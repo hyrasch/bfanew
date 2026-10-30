@@ -372,7 +372,10 @@ namespace Db
 	{
 		for (const auto& [itemId, count] : ParseItemList(items))
 		{
-			co_await theDb()->execSqlCoro("UPDATE player_items SET count = MAX(0, count - $3) WHERE user_id = $1 AND item_id = $2", userId, itemId, count);
+			// $N must appear in numeric order: SQLite takes "$3" as a *name* numbered by first appearance
+			// and Drogon binds positionally, so "count - $3 WHERE user_id = $1" got the user id as $3
+			// (ItemSell credited the zel but never removed the items)
+			co_await theDb()->execSqlCoro("UPDATE player_items SET count = MAX(0, count - $1) WHERE user_id = $2 AND item_id = $3", count, userId, itemId);
 			co_await theDb()->execSqlCoro("DELETE FROM player_items WHERE user_id = $1 AND item_id = $2 AND count <= 0", userId, itemId);
 			// the equipped count cannot exceed what is left
 			co_await theDb()->execSqlCoro(

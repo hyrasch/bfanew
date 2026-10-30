@@ -110,9 +110,9 @@ public:
 	* @param[in] fileName Base name of the file
 	* @param[in] path Path where the file should be stored
 	*/
-	void open(const std::string& fileName)
+	void open(const std::string& fileName, bool append = false)
 	{
-		m_log.open(fileName);
+		m_log.open(fileName, append ? std::ios::app : std::ios::out);
 		m_open = m_log.is_open();
 	}
 

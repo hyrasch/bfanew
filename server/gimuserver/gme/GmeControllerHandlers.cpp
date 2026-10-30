@@ -73,6 +73,7 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("Uo86DcRh", GatchaList, "8JbxFvuSaB2CK7Ln");
 	REGISTER("F7JvPk5H", GachaAction, "bL9fipzaSy7xN2w1");
 	REGISTER("BjAt1D6b", DungeonEventUpdate, "k5EiNe9x");
+	REGISTER("rCB7ZI8x", UpdateEventInfo, "L1o4eGbi");
 	REGISTER("NiYWKdzs", HomeInfo, "f6uOewOD");
 	REGISTER("ruoB7bD8", ItemEdit, "DHEfRexCu0q5TAQm");
 	REGISTER("qDQerU74", ItemSell, "73aFNjPu");

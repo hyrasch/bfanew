@@ -106,9 +106,9 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell. Stubs: DungeonEventUpdate (story events watched,
-not stored). Not implemented: item synthesis (ItemMix), town facilities, arena, gifts, friends,
-shop. Known client issue: the **village** (Town tab, "Village" button of the Randall map) dies on
-BlueStacks with a heap double free when its scene starts (see "Items / warehouse"). Handler registry:
+not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: item synthesis (ItemMix), town facilities, arena, gifts, friends,
+shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+"Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
 version list is `deploy/system/version_info.json` (169 tables). Per-mission battle data is
@@ -466,6 +466,11 @@ next mission is permitted. Two handlers and a data pipeline:
 - To start over: stop the server and delete `server/deploy/gme.sqlite` (the migrations recreate
   it), then `adb shell pm clear sg.gumi.bravefrontier` is NOT needed (the device keeps its `vid`
   and simply gets a new account).
+- SQL placeholders: write `$1, $2, $3...` in the order they first appear in the statement.
+  SQLite takes `$3` as a *named* parameter numbered by first appearance and Drogon binds the
+  arguments positionally, so `count - $3 WHERE user_id = $1` received the user id as `$3`
+  (ItemSell credited the zel but never removed the items until `Db::TakeItems` was reordered;
+  `scratchpad sqlscan.py` finds such statements).
 - The Java "Enjoying Brave Frontier? Please rate" dialog showed up after the second clear
   (`PTRateThisAppPopup`, which Revive patched to `ret`); "Remind me later" dismisses it.
 
@@ -561,8 +566,10 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   `ItemSellConnectScene`; the server removes the items, credits `sell_price` from
   **`server/deploy/items.json`** (`tools/build_units.py --items`, from the decoded F_ITEM_MST: name,
   type 1 consumable / 2 material / 3 sphere, rarity, sell price, max stack, max equipped) and
-  answers wallet + warehouse. **Not exercised on the client yet**: the Sell Items screen lives in
-  the village, which crashes on BlueStacks (below); the contract is from the disassembly only.
+  answers wallet + warehouse. Verified on the village's Sell Items screen (Green Grass x9 -> "Items
+  sold for 27 Zel", the request arrives with the next connection, the row is gone, zel +27); the
+  first try credited the zel without removing the items because of the `$N` placeholder order in
+  `Db::TakeItems` (see "SQL placeholders" under "Persistence").
 - MissionEnd request `47cJBUxz` = items used during the battles, `itemId:count,...`
   (`BattleUseItemLogList::getCsv`; the key is absent when nothing was used): removed from the
   warehouse and the equipped counts. Not exercised either: the Cure cannot be used at full HP and
@@ -579,16 +586,44 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   `MyTownTopScene::downloadFiles` dereferences the record of every location whose `need_mission_id`
   is cleared (mission 11 -> location 3 crashed the Town tab in `getTapCnt` once mission 11 was
   cleared).
-- **Village crash (open):** after that fix the village still dies on BlueStacks when its scene
-  starts (Town tab, or the "Village" button of the Randall facility map): logcat shows
-  `scudo ERROR: invalid chunk state when deallocating` in the game process right when the BGM
-  switches (`MediaPlayer` reset + new mp3), then a main-thread SIGSEGV with pc 0 and no usable
-  backtrace. Reproduced three times (17:00, 17:01, 17:04). The Randall map itself (home screen item
-  icon with the NEW badge -> Karl's dialogue -> facilities) works, the Official Guild of
-  Synthesizers (raid item synthesis) opens. Candidates: something in the new UserInfo lists
-  (warehouse, equipped items, town details), the cleared missions, or a BlueStacks-only heap
-  bug in the client; the town worked this morning with the stub player (level 1, missions 1-2, no
-  items). Bisect by blanking those lists one at a time.
+- **Village crash (solved 2026-10-30):** after that fix the village still died on BlueStacks when
+  its scene started (Town tab = scene 900 `MyTownTopScene`, or the "Village" button of the Randall
+  map = scene 1300 `RandallTownScene`): `scudo ERROR: invalid chunk state when deallocating` in the
+  game process right after the BGM switch, then a main-thread SIGSEGV with pc 0, no backtrace, the
+  same fault address every time. Not the data: blanking the warehouse / equip / clears / permits
+  lists in UserInfo (dev toggle `BFANEW_BLANK=warehouse,equip,town,clears,permits,units,decks`,
+  `gimuserver/gme/UserInfo.cpp`) changed nothing, and the scene reads only location id, tap count
+  and drop item info from the town records (all handled). The cause was the **content archive**:
+  `content/sam/MapVillage/MapVillage.sam` is the 2.19.6 animation but the archive carries an older
+  image set (`MapVillage_320x200.png`, `..._640x208_2.png`) instead of the two images the .sam
+  references (`MapVillage_320x289.jpg`, `MapVillage_640x384.png`, both in the APK's `assets/`); of
+  4,296 .sam files served, this is the only one with that gap (`tools/fill_content_from_apk.py`
+  scans them). The client's bulk download (first-launch DLC, or Settings > Downloadable Content)
+  fetched them, got the blank 1x1 PNG we answer for missing images (as `image/png` for a `.jpg`
+  path), cached them, and `SuperAnimList::addAnime` corrupted the heap on every visit. Fixes:
+  `tools/fill_content_from_apk.py` extracts APK assets that .sam files reference but the archive
+  lacks into **`deploy/apk_assets/`** (flat, gitignored) and `BfWebController` serves a missing
+  `/content/...` file from there by basename; missing `.jpg` paths get a real JPEG
+  (`apk_assets/_blank.jpg`, the archive's smallest); `.DS_Store` / `Thumbs.db` list entries get an
+  empty 200 (a 404 stalled "Full Download" for good at 10%); `deploy/log/dlc_404.log` now appends
+  across restarts with one path per line. Verified: fresh client (data cleared; the account came
+  back by itself, the device id is the account key) -> Town tab opens the village (Event Bazaar,
+  Synthesis, Upgrades, Items, Randall icon). Then Settings > Downloadable Content > Full Download (every file
+  re-fetched from this server, 20 min) -> Town tab opens the village again with the downloaded
+  files in place.
+  Recovery for an installed client with the bad cache: Settings > Downloadable Content > Full
+  Download (re-fetches everything, ~40 min at the client's one-file-per-second pace), or clear the
+  app data (`python tools/dev.py client --fresh`; the terms / phone-permission taps of the fresh
+  flow are timing-sensitive, redo them by hand if it stalls).
+- `rCB7ZI8x` **UpdateEventInfo** (key `L1o4eGbi`, URL `/actionSymbol/UEt5bqp4.php`,
+  `gimuserver/gme/UpdateEventInfo.cpp`): `HomeScene2::updateEvent` sends it (async, login info +
+  signal key) once the player has sat on the home screen for more than 300 s
+  (`UpdateEventInfo::isNeedUpdate`). It was unregistered: "Unsupported request: rCB7ZI8x" popped
+  up after the 20-minute download and the client restarted on OK. Stub answering `{}`.
+- Town records on the wire (from `MyTownTopScene`): `eip3MS5L` drop_item_info is
+  `itemId:count[:zel[:karma]],...` indexed by `count - tap_cnt`, read only when `mDaE3t6A` tap_cnt
+  >= 1 (collect animation, `TownUpdateRequest` queued); `qA7M9EjP` startdate is never read by the
+  client. Town locations are "open" when `HSRhkf70` need_mission_id is `0` or cleared.
 - Where things are in the client: the Units tab has no item menu; the home MENU has only the
   guides; item screens (`ItemTopScene`, scene reached from `GameScene::getGameScene`) are in the
   village. The Randall facility map is `RandallTopScene` (home icon next to MENU).
@@ -651,7 +686,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; ItemSell and items used in battle still unverified on the client); next: the village crash on BlueStacks (blocks Sell Items / item list), item synthesis (`ItemMix` `4P5GELTF`, key `AFqKIJ8Z4mHPB9xg`), energy purchase.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell verified on the Sell Items screen; next: item synthesis (`ItemMix` `4P5GELTF`, key `AFqKIJ8Z4mHPB9xg`), energy purchase.
 5. Test feature flags system by system.
 
 ## Conventions

@@ -39,7 +39,7 @@ void GimuServer::initAndStart(const Json::Value& config)
 		{
 			std::filesystem::path dlcPath(dir);
 			dlcPath /= dlcLogName;
-			m_dlc_error_log.open(dlcPath.string());
+			m_dlc_error_log.open(dlcPath.string(), true); // bfanew: append, keep the history across restarts
 		}
 	}
 

@@ -112,7 +112,20 @@ void BfWebController::HandleWebPage(const HttpRequestPtr& rq, std::function<void
     // Serve existing file if it exists
 	if (!fs::exists(path) || fs::is_directory(path))
 	{
-		logDlc() << rq->getPath();
+		// bfanew: the content archive misses files the client's own bundle has (the village
+		// animation's MapVillage_320x289.jpg / MapVillage_640x384.png: the archive carries an older
+		// image set with the 2.19.6 .sam). Serving the blank image for those made the client cache a
+		// 1x1 PNG and die with a heap corruption in the village. tools/fill_content_from_apk.py
+		// extracts such APK assets into deploy/apk_assets/ (flat, by basename), served from here.
+		const auto apkAsset = fs::path("apk_assets") / fs::path(rq->getPath()).filename();
+		if (rq->getPath().rfind("/content/", 0) == 0 && fs::is_regular_file(apkAsset))
+		{
+			LOG_DEBUG << "Missing content served from the APK assets: " << rq->getPath();
+			callback(HttpResponse::newFileResponse(apkAsset.string()));
+			return;
+		}
+
+		logDlc() << rq->getPath() << "\n";
 
 		// bfanew: the asset archive misses a few hundred files (mostly 2018-2022 summon
 		// banners, see docs "Missing assets"). The client shows a blocking
@@ -121,6 +134,28 @@ void BfWebController::HandleWebPage(const HttpRequestPtr& rq, std::function<void
 		// Other file types still get the 404 so that we notice them in dlc_404.log.
 		const auto& rp = rq->getPath();
 		const auto ext = fs::path(rp).extension().string();
+		const auto base = fs::path(rp).filename().string();
+		if (rp.rfind("/content/", 0) == 0 && (base == ".DS_Store" || base == "Thumbs.db"))
+		{
+			// the client's download list carries macOS junk entries (content/sam/5610BattleEffect
+			// MeikoAdd/.DS_Store); a 404 stalls Settings > Downloadable Content > Full Download for
+			// good, an empty file keeps it going
+			LOG_DEBUG << "Junk list entry, serving an empty file: " << rp;
+			auto resp = HttpResponse::newHttpResponse();
+			resp->setStatusCode(k200OK);
+			resp->setContentTypeCode(CT_APPLICATION_OCTET_STREAM);
+			resp->setBody("");
+			callback(resp);
+			return;
+		}
+		if (rp.rfind("/content/", 0) == 0 && (ext == ".jpg" || ext == ".jpeg") && fs::is_regular_file("apk_assets/_blank.jpg"))
+		{
+			// the client picks the decoder from the extension, so a .jpg path needs JPEG bytes
+			// (deploy/apk_assets/_blank.jpg, written by tools/fill_content_from_apk.py)
+			LOG_DEBUG << "Missing asset, serving the blank jpg: " << rp;
+			callback(HttpResponse::newFileResponse("apk_assets/_blank.jpg"));
+			return;
+		}
 		if (rp.rfind("/content/", 0) == 0 && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
 		{
 			static const unsigned char kBlankPng[] = { 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x60, 0x60, 0x60, 0x60, 0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x7a, 0xa8, 0x57, 0x50, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82 };

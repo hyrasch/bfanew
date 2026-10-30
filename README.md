@@ -31,6 +31,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 | `tools/dev.py` | The dev loop: build, serve, reload data, drive the game on BlueStacks, read the request log. |
 | `tools/build_battles.py` | Builds `server/deploy/battle/*.json` (per-mission enemy data for MissionStart) from the community datamine's 2014 captures. |
 | `tools/build_units.py` | Builds `server/deploy/units.json` (the server-side unit table: stats, exp pattern, max level, sell price), `evos.json` (evolution recipes) and `items.json` (item types, sell prices, stack limits) from the decoded MSTs. |
+| `tools/fill_content_from_apk.py` | Extracts the APK assets that served animations reference but the content archive lacks into `server/deploy/apk_assets/` (the village crash fix). |
 | `server/deploy/battle/` | Those files, 204 missions so far. |
 | `data/*_timeline.json` | First month each unit / mission appeared in Global, derived from the community datamine history; drives the phase cutoff. |
 | `GAP_ANALYSIS.md` | What the upstream server does and does not do, and how phasing fits. |

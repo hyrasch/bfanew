@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include <cstdlib>
 
 /*
 * UserInfo ("cTZ3W2JG"): the player's state after Initialize. Everything player-specific comes
@@ -52,6 +53,22 @@ HANDLEF(UserInfo)
 		d.location_id = loc.id;
 		d.tap_cnt = 0;
 		resp.town_location_detail.emplace_back(d);
+	}
+
+	// dev aid: BFANEW_BLANK=warehouse,equip,town,clears,permits,units,decks blanks lists to bisect client
+	// crashes without rebuilding (used for the village crash of 2026-10-30)
+	if (const char* blank = std::getenv("BFANEW_BLANK"))
+	{
+		const std::string b = blank;
+		auto has = [&](const char* k) { return b.find(k) != std::string::npos; };
+		if (has("warehouse")) resp.warehouse_info.clear();
+		if (has("equip")) resp.equip_info.clear();
+		if (has("town")) resp.town_location_detail.clear();
+		if (has("clears")) resp.clear_mission_info.clear();
+		if (has("permits")) resp.permit_place.clear();
+		if (has("units")) resp.unit_info.clear();
+		if (has("decks")) resp.party_deck_info.clear();
+		LOG_WARN << "UserInfo: BFANEW_BLANK=" << b;
 	}
 
 	// phase 1: no login campaign (id 0 keeps the "Login Campaign" popup from showing)

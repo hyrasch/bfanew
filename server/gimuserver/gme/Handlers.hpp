@@ -88,6 +88,7 @@ namespace GmeHandlers
 	HANDLE(GachaAction);
 	HANDLE(GatchaList);
 	HANDLE(DungeonEventUpdate);
+	HANDLE(UpdateEventInfo);
 	HANDLE(HomeInfo);
 	HANDLE(ItemEdit);
 	HANDLE(ItemSell);
