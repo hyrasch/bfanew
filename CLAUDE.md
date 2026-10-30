@@ -21,12 +21,20 @@ The base is the open-source emulator **decompfrontier** (C++/Drogon, AGPL-3.0). 
 bfanew/                      <- this repo (git, branch main)
   CLAUDE.md                  <- this file
   GAP_ANALYSIS.md            <- full analysis: server state, phasing design, gap table, plan
+  server/                    <- OUR FORK of decompfrontier/server (git subtree, upstream 7cc0ebd, AGPL-3.0)
+    packet-generator/        <- vendored (git subtree, upstream 61fedcc), no longer a submodule
+    gimuserver/packets/all.hpp  <- GENERATED (ignored), regenerate after .kdl changes
+    CMakeUserPresets.json    <- tracked here (VS 2026 / Ninja presets)
+    deploy/config.json       <- two listeners: 192.168.1.14:9960 (advertised by /dls), 127.0.0.1:9960
+    deploy/game_content      <- JUNCTION to decompfrontier/server/deploy/game_content (not in git)
+    out/build/debug-win64-ninja/ <- build output (ignored)
+  tools/patch_apk.py         <- Android client patcher (see "Android client")
   data/unit_timeline.json    <- unit id -> first month seen in Global datamine (2,940 ids)
   data/mission_timeline.json <- mission id -> first month seen (3,744 ids)
   data/build_timeline.py     <- script that built them (args: <repo> <file.json> <out.json>)
   setup/CMakeUserPresets.json<- copy of the presets file placed in decompfrontier/server
-decompfrontier/              <- upstream clones, read-only reference except local build files
-  server/                    <- C++ emulator. Built and running (see below)
+decompfrontier/              <- upstream clones, now READ-ONLY reference (the fork above is what runs)
+  server/                    <- C++ emulator (upstream). Its deploy/game_content holds the assets
     packet-generator/        <- submodule, checked out at pinned 61fedcc
     gimuserver/packets/all.hpp  <- GENERATED (not in git), regenerate after .kdl changes
     CMakeUserPresets.json    <- ours (VS 2026 / Ninja presets), untracked
@@ -75,7 +83,7 @@ cmake --build --preset debug-win64-ninja
 cd deploy
 ..\out\build\debug-win64-ninja\standalone_frontend\gimuserverw.exe
 
-# smoke test (verified 2026-10-30)
+# smoke test (verified 2026-10-30 on the fork)
 curl.exe http://127.0.0.1:9960/dls                                   # -> {"SREE":"..."}
 curl.exe -o NUL -w "%{http_code}\n" http://127.0.0.1:9960/mst/Ver1084_2r9cNSdt_1.dat   # -> 200
 ```
@@ -229,14 +237,14 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK, client reaches Initialize). Next blocker is server-side (see "First run"), so it folds into step 2.
-2. Fork decompfrontier/server into bfanew (keep AGPL, keep upstream history if possible), and add the `phase` config + `phases/NN/` folders for login-time tables.
+2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.
 5. Test feature flags system by system.
 
 ## Conventions
 
-- Don't modify the `decompfrontier/*` clones beyond local build files. Real changes go into bfanew (step 2 forks the server there).
+- Don't modify the `decompfrontier/*` clones at all any more; all server work happens in `bfanew/server`. To pull upstream later: `git subtree pull --prefix=server ../decompfrontier/server main` (and the same for `server/packet-generator`).
 - Git identity: `Sylvain Franco <sylvain.franco@outlook.fr>`. End commit messages with:
   ```
   Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
