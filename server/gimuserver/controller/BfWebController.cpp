@@ -113,6 +113,23 @@ void BfWebController::HandleWebPage(const HttpRequestPtr& rq, std::function<void
 	if (!fs::exists(path) || fs::is_directory(path))
 	{
 		logDlc() << rq->getPath();
+
+		// bfanew: the asset archive misses a few hundred files (mostly 2018-2022 summon
+		// banners, see docs "Missing assets"). The client shows a blocking
+		// "Error occurred during download" popup on any failed image, so answer
+		// missing images with a valid 1x1 transparent PNG instead of a 404.
+		// Other file types still get the 404 so that we notice them in dlc_404.log.
+		const auto& rp = rq->getPath();
+		const auto ext = fs::path(rp).extension().string();
+		if (rp.rfind("/content/", 0) == 0 && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
+		{
+			static const unsigned char kBlankPng[] = { 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x60, 0x60, 0x60, 0x60, 0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x7a, 0xa8, 0x57, 0x50, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82 };
+			auto resp = HttpResponse::newFileResponse(kBlankPng, sizeof(kBlankPng), "", CT_IMAGE_PNG);
+			LOG_DEBUG << "Missing asset, serving blank image: " << rp;
+			callback(resp);
+			return;
+		}
+
 		callback(HttpResponse::newNotFoundResponse());
 	}
 	else
