@@ -162,7 +162,7 @@ aligned, sign v1+v2. With port 9960 the replacement must stay <= 19 chars
 **Tooling (installed 2026-10-30):** Microsoft OpenJDK 17 (`C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot`,
 winget), Android platform-tools (`adb`, winget `Google.PlatformTools`, lands in
 `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Google.PlatformTools_...\platform-tools`), Android
-SDK at `D:\.Codendroid-sdk` with `cmdline-tools/latest` and `build-tools/34.0.0`
+SDK at `D:\.Code\android-sdk` with `cmdline-tools/latest` and `build-tools/34.0.0`
 (`zipalign`, `apksigner`). Python packages: `cryptography`, `pyaxmlparser`, `capstone`, `pyelftools`.
 
 **Patch script:** `tools/patch_apk.py` applies the byte patches above to both `libgame.so`,
@@ -173,11 +173,11 @@ changed (no `usesCleartextTraffic`): libcurl ignores the cleartext policy; revis
 WebView pages (news/notice) matter.
 
 ```powershell
-$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"; $env:Path = "$env:JAVA_HOMEin;$env:Path"
-cd D:\.Coderavefrontierfanew
-python tools/patch_apk.py --apk ..rave-frontier-2-19-6-0.apk --host 192.168.1.14 --sdk D:\.Codendroid-sdk --out ..uild
-# -> ..uildf-192.168.1.14-9960.apk  (verified: v1 true, v2 true)
-adb install -r ..uildf-192.168.1.14-9960.apk
+$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"; $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+cd D:\.Code\bravefrontier\bfanew
+python tools/patch_apk.py --apk ..\brave-frontier-2-19-6-0.apk --host 192.168.1.14 --sdk D:\.Code\android-sdk --out ..\build
+# -> ..\build\bf-192.168.1.14-9960.apk  (verified: v1 true, v2 true)
+adb install -r ..\build\bf-192.168.1.14-9960.apk
 ```
 
 **Device:** a real device, the user's **Ayn Thor** (Android handheld, arm64), same as
