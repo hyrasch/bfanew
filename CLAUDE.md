@@ -70,12 +70,13 @@ Not cloned: `decompfrontier/client` (a 180 MB client decompilation, not needed s
 
 ```powershell
 # regenerate packet classes (after editing packet-generator/assets/**/*.kdl)
-cd D:\.Code\bravefrontier\decompfrontier\server\packet-generator
+cd D:\.Code\bravefrontier\bfanew\server\packet-generator
 cargo run -- generate --cxx --glaze -i assets/all.kdl -o ../gimuserver/packets
 #   (don't use generate.py: it swallows errors)
 
-# configure + build (Developer PowerShell for VS 2026)
-cd D:\.Code\bravefrontier\decompfrontier\server
+# configure + build (Developer PowerShell for VS 2026, or in any PowerShell first run
+#   & 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\Tools\Launch-VsDevShell.ps1' -Arch amd64 -SkipAutomaticLocation)
+cd D:\.Code\bravefrontier\bfanew\server
 cmake --preset debug-win64-ninja
 cmake --build --preset debug-win64-ninja
 
