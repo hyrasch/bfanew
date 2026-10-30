@@ -62,7 +62,7 @@ There are four ways to hold content back, from easiest to riskiest:
 `cheahjs/bravefrontier_data` has 3,969 commits of Global datamines from **Aug 2014 to Nov 2021**. Replaying its history month by month gives the month each unit and quest first appeared:
 
 - `data/unit_timeline.json`: 2,940 unit IDs (2014: 1,421 · 2015: 473 · 2016: 407 · 2017: 321 · 2018: 111 · 2019: 125 · 2020: 72 · 2021: 10)
-- `data/mission_timeline.json`: 3,746 mission IDs (2014: 1,349 · 2015: 508 · 2016: 442 · 2017: 278 · 2018: 221 · 2019: 247 · 2020: 536 · 2021: 163)
+- `data/mission_timeline.json`: 3,744 mission IDs (2014: 1,349 · 2015: 508 · 2016: 442 · 2017: 278 · 2018: 221 · 2019: 247 · 2020: 536 · 2021: 163)
 
 Land order from the same data: Mistral, Agni, Cordelica, Palmyna, Lizeria and the Vortex (already present in Aug 2014), then Vriksha (Oct 2014), Atharva (Apr 2015), Bariura (May 2015), Celgrad, Lem, Beiorg, Wulgee, Rakshult and Zamburg (by Jan 2016). After that, lands are stored as numeric IDs (Chapter 2 onward).
 
