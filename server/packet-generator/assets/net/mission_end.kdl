@@ -1,0 +1,209 @@
+// MissionEnd (request id 9TvyNR5H, encode key oINq0rfUFPx5MgmT): sent by MissionResultScene::initConnect
+// when the last battle is over. Keys from MissionEndRequest::createBody (request) and
+// MissionRewardResponse::readParam (reply). See bfanew/CLAUDE.md "MissionEnd contract".
+
+json MissionEndParam {
+    doc "Request group Kz7qfSs5: which run ended and how"
+
+    field serial_id type="str" {
+        key "k9cxD7Ba"
+        doc "the serial id MissionStart answered (MissionInfo::getMissionSerialID)"
+    }
+
+    field state type="i32::str" {
+        key "j3g5P4cq"
+        doc "UserState::getMissionState: 2 = cleared"
+    }
+}
+
+json MissionEndResult {
+    doc "Request group rXvA1E5y: what happened during the battles (only the fields used so far are named; the rest are battle statistics and the anti-cheat log)"
+
+    field zel type="i32::str" {
+        key "Najhr8m6"
+        doc "zel picked up in battle"
+    }
+
+    field karma type="i32::str" {
+        key "HTVh8a65"
+        doc "karma picked up in battle"
+    }
+
+    field items type="str" {
+        key "4T0Q2Bh5"
+        doc "item drops picked up, itemId:count joined with a comma"
+    }
+
+    field bc type="i32::str" {
+        key "hoG2ieT5"
+        doc "battle crystals collected"
+    }
+
+    field hc type="i32::str" {
+        key "6PLsn8xo"
+        doc "heart crystals collected"
+    }
+
+    field monsters_killed type="str" {
+        key "L16VDrk5"
+        doc "monsterId:count joined with a comma"
+    }
+
+    field units_killed type="str" {
+        key "1CxU2MPn"
+        doc "unitId:count of the enemies killed, joined with a comma"
+    }
+
+    field enemies_per_battle type="str" {
+        key "Lu0pAk1R"
+        doc "enemy count per battle, comma separated"
+    }
+
+    field cheat_log type="str" {
+        key "TW1Mrtp5"
+        doc "MissionInfo::getCheatLog"
+        optional #true
+    }
+}
+
+json MissionEndUnit {
+    doc "Request list 0xgIw1Ns: one entry per squad unit"
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "TODO"
+    }
+
+    field unk1 type="i32::str" {
+        key "gr48vsdJ"
+        doc "TODO"
+    }
+
+    field unk2 type="i32::str" {
+        key "XuJL4pc5"
+        doc "TODO"
+    }
+}
+
+json MissionReward {
+    doc "Reply group F5Vs19mb (MissionRewardResponse::readParam -> MissionRewardInfo singleton, read by MissionResultScene::updateEvent and GameUtils::getAppearDungeon)"
+
+    field clear_bonus type="str" {
+        key "92ms7J5M"
+        doc "first-clear bonus, format still unknown (missions.json clear_bonus); empty = none"
+    }
+
+    field lvup_flg type="i32::str" {
+        key "wPb5uMR9"
+        doc "1 when the player levelled up"
+    }
+
+    field before_lv type="i32::str" {
+        key "81CsGAR9"
+        doc "player level before the mission"
+    }
+
+    field inc_exp type="i32::str" {
+        key "d96tuT2E"
+        doc "player exp gained"
+    }
+
+    field rein_req_state type="i32::str" {
+        key "0egM9p7I"
+        doc "reinforcement (helper) friend request state"
+    }
+
+    field clear_dungeon_id type="str" {
+        key "4sQ8vBXm"
+        doc "dungeon unlocked by this clear (GameUtils::getAppearDungeon shows it), empty = none"
+    }
+
+    field clear_area_id type="str" {
+        key "NgPQbA46"
+        doc "area unlocked by this clear, empty = none"
+    }
+
+    field clear_mission_id type="str" {
+        key "mauD5qZ1"
+        doc "mission unlocked by this clear, empty = none"
+    }
+
+    field reward_units type="str" {
+        key "3MAT6quo"
+        doc "units captured / rewarded, empty = none"
+    }
+
+    field zel type="i32::str" {
+        key "Najhr8m6"
+        doc "zel gained (mission reward + pickups)"
+    }
+
+    field karma type="i32::str" {
+        key "HTVh8a65"
+        doc "karma gained"
+    }
+
+    field exp_up_type type="str" {
+        key "3vXLQFjt"
+        doc "bonus event flag, 0 none"
+    }
+
+    field zel_up_type type="str" {
+        key "k6MynZkg"
+        doc "bonus event flag, 0 none"
+    }
+
+    field karma_up_type type="str" {
+        key "J1MwgxCL"
+        doc "bonus event flag, 0 none"
+    }
+
+    field exp_guild type="i32::str" {
+        key "b8D18b7e"
+        doc "guild exp bonus"
+    }
+
+    field karma_guild type="i32::str" {
+        key "7adBa819"
+        doc "guild karma bonus"
+    }
+
+    field zel_guild type="i32::str" {
+        key "gzs3Bw10"
+        doc "guild zel bonus"
+    }
+
+    field e_token type="i32::str" {
+        key "03fFk30f"
+        doc "event tokens"
+    }
+
+    field repeat_clear_bonus type="str" {
+        key "S2ChOKo6"
+        doc "repeat-clear bonus, empty = none"
+    }
+}
+
+json MissionUnlock {
+    doc "bfanew: a place that opens when the mission is cleared (built from the datamine requires chain and F_MISSION_MST)"
+
+    field mission_id type="str" {
+        key "mission_id"
+        doc "TODO"
+    }
+
+    field dungeon_id type="str" {
+        key "dungeon_id"
+        doc "TODO"
+    }
+
+    field area_id type="str" {
+        key "area_id"
+        doc "TODO"
+    }
+
+    field land_id type="str" {
+        key "land_id"
+        doc "TODO"
+    }
+}

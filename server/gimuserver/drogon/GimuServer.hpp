@@ -5,6 +5,9 @@
 #include <gimuserver/drogon/ServerCache.hpp>
 #include <gimuserver/utils/DumpLog.hpp>
 
+#include <mutex>
+#include <unordered_map>
+
 /*!
 * Implements the plugin of the system server. This is used to contain and caches everything.
 */
@@ -38,6 +41,24 @@ public:
     * Not thread-safe against in-flight requests; meant for local development only.
     */
     inline void reloadCache() { m_cache.Setup(m_serverConfigJson); }
+
+    /*!
+    * bfanew: remembers which mission a MissionStart serial id belongs to, because MissionEnd only
+    * sends the serial id. In-memory only (no persistence yet).
+    */
+    inline void rememberRun(const std::string& serialId, int32_t missionId)
+    {
+        std::lock_guard<std::mutex> lock(m_runsMutex);
+        m_runs[serialId] = missionId;
+    }
+
+    /*! Mission id of a run, 0 if unknown. */
+    inline int32_t missionForRun(const std::string& serialId)
+    {
+        std::lock_guard<std::mutex> lock(m_runsMutex);
+        const auto it = m_runs.find(serialId);
+        return it == m_runs.end() ? 0 : it->second;
+    }
 
     /*!
     * Gets the DLC 404 logger.
@@ -101,4 +122,8 @@ private:
     * Copy of the plugin's "server" config object, kept for reloadCache().
     */
     Json::Value m_serverConfigJson;
+
+    /*! serial id -> mission id of the runs started since the server came up (bfanew). */
+    std::unordered_map<std::string, int32_t> m_runs;
+    std::mutex m_runsMutex;
 };

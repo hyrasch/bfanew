@@ -89,6 +89,7 @@ namespace GmeHandlers
 	HANDLE(GatchaList);
 	HANDLE(HomeInfo);
 	HANDLE(MissionStart);
+	HANDLE(MissionEnd);
 	HANDLE(UpdateInfoLight);
 	HANDLE(UserInfo);
 }

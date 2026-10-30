@@ -1,0 +1,610 @@
+// MissionStart (request id jE6Sp0q4): the client's "Begin Quest". Everything here was read
+// off the 2.19.6.0 client: MissionStartRequest::createBody for the request, the *Response::readParam
+// parsers for the reply (key -> setter), MonsterParty::entryMonsters / MonsterUnit::initialize for the
+// string formats. See bfanew/CLAUDE.md "MissionStart contract".
+
+json MissionStartParam {
+    doc "Request group 9Q1Lq5FS"
+
+    field reinforce_user_id type="str" {
+        key "h7eY3sAK"
+        doc "UserState::getReinforcementUserID, 0 when no helper was picked"
+    }
+
+    field friend_point type="i32::str" {
+        key "J3stQ7jd"
+        doc "UserState::getFriendPoint (friend points the helper costs)"
+    }
+
+    field mission_id type="i32::str" {
+        key "j28VNcUW"
+        doc "UserState::getLastMissionID"
+    }
+
+    field unk type="str" {
+        key "jkldTrhL"
+        doc "always 0 so far"
+    }
+
+    field deck_num type="i32::str" {
+        key "Z0Y4RoD7"
+        doc "squad number used"
+    }
+
+    field quest_bonus_type type="i32::str" {
+        key "nA95Bdj6"
+        doc "UserState::getQuestBonusType"
+    }
+
+    field quest_bonus_rate type="str" {
+        key "5Z1LNoyH"
+        doc "UserState::getQuestBonusRate"
+    }
+
+    field reinforce_deck_no type="i32::str" {
+        key "u1iPEVUq"
+        doc "helper deck number, -1 without helper"
+    }
+
+    field reinforce_info type="str" {
+        key "1VagK32J"
+        doc "helper unit info, only with a helper"
+        optional #true
+    }
+}
+
+json MissionStartInfo {
+    doc "Reply group 9Q1Lq5FS (MissionStartInfoResponse::readParam -> MissionStartInfo singleton)"
+
+    field reinforce_user_id type="str" {
+        key "h7eY3sAK"
+        doc "echo of the request"
+    }
+
+    field friend_point type="i32::str" {
+        key "J3stQ7jd"
+        doc "friend points after the helper was paid"
+    }
+
+    field mission_id type="i32::str" {
+        key "j28VNcUW"
+        doc "echo of the request"
+    }
+
+    field reinforce_info type="str" {
+        key "1VagK32J"
+        doc "helper unit info, empty without helper"
+    }
+
+    field deck_num type="i32::str" {
+        key "Z0Y4RoD7"
+        doc "echo of the request"
+    }
+}
+
+json MissionNum {
+    doc "Reply group Kz7qfSs5 (MissionNumResponse::readParam -> MissionInfo). The serial id identifies this run of the mission; MissionStartScene::updateEvent refuses an empty one (INVALID_MISSION_SERIAL_ID)."
+
+    field serial_id type="str" {
+        key "k9cxD7Ba"
+        doc "MissionInfo::setMissionSerialID"
+    }
+
+    field bonus_type type="i32::str" {
+        key "nA95Bdj6"
+        doc "MissionInfo::setBonusType (0 none, zel/karma bonus events)"
+    }
+
+    field bonus_rate type="str" {
+        key "5Z1LNoyH"
+        doc "MissionInfo::setBonusRate (float)"
+    }
+
+    field drop_info type="str" {
+        key "LE6JkUp7"
+        doc "MissionDropInfoList::parse: per battle order|unitDropInfo|treasureBoxInfo joined with @; empty = no fixed drops"
+    }
+}
+
+json BattleGroupMst {
+    doc "Reply list pj41dy9g: one row per battle of the mission (BattleGroupMstResponse::readParam)"
+
+    field battle_group_id type="str" {
+        key "ZSf8e1MG"
+        doc "row id"
+    }
+
+    field battle_monster_group_id type="str" {
+        key "Qzhp8B40"
+        doc "the BattleMonsterGroupMst rows of this battle"
+    }
+
+    field mission_id type="str" {
+        key "j28VNcUW"
+        doc "F_MISSION_MST missionId"
+    }
+
+    field battle_order type="i32::str" {
+        key "VETu07N6"
+        doc "1-based battle number"
+    }
+
+    field boss_flg type="i32::str" {
+        key "etM5TCb9"
+        doc "1 on the boss battle"
+    }
+
+    field first_attack_rate type="str" {
+        key "5aetPz3C"
+        doc "float, chance the enemies act first"
+    }
+
+    field unk type="i32::str" {
+        key "mFxqsc7Y"
+        doc "7th key, no setter found; 0"
+    }
+}
+
+json BattleMonsterGroupMst {
+    doc "Reply list 75t0sx9z: one row per enemy on the field (BattleMonsterGroupMstResponse::readParam)"
+
+    field battle_monster_group_id type="str" {
+        key "Qzhp8B40"
+        doc "group this enemy belongs to"
+    }
+
+    field monster_id type="str" {
+        key "o49dYfpH"
+        doc "MonsterMst row"
+    }
+
+    field group_order type="i32::str" {
+        key "hZtF1s8B"
+        doc "MonsterUnit::setGroupOrder, 1-based slot in the group"
+    }
+
+    field position type="str" {
+        key "3g8PW6x0"
+        doc "x:y in the 640x440 battle field (MonsterParty::entryMonsters: StrToFloat * 0.5 -> BattleUnit::setX/setY)"
+    }
+
+    field item_drop type="str" {
+        key "i30R8TAs"
+        doc "MonsterParty::setMaterialDrop: percent:itemId:rest entries joined with a comma; empty = none"
+    }
+
+    field unit_drop type="str" {
+        key "hw3L0uVj"
+        doc "unit capture info, empty = none"
+    }
+
+    field treasure_drop type="str" {
+        key "5wB9SHAV"
+        doc "treasure chest info (MissionScene::getMaxRewardZel/Karma read it), empty = none"
+    }
+}
+
+json BattleMonsterGroupPartsMst {
+    doc "Reply list n64NOpfy: extra sprite parts of multi-part enemies (BattleMonsterGroupPartsMstResponse::readParam); empty for plain unit-based enemies"
+
+    field battle_monster_group_id type="str" {
+        key "Qzhp8B40"
+        doc "TODO"
+    }
+
+    field monster_id type="str" {
+        key "o49dYfpH"
+        doc "TODO"
+    }
+
+    field main_body_flg type="i32::str" {
+        key "7Hf3DnVj"
+        doc "TODO"
+    }
+
+    field z_order type="i32::str" {
+        key "2gZIRQ7D"
+        doc "TODO"
+    }
+
+    field img_anime type="str" {
+        key "2EF0d6ue"
+        doc "TODO"
+    }
+
+    field img_cgg type="str" {
+        key "QqfI9mM4"
+        doc "TODO"
+    }
+
+    field img_cgs type="str" {
+        key "0QxL2is7"
+        doc "TODO"
+    }
+
+    field target_area type="str" {
+        key "8GNxt1XE"
+        doc "TODO"
+    }
+}
+
+json MonsterMst {
+    doc "Reply list U0v5IeJo: the enemies' stats (MonsterMstResponse::readParam). Keys shared with F_UNIT_MST use the unit table's formats. With a unit_id the sprites come from the unit's files (GameUtils::getMonsterAnmImage: unit_anime_<id>), img_a / anm_cgg are for monster-only sprites."
+
+    field monster_id type="str" {
+        key "o49dYfpH"
+        doc "row id, referenced by BattleMonsterGroupMst"
+    }
+
+    field name type="str" {
+        key "3evIn0zZ"
+        doc "shown in battle"
+    }
+
+    field hp type="i32::str" {
+        key "e7DK0FQT"
+        doc "TODO"
+    }
+
+    field atk type="i32::str" {
+        key "67CApcti"
+        doc "TODO"
+    }
+
+    field def type="i32::str" {
+        key "q08xLEsy"
+        doc "TODO"
+    }
+
+    field element type="i32::str" {
+        key "iNy0ZU5M"
+        doc "1 fire, 2 water, 3 earth, 4 thunder, 5 light, 6 dark"
+    }
+
+    field effect_frame type="str" {
+        key "eyUo6a8c"
+        doc "like F_UNIT_MST effectFrames, e.g. 24:123:1"
+    }
+
+    field damage_frame type="str" {
+        key "6Aou5M9r"
+        doc "like F_UNIT_MST damageFrames, e.g. 30:100:2:1"
+    }
+
+    field drop_check_cnt type="i32::str" {
+        key "n9h7p02P"
+        doc "hits per attack that can drop BC/HC (unit dropCheckCount)"
+    }
+
+    field exp type="i32::str" {
+        key "d96tuT2E"
+        doc "TODO"
+    }
+
+    field amount type="i32::str" {
+        key "Rs7bCE3t"
+        doc "TODO"
+    }
+
+    field img_a type="str" {
+        key "2EF0d6ue"
+        doc "monster-only sprite sheet, empty with unit_id"
+    }
+
+    field anm_cgg type="str" {
+        key "QqfI9mM4"
+        doc "monster-only cgg, empty with unit_id"
+    }
+
+    field unit_id type="str" {
+        key "pn16CNah"
+        doc "F_UNIT_MST unitId whose sprites and BB this enemy uses"
+    }
+
+    field description type="str" {
+        key "qp37xTDh"
+        doc "TODO"
+    }
+
+    field move_speed type="i32::str" {
+        key "J2hPXGo5"
+        doc "unit moveSpeedType"
+    }
+
+    field attack_move_type type="i32::str" {
+        key "mv4o39Uz"
+        doc "unit attackMoveType"
+    }
+
+    field back_move_type type="i32::str" {
+        key "h2L1YI90"
+        doc "unit h2L1YI90"
+    }
+
+    field ai_id type="str" {
+        key "i74vGUFa"
+        doc "AIMst rows with this id drive the enemy"
+    }
+
+    field after_image type="i32::str" {
+        key "D4Y5bWK7"
+        doc "unit D4Y5bWK7"
+    }
+
+    field max_act_cnt type="i32::str" {
+        key "oMGC3hW0"
+        doc "actions per turn, max"
+    }
+
+    field min_act_cnt type="i32::str" {
+        key "m4EK7Gt6"
+        doc "actions per turn, min"
+    }
+
+    field act_rate type="i32::str" {
+        key "6fwL59FT"
+        doc "TODO"
+    }
+
+    field monster_skill_id type="str" {
+        key "F4bQ7r8C"
+        doc "MonsterSkillMst id, empty = the unit's own BB (BattleUnit::setUnitSkill)"
+    }
+
+    field skill_move_type type="i32::str" {
+        key "XE7Yi5c3"
+        doc "unit skillMoveType"
+    }
+
+    field bad_state_resists type="str" {
+        key "CEeqs63b"
+        doc "a:b:c:d:e:f like unit CEeqs63b"
+    }
+
+    field max_zel_drop type="i32::str" {
+        key "Najhr8m6"
+        doc "TODO"
+    }
+
+    field zel_drop_cnt type="i32::str" {
+        key "9FN0GAei"
+        doc "TODO"
+    }
+
+    field max_karma_drop type="i32::str" {
+        key "HTVh8a65"
+        doc "TODO"
+    }
+
+    field karma_drop_cnt type="i32::str" {
+        key "vNk2sI4X"
+        doc "TODO"
+    }
+
+    field hp_disp_pos type="str" {
+        key "3BpHN6VD"
+        doc "x,y HP bar offset like unit 3BpHN6VD"
+    }
+
+    field passive_process_id type="str" {
+        key "hjAy9St3"
+        doc "TODO"
+    }
+
+    field passive_process_param type="str" {
+        key "2Smu5Mtq"
+        doc "TODO"
+    }
+
+    field move_offset type="str" {
+        key "CYk84E3W"
+        doc "x,y"
+    }
+
+    field debuff_resist type="str" {
+        key "Y6bd4fXp"
+        doc "BattleUnit::setDebuffResist"
+    }
+
+    field damage_resist type="str" {
+        key "jm6JSK2D"
+        doc "BattleUnit::setDamageResist"
+    }
+
+    field wait type="i32::str" {
+        key "9pXSKmn1"
+        doc "TODO"
+    }
+
+    field unk type="str" {
+        key "Lkh6gYkT"
+        doc "38th key, no setter found"
+    }
+}
+
+json AIMst {
+    doc "Reply list 89ausgc4: enemy AI rows, several per ai_id in priority order (AIMstResponse::readParam). Formats as in the community datamine AI parser."
+
+    field ai_id type="str" {
+        key "4eEVw5hL"
+        doc "MonsterMst.ai_id"
+    }
+
+    field priority type="i32::str" {
+        key "yu18xScw"
+        doc "evaluation order"
+    }
+
+    field term type="str" {
+        key "q7Nit8JW"
+        doc "AIMst::parseAITerm: partyConditions#actConditions, 0:0:0:0#non:0 = unconditional"
+    }
+
+    field act_target type="i32::str" {
+        key "4xctV8gF"
+        doc "1 party, 2 enemy (the player's squad), 3 self"
+    }
+
+    field search_term type="str" {
+        key "VBj9u0ot"
+        doc "target selection, e.g. random"
+    }
+
+    field action_id type="str" {
+        key "Hhgi79M1"
+        doc "type@params, e.g. attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,"
+    }
+
+    field percent type="str" {
+        key "ug9xV4Fz"
+        doc "float chance"
+    }
+
+    field name type="str" {
+        key "L8PCsu0K"
+        doc "label, not read by the client"
+    }
+}
+
+json MonsterSkillMst {
+    doc "Reply list m9Ada1PN (MonsterSkillMstResponse::readParam): enemy-only skills; empty unless a MonsterMst references one"
+
+    field skill_id type="str" {
+        key "F4bQ7r8C"
+        doc "TODO"
+    }
+
+    field skill_name type="str" {
+        key "LC92Js8Z"
+        doc "TODO"
+    }
+
+    field range type="i32::str" {
+        key "6E2fGPWT"
+        doc "TODO"
+    }
+
+    field target_type type="str" {
+        key "moWQ30GH"
+        doc "TODO"
+    }
+
+    field target_area type="str" {
+        key "IZt73kLG"
+        doc "TODO"
+    }
+
+    field effect_frame type="str" {
+        key "eyUo6a8c"
+        doc "TODO"
+    }
+
+    field start_frame type="str" {
+        key "qYCx73y2"
+        doc "TODO"
+    }
+
+    field damage_frame type="str" {
+        key "6Aou5M9r"
+        doc "TODO"
+    }
+
+    field drop_check_cnt type="i32::str" {
+        key "n9h7p02P"
+        doc "TODO"
+    }
+
+    field wait type="i32::str" {
+        key "9pXSKmn1"
+        doc "TODO"
+    }
+
+    field active_turn type="i32::str" {
+        key "j5xF8PSy"
+        doc "TODO"
+    }
+
+    field battle_crystal_cost type="i32::str" {
+        key "2JYTh84z"
+        doc "TODO"
+    }
+
+    field process_id type="i32::str" {
+        key "hjAy9St3"
+        doc "TODO"
+    }
+
+    field process_param type="str" {
+        key "2Smu5Mtq"
+        doc "TODO"
+    }
+
+    field description type="str" {
+        key "qp37xTDh"
+        doc "TODO"
+    }
+}
+
+json MissionBattleData {
+    doc "bfanew: one deploy/battle/<mission_id>.json, built by tools/build_battles.py from the 2014 datamine captures. The lists are sent as-is in the MissionStart reply."
+
+    field energy_use type="i32::int" {
+        key "energy_use"
+        doc "F_MISSION_MST missionEnergyUse"
+    }
+
+    field battle_count type="i32::int" {
+        key "battle_count"
+        doc "number of battles"
+    }
+
+    field exp type="i32::int" {
+        key "exp"
+        doc "player exp for clearing (missions.json xp)"
+    }
+
+    field zel type="i32::int" {
+        key "zel"
+        doc "zel reward for clearing"
+    }
+
+    field karma type="i32::int" {
+        key "karma"
+        doc "karma reward for clearing"
+    }
+
+    field unlocks type="[MissionUnlock]" {
+        key "unlocks"
+        doc "places opened by clearing this mission"
+    }
+
+    field battle_groups type="[BattleGroupMst]" {
+        key "pj41dy9g"
+        doc "TODO"
+    }
+
+    field monster_groups type="[BattleMonsterGroupMst]" {
+        key "75t0sx9z"
+        doc "TODO"
+    }
+
+    field parts type="[BattleMonsterGroupPartsMst]" {
+        key "n64NOpfy"
+        doc "TODO"
+    }
+
+    field monsters type="[MonsterMst]" {
+        key "U0v5IeJo"
+        doc "TODO"
+    }
+
+    field ai type="[AIMst]" {
+        key "89ausgc4"
+        doc "TODO"
+    }
+
+    field skills type="[MonsterSkillMst]" {
+        key "m9Ada1PN"
+        doc "TODO"
+    }
+}

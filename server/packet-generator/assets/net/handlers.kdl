@@ -38,6 +38,8 @@ import "../net/npc.kdl"
 import "../net/friends.kdl"
 import "../net/event.kdl"
 import "../net/featuring_gate.kdl"
+import "../net/mission_start.kdl"
+import "../net/mission_end.kdl"
 
 json GachaActionParam {
     doc "Which summon the client wants to perform (GachaActionRequest::createBody)"
@@ -79,6 +81,137 @@ json GachaActionReq {
     field gacha type="[GachaActionParam]::size(1)" {
         key "1IR86sAv"
         doc "The summon to perform"
+    }
+}
+
+json MissionStartReq {
+    doc "MissionStart command (request id jE6Sp0q4): Begin Quest. The client also sends a JzS3uxsZ group ({0b4efi1W: 1}) and, in other modes, frontier gate / challenge groups; they are ignored (error_on_unknown_keys = false)."
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field mission type="[MissionStartParam]::size(1)" {
+        key "9Q1Lq5FS"
+        doc "the mission to start"
+    }
+}
+
+json MissionStartResp {
+    doc "MissionStart reply: run info, the serial id and the whole battle data of the mission"
+
+    field start_info type="[MissionStartInfo]::size(1)" {
+        key "9Q1Lq5FS"
+        doc "TODO"
+    }
+
+    field mission_num type="[MissionNum]::size(1)" {
+        key "Kz7qfSs5"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "wallet / energy after paying the mission"
+    }
+
+    field battle_groups type="[BattleGroupMst]" {
+        key "pj41dy9g"
+        doc "TODO"
+    }
+
+    field monster_groups type="[BattleMonsterGroupMst]" {
+        key "75t0sx9z"
+        doc "TODO"
+    }
+
+    field parts type="[BattleMonsterGroupPartsMst]" {
+        key "n64NOpfy"
+        doc "TODO"
+    }
+
+    field monsters type="[MonsterMst]" {
+        key "U0v5IeJo"
+        doc "TODO"
+    }
+
+    field ai type="[AIMst]" {
+        key "89ausgc4"
+        doc "TODO"
+    }
+
+    field skills type="[MonsterSkillMst]" {
+        key "m9Ada1PN"
+        doc "TODO"
+    }
+}
+
+json MissionEndReq {
+    doc "MissionEnd command (request id 9TvyNR5H): the mission is over"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field mission type="[MissionEndParam]::size(1)" {
+        key "Kz7qfSs5"
+        doc "serial id and state"
+    }
+
+    field result type="[MissionEndResult]::size(1)" {
+        key "rXvA1E5y"
+        doc "battle statistics and pickups"
+    }
+
+    field units type="[MissionEndUnit]" {
+        key "0xgIw1Ns"
+        doc "per squad unit"
+    }
+}
+
+json MissionEndResp {
+    doc "MissionEnd reply: the reward, the updated wallet, the cleared mission and the places it opened"
+
+    field reward type="[MissionReward]::size(1)" {
+        key "F5Vs19mb"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field clear_mission_info type="[UserClearMissionInfo]" {
+        key "UT1SVg59"
+        doc "TODO"
+    }
+
+    field permit_place type="[PermitPlace]" {
+        key "yXNM8kL3"
+        doc "TODO"
     }
 }
 

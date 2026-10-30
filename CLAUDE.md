@@ -365,34 +365,61 @@ the map / the mission list. What it took:
   Scene ids (`GameScene::getGameScene` jump tables): 40/41 HomeScene2, 61 DungeonSelectScene2,
   82 MissionScene (battle), 112 MissionSelectScene2, 2000 LandScene, 2001 GateScene.
 
-**MissionStart contract** (`MissionStartRequest::createBody`, encode key `csiVLDKkxEwBfR70`),
-for the implementation to come. Request group `9Q1Lq5FS`: `h7eY3sAK` reinforcement user id
-("0" = none), `J3stQ7jd` friend points to spend, `j28VNcUW` mission id, `jkldTrhL`,
-`Z0Y4RoD7` deck number, `nA95Bdj6`/`5Z1LNoyH` quest bonus type/rate, `u1iPEVUq` helper deck
-no (-1), optional `1VagK32J` helper info; group `JzS3uxsZ` `{"0b4efi1W":"1"}`; frontier
-gate / challenge groups (`cvg8hzp9`, `Mg8K8Y1a`, `Che7rAre`...) only in those modes. The
-client then needs, in the reply:
-- `9Q1Lq5FS` **MissionStartInfo** (`MissionStartInfoResponse::readParam`): `h7eY3sAK`
-  reinforce user id, `J3stQ7jd` friend points, `j28VNcUW` mission id, `1VagK32J` reinforce
-  info, `Z0Y4RoD7` deck num.
-- `Kz7qfSs5` **MissionNum** (`MissionNumResponse::readParam`): `k9cxD7Ba` = the mission
-  serial id (`MissionInfo::setMissionSerialID`; `MissionStartScene::updateEvent` refuses an
-  empty one with `INVALID_MISSION_SERIAL_ID`), `nA95Bdj6`/`5Z1LNoyH` bonus, `LE6JkUp7`.
-  Then the scene switches to 82 `MissionScene` (the battle).
-- The battle data, which is NOT among the downloaded MSTs (only `F_MONSTER_CGG/CGS/IMG`,
-  the sprites, are): `pj41dy9g` **BattleGroupMst** (`ZSf8e1MG`, `Qzhp8B40` group id,
-  `j28VNcUW` mission, `VETu07N6`, `etM5TCb9`, `5aetPz3C`, `mFxqsc7Y`), `75t0sx9z`
-  **BattleMonsterGroupMst** (`Qzhp8B40`, `o49dYfpH` monster id, `hZtF1s8B`, `3g8PW6x0`,
-  `i30R8TAs`, `hw3L0uVj`, `5wB9SHAV`), `n64NOpfy` **BattleMonsterGroupPartsMst**
-  (`Qzhp8B40`, `o49dYfpH`, `7Hf3DnVj`, `2gZIRQ7D`, `2EF0d6ue`, `QqfI9mM4`, `0QxL2is7`,
-  `8GNxt1XE`), `U0v5IeJo` **MonsterMst** (38 keys, stats `e7DK0FQT` hp ... `d96tuT2E` exp,
-  `Najhr8m6` zel, `HTVh8a65` karma, `pn16CNah` unit id...), and `F5Vs19mb`
-  **MissionReward** (19 keys). The key order above is the parser order; the field meanings
-  still have to be read off the setters. **There is no local source for the per-mission
-  enemy groups and monster stats** (`mst-decoded.zip` only has `F_RAID_BATTLE_GROUP_MST`;
-  the community datamine has mission rewards, not enemies), so the battle data has to be
-  rebuilt (wiki / datamine of enemy stats) before MissionStart can answer for real. This is
-  the next client-side gap.
+**Quests play end to end (2026-10-30):** Begin Quest -> five battles on auto -> Quest Clear
+Reward (zel, karma, XP, level up, energy refilled) -> the town "materials" popup -> home, and the
+next mission is permitted. Two handlers and a data pipeline:
+
+- `jE6Sp0q4` **MissionStart** (`gimuserver/gme/MissionStart.cpp`, key `csiVLDKkxEwBfR70`)
+  answers with the run info (`9Q1Lq5FS` MissionStartInfo), the serial id (`Kz7qfSs5` MissionNum,
+  `k9cxD7Ba` -> `MissionInfo::setMissionSerialID`; empty = `INVALID_MISSION_SERIAL_ID`), the
+  wallet (`fEi17cnx`, energy minus the mission) and **the whole battle data**, which is not among
+  the downloaded MSTs: `pj41dy9g` BattleGroupMst (one per battle), `75t0sx9z`
+  BattleMonsterGroupMst (one per enemy: group, monster id, slot, position, drops), `n64NOpfy`
+  parts (multi-part sprites, unused so far), `U0v5IeJo` MonsterMst (stats, 38 keys), `89ausgc4`
+  AIMst (rows per ai id) and `m9Ada1PN` MonsterSkillMst (empty so far). All key -> field
+  meanings are in `packet-generator/assets/net/mission_start.kdl`, read off the client's
+  `*Response::readParam` setters. Formats learned from `MonsterParty::entryMonsters` /
+  `MonsterUnit::initialize`: position `x:y` in the **640x440** battle field (the client
+  multiplies by 0.5), item drop `percent:itemId:rest` joined with commas, AI term
+  `partyConds#actConds` (`0:0:0:0#non:0` = none), AI action `attack@-1,-1,...`; the keys shared
+  with F_UNIT_MST (`eyUo6a8c` effect frames `24:123:1`, `6Aou5M9r` damage frames, `CEeqs63b`
+  status resists `0:0:0:0:0:0`, `3BpHN6VD` HP bar offset `0,4`) use the unit table's values.
+  An enemy with a `pn16CNah` unit id uses that unit's sprites (`GameUtils::getMonsterAnmImage`
+  -> `unit_anime_<id>`), so `img_a` / `anm_cgg` stay empty; an empty `F4bQ7r8C` skill id means
+  the unit's own BB (`BattleUnit::setUnitSkill`). `LE6JkUp7` fixed drops, unit/treasure drop
+  strings are sent empty (safe: `MissionDropInfoList::parse` returns on an empty string).
+- **Battle data source:** the community datamine `cheahjs/bravefrontier_data` has
+  `missions_parsed/<Mission name>_<YYYY-DD-MM-HH-MM>.json`, **608 captures from Sept/Oct 2014**
+  of the live server's mission data (per battle: enemies with stats, element, AI id, act counts,
+  drops), plus `missions.json` (ids, xp/zel/karma, energy, `requires` chain), `items.json`,
+  `ai.json`. Sparse clone at `D:\.Code\bravefrontier\tools-dl\bfdata\bravefrontier_data`
+  (`git sparse-checkout set --no-cone /missions.json /items.json /ai.json "/missions_parsed/*"`,
+  from Git Bash with `MSYS_NO_PATHCONV=1`). The parser that made them is
+  `Deathmax/bfdb` (`tools-dl/bfdb`, its `parsers/common/ai.py` documents the raw AI format).
+  `tools/build_battles.py --datamine ... --mst ..\assets\mst-decoded.zip --out server/deploy/battle`
+  turns them into **`server/deploy/battle/<mission_id>.json`** (MissionBattleData, wire keys,
+  read by the handler per request, so edits need no restart): it numbers battles and monsters
+  itself (`<mission><battle:02><slot>`), lays enemies out (`LAYOUTS`, guessed, y 300-380 looks
+  right), fills the animation fields from F_UNIT_MST, rebuilds AI rows from `ai.json`, and adds
+  the mission's xp/zel/karma and what clearing it unlocks (`unlocks`: missions whose `requires`
+  is this one, with their dungeon/area/land from F_MISSION_MST). 204 missions covered (199
+  distinct captured names); enemy skills (`skills` in the captures) are not converted yet
+  (warned), and captures whose name is not in `missions.json` are skipped.
+- `9TvyNR5H` **MissionEnd** (`gimuserver/gme/MissionEnd.cpp`, key `oINq0rfUFPx5MgmT`), sent
+  by `MissionResultScene::initConnect` (then a FriendGet). Request: `Kz7qfSs5` {serial id,
+  `j3g5P4cq` state, 2 = cleared}, `rXvA1E5y` battle stats (`Najhr8m6` zel and `HTVh8a65` karma
+  picked up, `4T0Q2Bh5` items `id:count,...`, `hoG2ieT5` BC, `6PLsn8xo` HC, `L16VDrk5`
+  monsters killed, `Lu0pAk1R` enemies per battle, `TW1Mrtp5` cheat log...), `0xgIw1Ns` per
+  squad unit. Reply: `F5Vs19mb` **MissionReward** (`net/mission_end.kdl`: clear bonus, lvup flag,
+  before level, inc exp, clear dungeon/area/mission ids -> "new area" via
+  `GameUtils::getAppearDungeon`, zel, karma, up types, guild bonuses...), `fEi17cnx` wallet
+  (zel/karma/exp added, level from `user_level.json`, a level-up refills energy), `UT1SVg59` the
+  cleared mission and `yXNM8kL3` the places it unlocks. The serial id -> mission id pair is
+  kept in memory by `GimuServer::rememberRun` (MissionEnd does not send the mission id).
+  Still stubbed: first-clear bonus (`92ms7J5M`, format unknown; mission 12 gives a gem), item
+  pickups are not added to the warehouse, nothing survives a relogin (no persistence).
+- Dev loop: `client --to mission`, then `tapk mission_first`, `tap 886 557` (helper dialog Yes),
+  `tap 960 752` (Begin Quest), `tap 1067 479` (AUTO); a mission takes ~2 min on auto.
 
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
@@ -449,7 +476,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quest flow reaches "Begin Quest" (world map, mission list, squad screen); next on the client side: MissionStart + the battle data (see "MissionStart contract"), then the write operations (DeckEdit, fusion, sell) once persistence exists.
+1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.

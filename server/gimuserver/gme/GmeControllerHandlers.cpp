@@ -74,6 +74,7 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("F7JvPk5H", GachaAction, "bL9fipzaSy7xN2w1");
 	REGISTER("NiYWKdzs", HomeInfo, "f6uOewOD");
 	REGISTER("jE6Sp0q4", MissionStart, "csiVLDKkxEwBfR70");
+	REGISTER("9TvyNR5H", MissionEnd, "oINq0rfUFPx5MgmT");
 	REGISTER("ynB7X5P9", UpdateInfoLight, "7kH9NXwC");
 	REGISTER("cTZ3W2JG", UserInfo, "ScJx6ywWEb0A3njT");
 

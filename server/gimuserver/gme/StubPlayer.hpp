@@ -91,6 +91,43 @@ namespace StubPlayer
 	*
 	* STUB: a real server derives both lists from the player's clear history (step 4).
 	*/
+	enum class Place { Gate, Land, Area, Dungeon, Mission };
+
+	/*! Appends one PermitPlace record (exactly one id key, see net/permit_place.kdl). */
+	inline void AddPermit(std::vector<PermitPlace>& out, Place kind, const std::string& id)
+	{
+		PermitPlace p = {};
+		p.time_limit = 0;
+		p.quest_bonus_type = 0;
+		p.quest_bonus_rate = "0";
+		p.quest_bonus_time_limit = 0;
+		p.period_text = "";
+		p.enterable_flg = true;
+		switch (kind)
+		{
+		case Place::Gate: p.gate_id = id; break;
+		case Place::Land: p.land_id = id; break;
+		case Place::Area: p.area_id = id; break;
+		case Place::Dungeon: p.dungeon_id = id; break;
+		case Place::Mission: p.mission_id = id; break;
+		}
+		out.emplace_back(std::move(p));
+	}
+
+	/*! One cleared-mission record. */
+	inline UserClearMissionInfo ClearedMission(int32_t missionId, const std::string& date)
+	{
+		UserClearMissionInfo c = {};
+		c.user_id = kUserId;
+		c.mission_id = missionId;
+		c.clear_date = date;
+		c.clear_cnt = 1;
+		c.most_time = 0;
+		c.get_bc = 0;
+		c.get_hc = 0;
+		return c;
+	}
+
 	inline void FillQuestProgress(UserInfoResp& resp)
 	{
 		auto permit = [&](auto setter)
