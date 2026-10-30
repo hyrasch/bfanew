@@ -1,0 +1,27 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "debug-win64-ninja",
+      "displayName": "Debug, Windows 64-bit, Ninja (recommended in VS 2026)",
+      "inherits": "default-debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": {
+        "GIMUSRV_FRONTEND": { "type": "STRING", "value": "STANDALONE" },
+        "VCPKG_TARGET_TRIPLET": { "type": "STRING", "value": "x64-windows" }
+      }
+    },
+    {
+      "name": "debug-win64-vs2026",
+      "displayName": "Debug, Windows 64-bit, Visual Studio 2026 generator",
+      "inherits": "debug-win64",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/out/build/${presetName}"
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug-win64-ninja", "configurePreset": "debug-win64-ninja" }
+  ]
+}

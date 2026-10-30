@@ -1,13 +1,18 @@
 {
-    // Server listener (http://127.0.0.1:9960/)
+    // Server listeners. The FIRST one is what /dls advertises to the client
+    // (GetDrogonBindHostname() -> listeners[0].toIpPort()), so it must be the
+    // address a phone/emulator can reach. Keep 127.0.0.1 second for local tests.
+    // Update the LAN address if DHCP changes it (ipconfig / Get-NetIPAddress).
     "listeners": [
+        {
+            "address": "192.168.1.14",
+            "port": 9960,
+            "https": false
+        },
         {
             "address": "127.0.0.1",
             "port": 9960,
-            "https": false,
-            "use_old_tls": true,
-            "key": "bf.pem",
-            "cert": "bf.crt"
+            "https": false
         }
     ],
     // Drogon app configuration

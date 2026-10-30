@@ -4,7 +4,7 @@
 HANDLEF(UserInfo)
 {
 	UserInfoReq req = {};
-	const auto& ec = glz::read_json(req, json);
+	const auto& ec = glz::read<glz::opts{.error_on_unknown_keys = false}>(req, json);
 	if (ec)
 	{
 		const auto& fmte = glz::format_error(ec, json);

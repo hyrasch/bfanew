@@ -792,6 +792,11 @@ json LoginInfoReq {  // # TODO: actually support (GumiLiveInfo), as it's not sup
         doc "Device advertisement ID (the same as vid in the gumi api login)"
     }
 
+    field advertising_id type="str" {
+        key "6K7LToCD"
+        doc "Android advertising ID (CommonUtils::getDeviceAdvertisingID); the Android client always sends it, WinRT did not"
+    }
+
     field pointer_name type="str" {
         key "fKSzGDFb"
         doc "TODO"
