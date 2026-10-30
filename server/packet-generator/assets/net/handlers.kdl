@@ -42,6 +42,8 @@ import "../net/mission_start.kdl"
 import "../net/mission_end.kdl"
 import "../net/deck_edit.kdl"
 import "../net/unit_mix.kdl"
+import "../net/unit_sell.kdl"
+import "../net/unit_evo.kdl"
 
 json GachaActionParam {
     doc "Which summon the client wants to perform (GachaActionRequest::createBody)"
@@ -299,6 +301,117 @@ json UnitMixResp {
 
     field result type="[UnitOpeResult]::size(1)" {
         key "1ZbHB6Im"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field unit_info type="[UserUnitInfo]" {
+        key "4ceMWH6k"
+        doc "TODO"
+    }
+}
+
+json UnitSellReq {
+    doc "UnitSell command (request id Ri3uTq9b): units sold on the Sell Units screen"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field info type="[UnitSellInfo]::size(1)" {
+        key "60subGk3"
+        doc "TODO"
+    }
+
+    field cost type="[UnitSellCost]::size(1)" {
+        key "mCE3rUu5"
+        doc "TODO"
+    }
+
+    field units type="[UnitSellUnit]" {
+        key "Km35HAXv"
+        doc "the units sold"
+    }
+}
+
+json UnitSellResp {
+    doc "UnitSell reply: the wallet and the whole box"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field unit_info type="[UserUnitInfo]" {
+        key "4ceMWH6k"
+        doc "TODO"
+    }
+}
+
+json UnitEvoReq {
+    doc "UnitEvo command (request id 0gUSE84e): evolve a unit"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field info type="[UnitEvoInfo]::size(1)" {
+        key "60subGk3"
+        doc "TODO"
+    }
+
+    field cost type="[UnitEvoCost]::size(1)" {
+        key "mCE3rUu5"
+        doc "TODO"
+    }
+
+    field materials type="[UnitEvoMaterial]" {
+        key "8Z2NQrx1"
+        doc "base then materials, typed"
+    }
+
+    field units type="[UnitEvoUnit]" {
+        key "Km35HAXv"
+        doc "base then unit materials"
+    }
+
+    field target type="[UnitEvoTarget]::size(1)" {
+        key "I82p0wCL"
+        doc "the unit id to evolve into"
+    }
+}
+
+json UnitEvoResp {
+    doc "UnitEvo reply: the evolution result, the wallet and the whole box"
+
+    field result type="[UnitOpeEvo]::size(1)" {
+        key "I82p0wCL"
         doc "TODO"
     }
 

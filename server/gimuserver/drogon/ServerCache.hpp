@@ -56,6 +56,16 @@ public:
 	*/
 	inline const UnitTable& units() const { return m_units; }
 
+	/*! bfanew: the evolution table (deploy/evos.json). */
+	inline const EvoTable& evos() const { return m_evos; }
+
+	/*! The evolution of a unit, nullptr if it has none. */
+	inline const EvoDef* evo(int32_t unitId) const
+	{
+		const auto it = m_evos.find(std::to_string(unitId));
+		return it == m_evos.end() ? nullptr : &it->second;
+	}
+
 	/*! A unit definition, nullptr if unknown. */
 	inline const UnitDef* unit(int32_t unitId) const
 	{
@@ -92,6 +102,11 @@ private:
 	* bfanew: unit table.
 	*/
 	UnitTable m_units;
+
+	/*!
+	* bfanew: evolution table.
+	*/
+	EvoTable m_evos;
 
 	/*!
 	* Cached data of response.

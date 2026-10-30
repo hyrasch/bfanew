@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <utility>
 #include <vector>
 
@@ -32,6 +33,44 @@ namespace NewPlayer
 		d.total_exp = 1;
 		d.unit_id = 50253;
 		return d;
+	}
+
+	/*! A fresh level-1 unit of the unit table (deploy/units.json), user_unit_id unset. */
+	inline UserUnitInfo UnitFromTable(int32_t unitId, const UnitDef& def, int32_t unitType = 1)
+	{
+		static constexpr const char* kElements[] = { "", "fire", "water", "earth", "thunder", "light", "dark" };
+		UserUnitInfo d = {};
+		d.unit_id = unitId;
+		d.unit_type_id = unitType; // 1 Lord, 2 Anima, 3 Breaker, 4 Guardian, 5 Oracle (not the rarity)
+		d.unit_lv = 1;
+		d.exp = 0;
+		d.total_exp = 0;
+		d.base_hp = def.hp.empty() ? 1 : def.hp[0];
+		d.base_atk = def.atk.empty() ? 1 : def.atk[0];
+		d.base_def = def.def_.empty() ? 1 : def.def_[0];
+		d.base_heal = def.rec.empty() ? 1 : def.rec[0];
+		d.element = (def.element >= 1 && def.element <= 6) ? kElements[def.element] : "fire";
+		d.leader_skill_id = def.ls_id;
+		d.skill_id = def.bb_id;
+		d.skill_lv = 1;
+		d.extra_skill_id = def.es_id;
+		d.new_flag = true;
+		d.receive_date = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+		return d;
+	}
+
+	/*! Puts a unit at a level: exp from the unit's exp pattern, stats interpolated (Units::StatAt). */
+	inline void SetUnitLevel(UserUnitInfo& u, const UnitDef& def, int32_t lv)
+	{
+		const auto& cache = theServer()->cache();
+		lv = std::max<int32_t>(1, std::min<int32_t>(lv, def.max_level));
+		u.unit_lv = lv;
+		u.total_exp = static_cast<int32_t>(cache.expForLevel(def.exp_pattern, lv));
+		u.exp = 0;
+		u.base_hp = Units::StatAt(def.hp, lv, def.max_level);
+		u.base_atk = Units::StatAt(def.atk, lv, def.max_level);
+		u.base_def = Units::StatAt(def.def_, lv, def.max_level);
+		u.base_heal = Units::StatAt(def.rec, lv, def.max_level);
 	}
 
 	/*! Fills the level-dependent fields of a team from the level table (user_level.json). */

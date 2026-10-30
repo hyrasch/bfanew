@@ -103,8 +103,9 @@ missions 1, 2, 10 permitted, tutorial missions cleared). Stored: wallet, level, 
 point per `energy_regen_seconds`, 180), units (`UserUnitInfo` as JSON), squads, cleared missions,
 permitted places, mission runs, item pickups (counts only, not shown yet). Handlers that write:
 GachaAction (units, gems / honor points), MissionStart (energy, run), MissionEnd (rewards, level,
-clears, unlocks, items), DeckEdit (squads, helper squads, handle name), UnitMix (fusion). Not
-implemented: evolution, sell, items and warehouse packets, town, arena, gifts, friends, shop. Handler registry:
+clears, unlocks, items), DeckEdit (squads, helper squads, handle name), UnitMix (fusion), UnitEvo
+(evolution), UnitSell. Not implemented: items and warehouse packets (so no item materials, no
+item pickups shown), town, arena, gifts, friends, shop. Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
 version list is `deploy/system/version_info.json` (169 tables). Per-mission battle data is
@@ -505,6 +506,36 @@ numbers the Fuse screen predicts (checked: zel 200 and XP 306 for a lv1 same-ele
   units. Verified: Selena lv 6 + a lv 1 Magress -> lv 8 (+204 exp, 700 zel), the level-up
   animation and result screen play, the box and wallet persist.
 
+**Selling / UnitSell (2026-10-30):** `Ri3uTq9b` (key `92VqcGFWuPkmT60U`, `gimuserver/gme/UnitSell.cpp`,
+`net/unit_sell.kdl`). The client sells locally ("Units sold for N Zel", the box shrinks) and
+only sends the request when **leaving** the Sell Units screen (`UnitSellRequest::addResult`
+queues them): `60subGk3` {`n7Pmh6ex` count}, `mCE3rUu5` {`Rs7bCE3t` zel}, `Km35HAXv` list of
+{`mnZ5K4Ii` order 2.., `edy7fq3L` user unit id}. The server removes the units (and their squad
+slots), credits `sell_price` from `units.json` and answers wallet + box. Verified: a Fencer
+Vargas sold for 300 zel, gone after relaunch.
+
+**Evolution / UnitEvo (2026-10-30):** `0gUSE84e` (key `biHf01DxcrPou5Qt`, `gimuserver/gme/UnitEvo.cpp`,
+`net/unit_evo.kdl`). The client enables Evolve only at the base's max level ("Insufficient Lv"
+otherwise) and with the F_UNIT_EVO_MST materials owned. Request: `8Z2NQrx1` list of {`mnZ5K4Ii`
+order (1 = base), `29MgiJIQ` type (1 unit, 2 item), `inU8Q4gL` user unit id / item id},
+`mCE3rUu5` {`Rs7bCE3t` zel}, `I82p0wCL` {`pn16CNah` target unit id}, `60subGk3` {`q7DwK6Am` 1};
+the `Km35HAXv` list of the summoner-unit variant is NOT sent. Reply: `I82p0wCL` **UnitOpeEvo**
+(`pn16CNah` new unit id, `edy7fq3L` user unit id, `t9FEW2KC` / `u1ECvfg8` the ids before,
+`dV3qji4I` evolution type 0), wallet, box. The server checks the recipe in
+**`server/deploy/evos.json`** (`tools/build_units.py --evos`, from the decoded F_UNIT_EVO_MST:
+evolved id, zel, karma, materials), requires max level, consumes the unit materials and the
+zel, and rewrites the base as the evolved unit at level 1 (same user unit id, BB level and type
+kept). Item materials (type 2) are refused until the warehouse exists. Verified: Selena lv 12 +
+Water Nymph (20130) -> Glacial Selena (20012) with the evolution animation, "RARE!!" reveal,
+2,500 zel.
+- Dev route **`GET /bfanew/give?user=<gumi user id or user id>&unit=<unit id>&count=1&lv=1`**
+  (`DevController::HandleGive`) puts units in a box, for materials and max-level bases (there
+  is no drop source for Nymphs yet). `NewPlayer::UnitFromTable` / `SetUnitLevel` build the
+  record from `units.json`.
+- Unit **type** (`nBTx56W9` unit_type_id: 1 Lord, 2 Anima, 3 Breaker, 4 Guardian, 5 Oracle) was
+  being filled with the rarity by the summon (the sell list said "[Anima] Fencer Vargas"); now
+  random 1-5 on summon, 1 for given units, kept through evolution.
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -563,7 +594,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: evolution (`UnitEvo`), sell (`UnitSell`), the warehouse (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: the warehouse / items (`UserWarehouseInfo` packet, item pickups, item evolution materials) (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
 5. Test feature flags system by system.
 
 ## Conventions

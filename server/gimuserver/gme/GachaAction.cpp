@@ -139,7 +139,8 @@ HANDLEF(GachaAction)
 		const auto& u = pick(gachaId);
 		UserUnitInfo d = {};
 		d.unit_id = u.unit_id;
-		d.unit_type_id = u.rarity;
+		// unit type (1 Lord, 2 Anima, 3 Breaker, 4 Guardian, 5 Oracle), random like the real summon
+		d.unit_type_id = std::uniform_int_distribution<int>(1, 5)(rng());
 		d.unit_lv = 1;
 		d.exp = 0;
 		d.total_exp = 0;

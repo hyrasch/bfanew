@@ -91,6 +91,8 @@ namespace GmeHandlers
 	HANDLE(MissionStart);
 	HANDLE(MissionEnd);
 	HANDLE(UnitMix);
+	HANDLE(UnitEvo);
+	HANDLE(UnitSell);
 	HANDLE(UpdateInfoLight);
 	HANDLE(UserInfo);
 }

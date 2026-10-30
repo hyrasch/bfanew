@@ -78,7 +78,8 @@ void ServerCache::Setup(const Json::Value& serverObj)
 
 	m_feature = LoadJson<FeatureCheck>(mstRoot, "features.json");
 	m_units = LoadJson<UnitTable>(".", "units.json"); // bfanew: tools/build_units.py
-	LOG_INFO << "bfanew: " << m_units.size() << " units in the unit table";
+	m_evos = LoadJson<EvoTable>(".", "evos.json");
+	LOG_INFO << "bfanew: " << m_units.size() << " units in the unit table, " << m_evos.size() << " evolutions";
 	m_controlCenterRsp = LoadJson<SlotGameInfoR>(mstRoot, "brave_slots.json");
 
 	{

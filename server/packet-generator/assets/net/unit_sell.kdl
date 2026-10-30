@@ -1,0 +1,35 @@
+// UnitSell (request id Ri3uTq9b, encode key 92VqcGFWuPkmT60U): selling units. The client applies the
+// sale locally ("Units sold for N Zel") and sends the request when leaving the Sell Units screen
+// (UnitSellRequest::addResult queues the units). Keys from UnitSellRequest::createBody.
+
+json UnitSellInfo {
+    doc "Request group 60subGk3"
+
+    field unit_count type="i32::str" {
+        key "n7Pmh6ex"
+        doc "number of units sold"
+    }
+}
+
+json UnitSellCost {
+    doc "Request group mCE3rUu5"
+
+    field zel type="i32::str" {
+        key "Rs7bCE3t"
+        doc "zel the client credited itself (sum of the units' sell prices)"
+    }
+}
+
+json UnitSellUnit {
+    doc "Request list Km35HAXv"
+
+    field order type="i32::str" {
+        key "mnZ5K4Ii"
+        doc "2.. (1 would be a base, there is none)"
+    }
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "TODO"
+    }
+}

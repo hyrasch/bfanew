@@ -1,0 +1,92 @@
+// UnitEvo (request id 0gUSE84e, encode key biHf01DxcrPou5Qt): evolution. Keys from
+// UnitEvoRequest::createBody (request) and UnitOpeEvoResponse::readParam (reply). The client only
+// enables Evolve when the base is at its max level and the F_UNIT_EVO_MST materials are owned.
+
+json UnitEvoInfo {
+    doc "Request group 60subGk3"
+
+    field unk type="i32::str" {
+        key "q7DwK6Am"
+        doc "TODO"
+    }
+}
+
+json UnitEvoCost {
+    doc "Request group mCE3rUu5"
+
+    field zel type="i32::str" {
+        key "Rs7bCE3t"
+        doc "zel the client expects to pay (F_UNIT_EVO_MST zel)"
+    }
+}
+
+json UnitEvoMaterial {
+    doc "Request list 8Z2NQrx1: the base (order 1) then every material, units by user unit id and items by item id"
+
+    field order type="i32::str" {
+        key "mnZ5K4Ii"
+        doc "1 = base, 2.. = materials"
+    }
+
+    field material_type type="i32::str" {
+        key "29MgiJIQ"
+        doc "1 unit, 2 item"
+    }
+
+    field id type="i32::str" {
+        key "inU8Q4gL"
+        doc "user unit id (type 1) or item id (type 2)"
+    }
+}
+
+json UnitEvoUnit {
+    doc "Request list Km35HAXv: not sent by the 2.19.6.0 client (only 8Z2NQrx1 is), kept in case"
+
+    field order type="i32::str" {
+        key "mnZ5K4Ii"
+        doc "TODO"
+    }
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "TODO"
+    }
+}
+
+json UnitEvoTarget {
+    doc "Request group I82p0wCL"
+
+    field unit_id type="i32::str" {
+        key "pn16CNah"
+        doc "the F_UNIT_MST id the base evolves into (UserState::getEvoMst)"
+    }
+}
+
+json UnitOpeEvo {
+    doc "Reply group I82p0wCL (UnitOpeEvoResponse::readParam -> UnitEvoInfo)"
+
+    field unit_id type="str" {
+        key "pn16CNah"
+        doc "the evolved unit's F_UNIT_MST id"
+    }
+
+    field user_unit_id type="str" {
+        key "edy7fq3L"
+        doc "the evolved unit (same user unit id as the base)"
+    }
+
+    field unit_id_before type="str" {
+        key "t9FEW2KC"
+        doc "the base's F_UNIT_MST id"
+    }
+
+    field user_unit_id_before type="str" {
+        key "u1ECvfg8"
+        doc "the base's user unit id"
+    }
+
+    field evolution_type type="i32::str" {
+        key "dV3qji4I"
+        doc "0 so far"
+    }
+}

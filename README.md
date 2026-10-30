@@ -15,8 +15,8 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
   with the 2013/2014 art) and plays quests: world map, mission list, battles with the 2014
   enemy data (from the community datamine captures), result screen.
 - Accounts are persistent (SQLite): one per device, with units, squads, wallet, level, energy,
-  cleared missions and unlocked places; squads can be edited and units fused. Evolution,
-  selling, items, town, arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
+  cleared missions and unlocked places; squads can be edited, units fused, evolved and sold.
+  Items, town, arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
 - `CLAUDE.md` is the working log: layout, build and run commands, what the client does on the
   wire, what was patched and why, and the next steps. Read it first.
 
@@ -29,7 +29,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 | `tools/patch_apk.py` | Points the 2.19.6.0 APK at a private server (host strings, `https` to `http`), then aligns and signs it with the Android SDK tools. |
 | `tools/dev.py` | The dev loop: build, serve, reload data, drive the game on BlueStacks, read the request log. |
 | `tools/build_battles.py` | Builds `server/deploy/battle/*.json` (per-mission enemy data for MissionStart) from the community datamine's 2014 captures. |
-| `tools/build_units.py` | Builds `server/deploy/units.json`, the server-side unit table (stats, exp pattern, max level) from the decoded unit MST. |
+| `tools/build_units.py` | Builds `server/deploy/units.json` (the server-side unit table: stats, exp pattern, max level, sell price) and `evos.json` (evolution recipes) from the decoded MSTs. |
 | `server/deploy/battle/` | Those files, 204 missions so far. |
 | `data/*_timeline.json` | First month each unit / mission appeared in Global, derived from the community datamine history; drives the phase cutoff. |
 | `GAP_ANALYSIS.md` | What the upstream server does and does not do, and how phasing fits. |

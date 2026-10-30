@@ -44,6 +44,24 @@ struct glz::meta<UnitDef>
 
 using UnitTable = std::unordered_map<std::string, UnitDef>;
 
+/*! One material of an evolution: type 1 = unit (F_UNIT_MST id), 2 = item. */
+struct EvoMaterial
+{
+	int32_t type = 1;
+	int32_t id = 0;
+};
+
+/*! deploy/evos.json (F_UNIT_EVO_MST): what a unit evolves into and what it costs. */
+struct EvoDef
+{
+	int32_t evo_unit_id = 0;
+	int32_t zel = 0;
+	int32_t karma = 0;
+	std::vector<EvoMaterial> materials;
+};
+
+using EvoTable = std::unordered_map<std::string, EvoDef>;
+
 namespace Units
 {
 	/*! A stat at a level: linear between the level-1 and the max-level value (good enough until the real curve is known). */
