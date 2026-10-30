@@ -330,6 +330,18 @@ with the honor points decremented. How the client consumes it (all from the disa
   response class, extracted from `GameResponseParser::getResponseObject`. Use it to know
   which key a handler must answer with.
 
+**Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
+all open **without a single server request**: they work from the unit box, decks and master
+tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
+the squad cost limit shown as "COST x/limit" (now taken from `user_level.json` for the
+player's level, 100 at level 1 in the 2022 table) and `TwqMChon` are the three helper
+squad numbers (now 0,1,2). Leaving Manage Squad still shows "The same Unit has been placed
+in all Helper Squads": the stub has one unit and it leads all ten squads, so it is true;
+OK dismisses it, and it disappears once decks differ (persistence, step 4). The server-side
+operations of this tab (DeckEdit `m2Ve9PkJ` is a stub, UnitMix/UnitEvo/UnitSell/
+UnitFavorite are not registered) only fire when something is changed, not when browsing.
+Town shows Imperial Capital Randall and Karl's greeting from town data alone.
+
 Fixed on the way (both in the fork):
 1. `6K7LToCD` (advertising id) in `LoginInfoReq` + `error_on_unknown_keys=false` in the
    Initialize/UserInfo reads (commit 80d33eb).
@@ -373,7 +385,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK; home screen, Summon scene with the two launch banners, a working Honor/Rare summon). Next on the client side: follow the request log through Unit, Town, Quest; summons need a real pool/rates and persistence (step 4).
+1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Next on the client side: Quest (Vortex Gate / world map, MissionStart is a stub) and the write operations (DeckEdit, fusion, sell) once persistence exists.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.

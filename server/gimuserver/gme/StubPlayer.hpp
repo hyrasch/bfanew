@@ -43,10 +43,16 @@ namespace StubPlayer
 	inline void FillTeam(UserTeamInfo& t, const ServerConfig& scfg)
 	{
 		t.user_id = kUserId;
-		// "TwqMChon" is serialised as "a,b,c"; the client splits it and StrToInt()s every
-		// piece, and an empty string there is a null read (crash seen in GachaAction).
-		t.reinforcement_deck = { 0, 0, 0 };
+		// "TwqMChon" is serialised as "a,b,c": the squad numbers used as helper squads 1/2/3.
+		// The client splits it and StrToInt()s every piece (an empty string is a null read,
+		// crash seen in GachaAction), and equal numbers give the "same unit placed in all
+		// Helper Squads" caution when leaving Manage Squad.
+		t.reinforcement_deck = { 0, 1, 2 };
 		t.level = 1;
+		// cost limit shown in Manage Squad ("COST x/limit"): from the level table
+		t.deck_cost = 0;
+		for (const auto& lv : theServer()->cache().initializeResp().progression)
+			if (lv.level == t.level) { t.deck_cost = lv.deck_cost; break; }
 		t.exp = 0;
 		t.warehouse_count = 100;
 		t.add_unit_count = 100;

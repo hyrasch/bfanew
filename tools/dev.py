@@ -2,7 +2,7 @@
 """
 dev.py - one-command iteration loop for bfanew (Windows).
 
-    python tools/dev.py build [--configure]   build the server (VS dev shell + Ninja)
+    python tools/dev.py build [--configure]   stop the server, build it (VS dev shell + Ninja)
     python tools/dev.py serve                 run the server in the foreground (use in a terminal tab)
     python tools/dev.py restart               stop the running server, start it detached
     python tools/dev.py stop
@@ -62,6 +62,13 @@ COORDS = {
     "door": (0.499, 0.512),           # summon door / result screen tap-through
     "popup_close": (0.311, 0.843),
     "popup_claim": (0.499, 0.843),
+    "back": (0.078, 0.219),           # the scene's Back button (top-left of the sub-header)
+    "unit_view": (0.266, 0.375),      # Unit menu
+    "unit_squad": (0.734, 0.375),
+    "unit_fusion": (0.266, 0.543),
+    "unit_evolve": (0.734, 0.543),
+    "unit_sphere": (0.266, 0.715),
+    "unit_sell": (0.734, 0.715),
     "terms_checkbox": (0.142, 0.696),
     "terms_agree": (0.499, 0.854),
     "phone_ok": (0.499, 0.658),
@@ -245,6 +252,8 @@ def cmd_serve(_):
 def cmd_build(a):
     if not Path(VSDEVCMD).exists():
         sys.exit(f"VsDevCmd.bat not found at {VSDEVCMD}")
+    if not getattr(a, "keep", False):
+        cmd_stop(None)  # the link step needs the exe free; a `serve` tab shows the exit and can be re-run
     steps = []
     if a.configure:
         steps.append("cmake --preset debug-win64-ninja")
@@ -416,7 +425,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--device", default=DEVICE)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    b = sub.add_parser("build"); b.add_argument("--configure", action="store_true"); b.set_defaults(f=cmd_build)
+    b = sub.add_parser("build"); b.add_argument("--configure", action="store_true"); b.add_argument("--keep", action="store_true", help="do not stop a running server first"); b.set_defaults(f=cmd_build)
     sub.add_parser("serve").set_defaults(f=cmd_serve)
     sub.add_parser("start").set_defaults(f=cmd_start)
     sub.add_parser("stop").set_defaults(f=cmd_stop)
