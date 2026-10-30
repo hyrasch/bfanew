@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include <cstdio>
 
 #include <gimuserver/gme/NewPlayer.hpp>
 
@@ -91,6 +92,34 @@ HANDLEF(MissionEnd)
 	p.team.zel += r.zel;
 	p.team.karma += r.karma;
 	p.team.exp += r.inc_exp;
+
+	// first clear: the mission's own rewards (F_MISSION_MST missionRewards, deploy/battle first_clear,
+	// "type:id:count": 8 gems, 2 zel, 3 karma) plus one gem for every mission, because gems are
+	// free here (see CLAUDE.md "Free economy"). The client reads 92ms7J5M as "type:id:count,..."
+	// (MissionResultBaseScene::getRewardBraveCoin / getRewardBonusZel / getRewardBonusKaruma).
+	if (cleared && !(co_await Db::IsCleared(p.user_id, missionId)))
+	{
+		int32_t gems = 1, zel = 0, karma = 0;
+		for (const auto& e : data.first_clear)
+		{
+			int type = 0, id = 0, count = 0;
+			if (std::sscanf(e.c_str(), "%d:%d:%d", &type, &id, &count) < 3) continue;
+			if (type == 8) gems += count;
+			else if (type == 2) zel += count;
+			else if (type == 3) karma += count;
+			else LOG_WARN << "MissionEnd: first-clear reward type " << type << " (id " << id << ") not granted for mission " << missionId;
+		}
+		// the client wants three fields per entry (MissionResultBaseScene::getRewardBraveCoin skips
+		// anything shorter): type:id:count, the amount is the third
+		r.clear_bonus = "8:0:" + std::to_string(gems);
+		if (zel > 0) r.clear_bonus += ",2:0:" + std::to_string(zel);
+		if (karma > 0) r.clear_bonus += ",3:0:" + std::to_string(karma);
+		p.team.brave_coin += gems; // the gem balance the client shows and spends (03UGMHxF)
+		p.team.free_gems += gems;  // the free / paid split, kept in step
+		p.team.zel += zel;
+		p.team.karma += karma;
+		LOG_DEBUG << "MissionEnd: first clear of " << missionId << " -> " << r.clear_bonus;
+	}
 
 	// level from the level table (user_level.json): the highest level whose exp is reached
 	int32_t newLv = beforeLv;

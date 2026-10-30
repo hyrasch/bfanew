@@ -63,7 +63,7 @@ namespace
 	};
 
 	constexpr int32_t kRareGacha = 2000;
-	constexpr int32_t kGemCost = 5;
+	constexpr int32_t kGemCost = 1; // bfanew: cheap summons (the gacha table says 1 Gem too)
 	constexpr int32_t kHonorCost = 200;
 
 	// GachaEffectMst ids (deploy/system/gacha_effects.json) per gacha and rarity.
@@ -117,11 +117,14 @@ HANDLEF(GachaAction)
 	if (gachaId == kRareGacha)
 	{
 		const auto cost = kGemCost * count;
-		if (p.team.free_gems + p.team.paid_gems < cost)
+		// the gem balance the client shows and checks is brave_coin (03UGMHxF, the gacha table's
+		// price is in it too); free_gems / paid_gems are the accounting split, kept in step
+		if (p.team.brave_coin < cost)
 			co_return HandleResult::error("Not enough gems");
+		p.team.brave_coin -= cost;
 		const auto fromFree = std::min(cost, p.team.free_gems);
 		p.team.free_gems -= fromFree;
-		p.team.paid_gems -= cost - fromFree;
+		p.team.paid_gems = std::max(0, p.team.paid_gems - (cost - fromFree));
 	}
 	else
 	{

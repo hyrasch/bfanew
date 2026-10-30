@@ -81,6 +81,24 @@ def load_mission_places(mst_zip):
     return places
 
 
+def load_mission_rewards(mst_zip):
+    """mission id -> first-clear rewards from F_MISSION_MST missionRewards, a list of
+    "type:id:count" (type 8 = gems, 2 = zel, 3 = karma, 1 = unit, 4 = item; the MST carries
+    "type:id:count:x:y" entries separated by commas)."""
+    rewards = {}
+    with zipfile.ZipFile(mst_zip) as z:
+        for n in z.namelist():
+            if n.startswith("3-mst-translated/F_MISSION_MST"):
+                for m in json.loads(z.read(n)):
+                    out = []
+                    for e in (m.get("missionRewards") or "").split(","):
+                        f = e.split(":")
+                        if len(f) >= 3 and f[0]:
+                            out.append(f"{f[0]}:{f[1]}:{f[2]}")
+                    rewards[m["missionId"]] = out
+    return rewards
+
+
 def ai_rows(ai_id, ai_json, fallback):
     """AIMst rows (wire keys) for one ai id."""
     src = ai_json.get(str(ai_id)) or fallback or {}
@@ -113,7 +131,7 @@ def ai_rows(ai_id, ai_json, fallback):
     return rows
 
 
-def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlocks=()):
+def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlocks=(), first_clear=()):
     mid = str(mission_id)
     out = {
         "energy_use": int(info.get("energy_use", 0)),
@@ -122,6 +140,7 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
         "zel": int(info.get("zel", 0)),
         "karma": int(info.get("karma", 0)),
         "unlocks": list(unlocks),
+        "first_clear": list(first_clear),
         "pj41dy9g": [], "75t0sx9z": [], "n64NOpfy": [], "U0v5IeJo": [], "89ausgc4": [], "m9Ada1PN": [],
     }
     ai_ids = {}
@@ -223,6 +242,7 @@ def main():
     ai_json = json.load(open(os.path.join(dm, "ai.json"), encoding="utf-8"))
     units = load_units(a.mst)
     places = load_mission_places(a.mst)
+    rewards = load_mission_rewards(a.mst)
     unlocked_by = {}
     for mid, info in missions.items():
         for req in str(info.get("requires", "0")).split(","):
@@ -259,7 +279,7 @@ def main():
         for mid, info in targets:
             if only and mid not in only:
                 continue
-            out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()))
+            out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()))
             with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
                 json.dump(out, fo, ensure_ascii=False, indent=1)
             written += 1
@@ -282,7 +302,7 @@ def main():
         src = min(siblings, key=lambda m: abs(int(m) - int(mid)) if m.isdigit() and mid.isdigit() else 1 << 30)
         data = json.load(open(captured_ids[src], encoding="utf-8"))
         battles = next(iter(data.values())).get("battles", [])
-        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()))
+        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()))
         out["borrowed_from"] = src
         with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
             json.dump(out, fo, ensure_ascii=False, indent=1)

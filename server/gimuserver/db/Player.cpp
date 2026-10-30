@@ -291,6 +291,12 @@ namespace Db
 			userId, static_cast<int64_t>(missionId), date);
 	}
 
+	Task<bool> IsCleared(std::string userId, int32_t missionId)
+	{
+		const auto res = co_await theDb()->execSqlCoro("SELECT 1 FROM player_clears WHERE user_id = $1 AND mission_id = $2 LIMIT 1", userId, missionId);
+		co_return res.size() > 0;
+	}
+
 	Task<std::vector<PermitPlace>> LoadPermits(std::string userId)
 	{
 		std::vector<PermitPlace> out;

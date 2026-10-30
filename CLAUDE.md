@@ -105,7 +105,8 @@ permitted places, mission runs, the warehouse (item pickups) and the items equip
 Handlers that write: GachaAction (units, gems / honor points), MissionStart (energy, run),
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
-UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis). Stubs: DungeonEventUpdate (story events watched,
+UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, slot
+extensions, all free). Stubs: DungeonEventUpdate (story events watched,
 not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: item synthesis (ItemMix), town facilities, arena, gifts, friends,
 shop, town facility upgrades. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
@@ -650,6 +651,51 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   guides; item screens (`ItemTopScene`, scene reached from `GameScene::getGameScene`) are in the
   village. The Randall facility map is `RandallTopScene` (home icon next to MENU).
 
+**Free economy (2026-10-30, design rule):** nobody pays for anything on this server. Energy
+refills, unit-slot and warehouse extensions, continues and friend slots cost **0 gems**, gem
+summons cost **1 gem**, and every first mission clear gives at least one gem.
+- The client's gem balance is **`brave_coin`** (`03UGMHxF` in `UserTeamInfo`): that is what the
+  header shows, what the summon dialog compares ("Available: N Gem(s)") and what ShopUse / the
+  gacha tables price in. `free_gems` / `paid_gems` (`92uj7oXB` / `d37CaiX1`) are only the
+  free-vs-paid split; the server keeps them in step but never shows them. GachaAction now pays
+  from `brave_coin` (`kGemCost` 1).
+- Prices live in tables the client caches by version (`python tools/dev.py bump <MST>` after an
+  edit, the client re-reads at the next launch): `system/defines.json` (`DefineMst`, M_DEFINE_MST)
+  `C8KkHGa7` ActionPointHealCnt (energy refill gems), `sy9G24Su` FightPointHealCnt (arena),
+  `I73XkAQi` UnitBoxExtCnt, `CA01vo2Q` ItemBoxExtCnt, `QW3HiNv8` ContinuDiaCnt, `3Ep5akHJ`
+  FriendExtCnt, all 0 now; `eRQvzLeF` ActionPointThreshold (plain int) **had to be added**: the
+  energy "+" refuses with ENERGY_RECOVER_GEM_MAX_THRESHOLD when energy >= threshold, and a missing
+  key reads as 0 (9999 now); `hAiXsSPF` ActionPointRecoverFixed (0, the server refills to max
+  anyway). `system/gacha.json` (`GachaMst`, M_GACHA_MST) `03UGMHxF` gem price, 5 -> 1 on every
+  type-2 (gem) summon, "5 Gems" texts rewritten; **the summon dialog's price comes from
+  `system/gacha_info.json`** (UserInfo `1IR86sAv`, `GachaInfo::getNeedBraveCoin`, `03UGMHxF`),
+  1 there too (sent at login, no version bump).
+- `xe8tiSf4` **ShopUse** (key `qthMXTQSkz3KfH9R`, URL `/actionSymbol/T10fSAQ6.php`,
+  `gimuserver/gme/ShopUse.cpp`): everything the client pays gems for outside summons. The scenes
+  fill `UserState` (setShopUseType, setBravecoin = the define price, setExtCnt) and
+  `ShopUseRequest::createBody` sends one node of group `32ibWjFG`: `60IsqxDt` type, `03UGMHxF`
+  gems, `5gXxT7LZ` ext count, `rA9jDCP5`, `edy7fq3L` unit id, `T1IxCpTF`, `9i2xhMaJ`; group
+  `d2b8d79J` {`n37dK9Xi`}. Types: 1 energy refill (home "+" = `GameScene::confirmAnswerYesEnergy`,
+  `MissionSelectShortageStaminaScene`), 10 the same from the result's repeat prompt, 2 unit box
+  +ext (`ShopUnitBoxExtScene`), 3 warehouse +ext (`ShopItemBoxExtScene`), 7 friend slots +5,
+  5 continue after a defeat, 4 arena points, 6 stamp, 8 colosseum, 9 unit info reset, 11 / 12
+  summoner shop. The server never deducts gems; 1 / 10 set the energy to max, 2 / 3 grow
+  `max_unit_count` / `warehouse_count` (caps 4000 / 3200), the rest is accepted and ignored.
+  Reply: `fEi17cnx`. **Verified**: energy 11/17 -> "+" -> prompt -> Yes -> request type 1 with
+  0 gems -> 17/17, balance unchanged. Box extensions are unverified: their scenes sit in the
+  Shop tab, which kills the client on BlueStacks (SOOMLA billing, see "Multi Summon"); that
+  same `StoreController.startBillingService()` also killed the client at two launches tonight.
+- **First-clear rewards** (`MissionEnd`): `tools/build_battles.py` now exports F_MISSION_MST
+  `missionRewards` as `first_clear` (`"type:id:count"`, 8 gems, 2 zel, 3 karma, 1 unit, 4 item)
+  into `deploy/battle/<id>.json`; on a first clear the server grants them plus **1 gem for every
+  mission** and sends `92ms7J5M` as `type:id:count,...` (`MissionResultBaseScene::
+  getRewardBraveCoin` wants three fields and reads the third; `"8:1"` is silently dropped).
+  Unit / item first-clear rewards are logged, not granted yet. Verified: mission 20 first clear
+  -> `8:0:1`, balance 5 -> 6, "Summon once for 1 Gem(s) / You can summon 5 time(s)".
+- Known cosmetic issue: the texts ENERGY_RECOVER_GEM_RECOVER_ENERGY / _MAX_THRESHOLD show as raw
+  keys, the served text table predates them (the client's strings are the APK's `assets/text.csv`
+  plus downloaded ones; not located yet).
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -708,7 +754,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; next: energy purchase, town facility upgrades, item collection taps on the village locations (`TownUpdateRequest`).
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); next: town facility upgrades, item collection taps on the village locations (`TownUpdateRequest`), the energy-recovery texts.
 5. Test feature flags system by system.
 
 ## Conventions

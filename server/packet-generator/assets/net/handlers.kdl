@@ -555,6 +555,78 @@ json ItemMixResp {
     }
 }
 
+json ShopUseEntry {
+    doc "ShopUse request group 32ibWjFG (ShopUseRequest::createBody from UserState): what the gems buy"
+
+    field shop_use_type type="i32::str" {
+        key "60IsqxDt"
+        doc "UserState::setShopUseType: 1 energy refill (home +, stamina shortage), 10 energy refill from the result's repeat screen, 2 unit box +ext, 3 warehouse +ext, 4 arena points, 5 continue after a defeat, 6 stamp, 7 friend slots +5, 8 colosseum, 9 unit info reset, 11 summoner item, 12 summoner unit"
+    }
+
+    field gems type="i32::str" {
+        key "03UGMHxF"
+        doc "UserState::setBravecoin: the price the client took from the define table (ActionPointHealCnt, UnitBoxExtCnt...)"
+    }
+
+    field ext_cnt type="i32::str" {
+        key "5gXxT7LZ"
+        doc "UserState::setExtCnt: slots added for types 2 / 3 / 7"
+    }
+
+    field unk1 type="i32::str" {
+        key "rA9jDCP5"
+        doc "TODO"
+    }
+
+    field unit_id type="str" {
+        key "edy7fq3L"
+        doc "user unit id (type 9)"
+    }
+
+    field unk2 type="str" {
+        key "T1IxCpTF"
+        doc "TODO"
+    }
+
+    field unk3 type="i32::str" {
+        key "9i2xhMaJ"
+        doc "TODO"
+    }
+}
+
+json ShopUseReq {
+    doc "ShopUse command (request id xe8tiSf4, key qthMXTQSkz3KfH9R, URL /actionSymbol/T10fSAQ6.php): energy refill, unit box / warehouse / friend slot extension, continue... everything the client pays gems for outside summons"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field shop type="[ShopUseEntry]" {
+        key "32ibWjFG"
+        doc "one node"
+    }
+}
+
+json ShopUseResp {
+    doc "ShopUse reply: the wallet after the purchase (energy, box sizes, gems)"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+}
+
 json OpeUserUnit {
     doc "One summoned unit as the classic (non-resummon) GachaActionScene wants it: OpeUserUnitResponse sets UserState::setSelectUserUnitID / GachaUnitsList, setGachaChangeRateInfo and setGachaEffectID from these."
 

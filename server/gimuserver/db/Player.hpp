@@ -69,6 +69,8 @@ namespace Db
 
 	drogon::Task<std::vector<UserClearMissionInfo>> LoadClears(std::string userId);
 	drogon::Task<void> AddClear(std::string userId, int32_t missionId, std::string date);
+	/*! Whether the mission was already cleared once (first-clear rewards). */
+	drogon::Task<bool> IsCleared(std::string userId, int32_t missionId);
 
 	drogon::Task<std::vector<PermitPlace>> LoadPermits(std::string userId);
 	drogon::Task<void> AddPermit(std::string userId, int kind, std::string placeId);

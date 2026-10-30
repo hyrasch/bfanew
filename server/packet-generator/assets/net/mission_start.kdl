@@ -578,6 +578,11 @@ json MissionBattleData {
         doc "places opened by clearing this mission"
     }
 
+    field first_clear type="[str]" {
+        key "first_clear"
+        doc "bfanew: F_MISSION_MST missionRewards as type:id:count (8 gems, 2 zel, 3 karma, 1 unit, 4 item), granted on the first clear (tools/build_battles.py)"
+    }
+
     field battle_groups type="[BattleGroupMst]" {
         key "pj41dy9g"
         doc "TODO"
