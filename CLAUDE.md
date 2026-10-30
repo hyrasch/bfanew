@@ -218,11 +218,17 @@ request, decrypted body + response):
 `GET /dls` -> wallpaper -> `GET /accounts/guest/login/` -> `MfZyu1q9` Initialize (7.6 MB reply)
 -> `cTZ3W2JG` UserInfo -> `2o4axPIC` FriendGet -> `nJ3A7qFp` BadgeInfo -> `uYF93Mhc`
 ControlCenterEnter -> `ynB7X5P9` UpdateInfoLight -> `NiYWKdzs` HomeInfo (x3, stub `{}` is
-accepted) -> `Zw3WIoWu` ChallengeArenaResetInfo -> `Uo86DcRh` **GatchaList**, whose stub
-answers `error "Unsupported"`; the client process dies one second later (no tombstone in
-BlueStacks' logcat). Between those it downloads `/content/...` assets and `/mst/...` tables
-(the `webpage` logs). **Next missing piece: a real GatchaList handler** (summon list, data in
-`deploy/system/gacha_info.json`), since the home screen opens the summons top on its own.
+accepted) -> `Zw3WIoWu` ChallengeArenaResetInfo. The home screen renders fully (party, Vortex Gate /
+Light Featured Summon banners, bottom menu) after two startup popups ("Today's Tasks" ->
+Close, "Brave Burst 2022 Login Campaign" -> Claim). Opening the **Summon** tab sends
+`Uo86DcRh` **GatchaList**, now implemented (commit below): the Summon scene opens and the
+game keeps running, but its banner list is **empty** ("Select a type of Summon." with nothing
+to pick). The six banners in `deploy/system/gacha_info.json` are 2016-2022 entries with
+`TCnm1F4v` category ids 201..1549; the client (`SummonsCategorizationScene`,
+`GachaCategoryMstList`) matches them against the downloaded `F_GACHA_CATEGORY_MST` and
+start/end dates, so phase-1 banners will need consistent category + date data. Nothing
+else was requested on the Summon tab (no new `webpage`/MST fetches). Between those it
+downloads `/content/...` assets and `/mst/...` tables (the `webpage` logs).
 
 Fixed on the way (both in the fork):
 1. `6K7LToCD` (advertising id) in `LoginInfoReq` + `error_on_unknown_keys=false` in the
@@ -232,6 +238,11 @@ Fixed on the way (both in the fork):
    occurred during download" popup on any failed image, and the archive lacks ~850 files
    (`decompfrontier/docs/source/pages/Status/missing-asset.rst`), first hit:
    `/gacha/gacha_Light_Featured_img_2022_s2.png` (commit df95d7a).
+3. `GatchaList` handler (`gimuserver/gme/GatchaList.cpp`) + `GatchaListResp` in
+   `net/handlers.kdl`: the client maps the top-level key `1IR86sAv` to `GachaInfoResponse`
+   (`GameResponseParser::getResponseObject`), i.e. the same `GachaInfoMst` list that UserInfo
+   sends, so the handler returns the cached `gacha_info` table. The old stub error killed
+   the client one second after the home screen.
 
 Client-side quirks: on first launch the Java side opens a **Google Play Games sign-in**
 (`com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity`); press Back, the game
@@ -262,7 +273,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK; the client reaches the home screen). Next blocker: implement `GatchaList` (`Uo86DcRh`, stub kills the client), then whatever the summons top / home screen asks for next.
+1. Android patch: **done** (script, APK; the client reaches the home screen and the Summon scene). Next on the client side: make a banner show up in the Summon scene (category/date data), then follow the request log through Unit, Town, Quest.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.

@@ -39,6 +39,16 @@ import "../net/friends.kdl"
 import "../net/event.kdl"
 import "../net/featuring_gate.kdl"
 
+json GatchaListResp {
+    doc "Response of the GatchaList command (summons top / categorization scenes). The client maps the top-level key to GachaInfoResponse, i.e. the same banner list UserInfo sends."
+
+    field gachaInfo type="[GachaInfoMst]" {
+        key "1IR86sAv"
+        doc "Current summon banners"
+    }
+}
+
+
 json InitializeReq {
     doc "Initialization command"
 
