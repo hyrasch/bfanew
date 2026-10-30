@@ -277,10 +277,16 @@ with the honor points decremented. How the client consumes it (all from the disa
 - `StubPlayer.hpp` now holds the one hard-coded player (unit box, wallet) shared by UserInfo
   and GachaAction, and `ServerConfig` is finally filled from `config.json` (upstream never
   did; `initial_free_gems`, new `initial_friend_points`).
-- Multi Summon (5x) ended with `StoreController: opening store` -> `startBillingService()`
-  -> the app killing itself (`SIG 9`): the multi-summon result goes through the IAP flow,
-  which has no Google Play here. Multi summon did not exist in 2013, so
-  `features.json` `multisummon` is now 0 (button greyed out). Revisit with the shop.
+- Multi Summon (5x) works too (`multisummon` stays 1). The self-kill seen once
+  (`StoreController: opening store` -> `startBillingService()` -> `SIG 9`) is the **Shop
+  tab**: the Java SOOMLA `StoreController` opens Google Play billing when the gem shop
+  opens, and on BlueStacks with no Google account signed in `BillingClient` reports
+  "Billing service unavailable on device." and the app calls `killProcess`. There is no
+  feature flag for the shop (`freepaid_gems`, `shop_friend`, `slot`, `video_ads` gate other
+  things). Workarounds: sign in to Google Play inside BlueStacks (the sign-in prompt at
+  launch), or don't open the Shop tab there; a real device with Play services won't die.
+  Shop requests (`BuyCoinStart`, `BuyCoin`) are not implemented anyway.
+
 - `data/response_keys.txt`: the client's full table (489 rows) of top-level JSON key ->
   response class, extracted from `GameResponseParser::getResponseObject`. Use it to know
   which key a handler must answer with.
