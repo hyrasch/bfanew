@@ -197,8 +197,28 @@ Diff of its `libgame.so` vs the original (60 regions, `scratchpad rvdiff.py`):
   `MissionResultScene`/`ReinforcementInfoList` hooks, several code caves with new code
   (`0xe63080`, `0x12db460`, `0x16328e0`, `0x186b4e0`, ...). None of it is needed to log in.
 
-**Device:** a real device, the user's **Ayn Thor** (Android handheld, arm64), same as
-Revive. No emulator. Firewall rule for TCP 9960 inbound was added on 2026-10-30.
+**Device:** the user's **Ayn Thor** (Android 13, arm64) still has Revive's build (same
+package name, other key, so ours cannot be installed over it without uninstalling).
+For testing the user installed **BlueStacks** on the PC instead; it runs the arm64 APK
+through ARM translation and reports itself as `SM-S928B`, Android 16 to the server.
+Firewall rule for TCP 9960 inbound was added on 2026-10-30.
+
+**First run against our server (2026-10-30, BlueStacks):** the client went
+`GET /dls` -> `GET /content/wallpaper/title_logo20151028.jpg` -> `GET /accounts/guest/login/`
+-> `POST /bf/gme/action.php` request `MfZyu1q9` = **Initialize**. So DLS, scheme patch,
+gumi-live login and GME encryption all work; the milestone call is reached.
+The server answered `Unable to handle request: "MfZyu1q9", Error: "Deserialization error"`
+(`1:206: unknown_key`): the Android client sends login-info key `6K7LToCD`
+(= `CommonUtils::getDeviceAdvertisingID()`, also sent by `CreateUserRequest`,
+`InitializeRequest2`, `TransferRequest`), which `LoginInfoReq` in
+`packet-generator/assets/net/user.kdl` does not define, and glaze defaults to
+`error_on_unknown_keys = true`. The WinRT client the upstream devs used never sent it.
+Fix (needs the server fork, next step 2): add
+`field advertising_id type="str" { key "6K7LToCD" }` to `LoginInfoReq`, regenerate
+`gimuserver/packets`, rebuild; and consider `glz::opts{.error_on_unknown_keys=false}`
+in the handlers' `read_json` calls so other Android-only keys don't stop the flow.
+Each request is dumped decrypted to `deploy/log/http_log_<id>_<time>.log` (request and
+response), which is the way to see the next missing piece.
 
 **Server side done:** `deploy/config.json` now has two listeners, `192.168.1.14:9960`
 first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile is
@@ -208,7 +228,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: analysis and `tools/patch_apk.py` done, APK built. Still to do: install on the Ayn Thor, read the server request log (`deploy/log/`, TRACE level) to see how far the client gets, stub what is missing. Done = client reaches Initialize/UserInfo on our server.
+1. Android patch: **done** (script, APK, client reaches Initialize). Next blocker is server-side (see "First run"), so it folds into step 2.
 2. Fork decompfrontier/server into bfanew (keep AGPL, keep upstream history if possible), and add the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.
