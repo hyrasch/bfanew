@@ -1,0 +1,180 @@
+// UnitMix (request id Mw08CIg2, encode key JnegC7RrN3FoW8dQ): fusion, sent by
+// UnitMixConnectScene::initConnect. Keys from UnitMixRequest::createBody (request) and
+// UnitOpeResultResponse::readParam (reply); UnitMixPlayScene::parseMixResult reads the
+// level-up records.
+
+json UnitMixInfo {
+    doc "Request group 60subGk3"
+
+    field mix_type type="i32::str" {
+        key "81GjwoWy"
+        doc "1 so far"
+    }
+
+    field unit_count type="i32::str" {
+        key "2vnqRIr3"
+        doc "number of entries in Km35HAXv (base + materials)"
+    }
+}
+
+json UnitMixCost {
+    doc "Request group mCE3rUu5"
+
+    field zel type="i32::str" {
+        key "Rs7bCE3t"
+        doc "zel the client expects to pay (GameUtils::getMixGold: sum of (base level + material level) * 100)"
+    }
+}
+
+json UnitMixUnit {
+    doc "Request list Km35HAXv: the base first (order 1), then the materials"
+
+    field order type="i32::str" {
+        key "mnZ5K4Ii"
+        doc "1 = base, 2.. = materials"
+    }
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "TODO"
+    }
+}
+
+json UnitOpeResult {
+    doc "Reply group 1ZbHB6Im (UnitOpeResultResponse::readParam -> UnitOpeResult singleton): what happened to the base unit"
+
+    field unit_id type="str" {
+        key "pn16CNah"
+        doc "F_UNIT_MST id of the base"
+    }
+
+    field user_unit_id type="str" {
+        key "edy7fq3L"
+        doc "the base"
+    }
+
+    field zel type="i32::str" {
+        key "Najhr8m6"
+        doc "zel paid"
+    }
+
+    field exp type="i32::str" {
+        key "d96tuT2E"
+        doc "exp gained"
+    }
+
+    field success_type type="i32::str" {
+        key "6hMI5xeF"
+        doc "0 normal, 1 great success, 2 super success"
+    }
+
+    field before_lv type="i32::str" {
+        key "81CsGAR9"
+        doc "TODO"
+    }
+
+    field after_lv type="i32::str" {
+        key "MD8r7Wa0"
+        doc "TODO"
+    }
+
+    field before_exp type="i32::str" {
+        key "rQ9JVD0w"
+        doc "TODO"
+    }
+
+    field after_exp type="i32::str" {
+        key "K3iqB72Q"
+        doc "TODO"
+    }
+
+    field before_skill_lv type="i32::str" {
+        key "vZH12LoA"
+        doc "brave burst level before"
+    }
+
+    field after_skill_lv type="i32::str" {
+        key "8hVR4Fjr"
+        doc "brave burst level after"
+    }
+
+    field before_extra_skill_lv type="i32::str" {
+        key "g9DXe3HZ"
+        doc "TODO"
+    }
+
+    field after_extra_skill_lv type="i32::str" {
+        key "0xgWq5bD"
+        doc "TODO"
+    }
+
+    field lvup_status type="str" {
+        key "5Hi7MVQe"
+        doc "one record per level reached, lv:hp:atk:def:rec, records joined with commas (UnitMixPlayScene::parseMixResult)"
+    }
+
+    field param_up_state type="str" {
+        key "Xoq6z0VI"
+        doc "imp (stat potion) gains, empty = none"
+    }
+
+    field before_eqp_frame_id type="i32::str" {
+        key "WT2X78J1"
+        doc "TODO"
+    }
+
+    field after_eqp_frame_id type="i32::str" {
+        key "N2Iiemv4"
+        doc "TODO"
+    }
+
+    field before_eqp_frame_id2 type="i32::str" {
+        key "1wme6kJz"
+        doc "TODO"
+    }
+
+    field after_eqp_frame_id2 type="i32::str" {
+        key "m0fq76GY"
+        doc "TODO"
+    }
+
+    field before_fe_bp type="i32::str" {
+        key "0xhLsnDv"
+        doc "TODO"
+    }
+
+    field after_fe_bp type="i32::str" {
+        key "3YVEeL2a"
+        doc "TODO"
+    }
+
+    field before_fe_info type="str" {
+        key "TLbr6q4U"
+        doc "TODO"
+    }
+
+    field after_fe_info type="str" {
+        key "Wyn8wrxw"
+        doc "TODO"
+    }
+
+    field before_max_fe_bp type="i32::str" {
+        key "kuHWF7yc"
+        doc "TODO"
+    }
+
+    field after_max_fe_bp type="i32::str" {
+        key "ksED59z9"
+        doc "TODO"
+    }
+
+    field before_dbb_skill_level type="i32::str" {
+        key "KLpo4OX6"
+        doc "TODO"
+    }
+
+    field after_dbb_skill_level type="i32::str" {
+        key "lo7ebFla"
+        doc "TODO"
+    }
+}

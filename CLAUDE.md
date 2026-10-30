@@ -103,8 +103,8 @@ missions 1, 2, 10 permitted, tutorial missions cleared). Stored: wallet, level, 
 point per `energy_regen_seconds`, 180), units (`UserUnitInfo` as JSON), squads, cleared missions,
 permitted places, mission runs, item pickups (counts only, not shown yet). Handlers that write:
 GachaAction (units, gems / honor points), MissionStart (energy, run), MissionEnd (rewards, level,
-clears, unlocks, items), DeckEdit (squads, helper squads, handle name). Not implemented:
-fusion/evolution/sell, items and warehouse packets, town, arena, gifts, friends, shop. Handler registry:
+clears, unlocks, items), DeckEdit (squads, helper squads, handle name), UnitMix (fusion). Not
+implemented: evolution, sell, items and warehouse packets, town, arena, gifts, friends, shop. Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
 version list is `deploy/system/version_info.json` (169 tables). Per-mission battle data is
@@ -477,6 +477,34 @@ unit the player does not own are dropped. Note the request sends deck type / num
 while `UserPartyDeckInfo` (the reply) has them as ints, hence the separate `DeckEditEntry`.
 Verified: a unit placed in squad 1 is still there after a relaunch (`player_decks`).
 
+**Fusion / UnitMix (2026-10-30):** `Mw08CIg2` (key `JnegC7RrN3FoW8dQ`, `gimuserver/gme/UnitMix.cpp`,
+`net/unit_mix.kdl`), sent by `UnitMixConnectScene::initConnect`. Request: `Km35HAXv` list of
+{`mnZ5K4Ii` order, `edy7fq3L` user unit id}, order 1 = base, 2.. = materials; `mCE3rUu5`
+{`Rs7bCE3t` zel the client expects}; `60subGk3` {`81GjwoWy` 1, `2vnqRIr3` unit count}. Reply:
+`1ZbHB6Im` **UnitOpeResult** (before/after level, exp, BB level, `6hMI5xeF` success type 0/1/2,
+`5Hi7MVQe` one `lv:hp:atk:def:rec` record per level reached joined with commas, parsed by
+`UnitMixPlayScene::parseMixResult` with strtok, so a wrong separator is a null deref), `fEi17cnx`
+wallet, `4ceMWH6k` the whole box. The rules were read off the client so the server matches the
+numbers the Fuse screen predicts (checked: zel 200 and XP 306 for a lv1 same-element 2* material):
+- exp per material (`GameUtils::getMixExp`): material total exp / 2.5 + cost * 2 + adjust exp
+  (`unitAdditionalXpBoost`) + 100 / 200 / 500 / 1000 / 1500 / 3000 / 5000 / 10000 by rarity
+  1..8, x1.5 when the material has the base's element; Great / Super success multiply by the
+  define table rates (`2inP0tCg` 1.5, `zn65EXYF` 2.0; the chances, 10% / 2%, are ours);
+- zel (`GameUtils::getMixGold`): sum over materials of (base level + material level) * 100;
+- level from the unit's exp pattern (`unit_exp_pattern.json`: `5UvTp7q1` pattern, `D9wXQI2V`
+  level, `grKTq15A` total exp), capped at the unit's max level; stats interpolated linearly
+  between the level-1 and max-level values (the real curve is not known yet);
+- BB level: each material with the base's brave burst (same bb id or same unit family) has a
+  20% chance to raise it (max 10).
+- **`server/deploy/units.json`** is the server-side unit table (`tools/build_units.py` from
+  the decoded F_UNIT_MST: rarity, cost, element, max level, exp pattern, base/lord stats,
+  adjust exp, skills, sell price), loaded into `ServerCache::units()`; force-added to git like
+  the battle files.
+- Units in a squad cannot be materials (the client refuses: "Squad is being edited"), so a
+  test needs a freshly summoned unit; `Db::RemoveUnits` also drops the squad slots of consumed
+  units. Verified: Selena lv 6 + a lv 1 Magress -> lv 8 (+204 exp, 700 zel), the level-up
+  animation and result screen play, the box and wallet persist.
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -535,7 +563,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: fusion/evolution/sell, the warehouse (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: evolution (`UnitEvo`), sell (`UnitSell`), the warehouse (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
 5. Test feature flags system by system.
 
 ## Conventions

@@ -90,6 +90,7 @@ namespace GmeHandlers
 	HANDLE(HomeInfo);
 	HANDLE(MissionStart);
 	HANDLE(MissionEnd);
+	HANDLE(UnitMix);
 	HANDLE(UpdateInfoLight);
 	HANDLE(UserInfo);
 }

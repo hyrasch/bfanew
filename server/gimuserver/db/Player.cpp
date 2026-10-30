@@ -224,6 +224,21 @@ namespace Db
 		co_await theDb()->execSqlCoro("UPDATE player_units SET data = $1 WHERE user_unit_id = $2", ToJson(unit), static_cast<int64_t>(unit.user_unit_id));
 	}
 
+	Task<void> UpdateUnit(std::string userId, const UserUnitInfo& unit)
+	{
+		co_await theDb()->execSqlCoro("UPDATE player_units SET unit_id = $1, data = $2 WHERE user_id = $3 AND user_unit_id = $4",
+			static_cast<int64_t>(unit.unit_id), ToJson(unit), userId, static_cast<int64_t>(unit.user_unit_id));
+	}
+
+	Task<void> RemoveUnits(std::string userId, const std::vector<int32_t>& userUnitIds)
+	{
+		for (const auto id : userUnitIds)
+		{
+			co_await theDb()->execSqlCoro("DELETE FROM player_units WHERE user_id = $1 AND user_unit_id = $2", userId, static_cast<int64_t>(id));
+			co_await theDb()->execSqlCoro("DELETE FROM player_decks WHERE user_id = $1 AND user_unit_id = $2", userId, static_cast<int64_t>(id));
+		}
+	}
+
 	Task<std::vector<UserPartyDeckInfo>> LoadDecks(std::string userId)
 	{
 		std::vector<UserPartyDeckInfo> out;

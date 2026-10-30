@@ -58,6 +58,10 @@ namespace Db
 	drogon::Task<std::vector<UserUnitInfo>> LoadUnits(std::string userId);
 	/*! Inserts a unit; its user_unit_id is assigned by the database and written back. */
 	drogon::Task<void> AddUnit(std::string userId, UserUnitInfo& unit);
+	/*! Writes a changed unit back (fusion, evolution). */
+	drogon::Task<void> UpdateUnit(std::string userId, const UserUnitInfo& unit);
+	/*! Deletes units (and the squad slots that held them). */
+	drogon::Task<void> RemoveUnits(std::string userId, const std::vector<int32_t>& userUnitIds);
 
 	drogon::Task<std::vector<UserPartyDeckInfo>> LoadDecks(std::string userId);
 	drogon::Task<void> SaveDecks(std::string userId, const std::vector<UserPartyDeckInfo>& decks);

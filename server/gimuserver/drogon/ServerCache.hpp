@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ServerConfig.hpp"
+#include <gimuserver/db/UnitTable.hpp>
 
 /*!
 * Cache of the server
@@ -50,11 +51,47 @@ public:
 	*/
 	inline const auto& serverConfig() const { return m_serverConfig; }
 
+	/*!
+	* bfanew: the unit table (deploy/units.json).
+	*/
+	inline const UnitTable& units() const { return m_units; }
+
+	/*! A unit definition, nullptr if unknown. */
+	inline const UnitDef* unit(int32_t unitId) const
+	{
+		const auto it = m_units.find(std::to_string(unitId));
+		return it == m_units.end() ? nullptr : &it->second;
+	}
+
+	/*! Total exp needed to be at a level of an exp pattern (0 for level 1 / unknown). */
+	inline int64_t expForLevel(int32_t pattern, int32_t lv) const
+	{
+		for (const auto& e : m_initrsp.exp_pattern)
+			if (e.id == pattern && e.lv == lv)
+				return e.need_exp;
+		return 0;
+	}
+
+	/*! The level reached with a total exp in an exp pattern, capped. */
+	inline int32_t levelForExp(int32_t pattern, int64_t exp, int32_t maxLv) const
+	{
+		int32_t best = 1;
+		for (const auto& e : m_initrsp.exp_pattern)
+			if (e.id == pattern && e.need_exp <= exp && e.lv > best && e.lv <= maxLv)
+				best = e.lv;
+		return best;
+	}
+
 private:
 	/*!
 	* DLS cached JSON.
 	*/
 	std::string m_dls;
+
+	/*!
+	* bfanew: unit table.
+	*/
+	UnitTable m_units;
 
 	/*!
 	* Cached data of response.

@@ -41,6 +41,7 @@ import "../net/featuring_gate.kdl"
 import "../net/mission_start.kdl"
 import "../net/mission_end.kdl"
 import "../net/deck_edit.kdl"
+import "../net/unit_mix.kdl"
 
 json GachaActionParam {
     doc "Which summon the client wants to perform (GachaActionRequest::createBody)"
@@ -255,6 +256,59 @@ json DeckEditResp {
 
     field party_deck_info type="[UserPartyDeckInfo]" {
         key "dX7S2Lc1"
+        doc "TODO"
+    }
+}
+
+json UnitMixReq {
+    doc "UnitMix command (request id Mw08CIg2): fuse materials into a base unit"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field info type="[UnitMixInfo]::size(1)" {
+        key "60subGk3"
+        doc "TODO"
+    }
+
+    field cost type="[UnitMixCost]::size(1)" {
+        key "mCE3rUu5"
+        doc "TODO"
+    }
+
+    field units type="[UnitMixUnit]" {
+        key "Km35HAXv"
+        doc "base first, then the materials"
+    }
+}
+
+json UnitMixResp {
+    doc "UnitMix reply: the result for the animation, the wallet and the whole unit box (materials gone, base updated)"
+
+    field result type="[UnitOpeResult]::size(1)" {
+        key "1ZbHB6Im"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field unit_info type="[UserUnitInfo]" {
+        key "4ceMWH6k"
         doc "TODO"
     }
 }
