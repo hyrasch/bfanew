@@ -1,0 +1,78 @@
+// DeckEdit (request id m2Ve9PkJ, encode key d7UuQsq8): sent when leaving Manage Squad
+// (PartyEditTopScene2), from the squad list, the player info screen and the options
+// (handle name / friend message). Keys from DeckEditRequest::createBody.
+
+json DeckEditEntry {
+    doc "One squad slot (request list dX7S2Lc1). Same fields as UserPartyDeckInfo but every value is a string in the request."
+
+    field deck_type type="i32::str" {
+        key "U9ABSYEp"
+        doc "1 = normal squad"
+    }
+
+    field deck_num type="i32::str" {
+        key "zsiAn9P1"
+        doc "squad number 0-9"
+    }
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "unit in the slot"
+    }
+
+    field member_type type="i32::str" {
+        key "gr48vsdJ"
+        doc "0 = leader, 1 = member"
+    }
+
+    field disp_order type="i32::str" {
+        key "XuJL4pc5"
+        doc "slot 0-4"
+    }
+}
+
+json DeckEditInfo {
+    doc "Request group Ti62XfZK: the team-level settings that go with the squads"
+
+    field active_deck type="i32::str" {
+        key "Z0Y4RoD7"
+        doc "UserTeamInfo::getActiveDeckNum"
+    }
+
+    field reinforcement_deck type="[i32::int]::sep(comma)" {
+        key "TwqMChon"
+        doc "helper squads 1/2/3 as a,b,c"
+    }
+
+    field arena_deck type="i32::str" {
+        key "gKNfIZiA"
+        doc "UserTeamInfo::getArenaDeckNum"
+    }
+
+    field unk1 type="i32::str" {
+        key "qvY4IVL7"
+        doc "0 so far"
+    }
+
+    field unk2 type="i32::str" {
+        key "K8U410zY"
+        doc "0 so far"
+    }
+
+    field unk3 type="i32::str" {
+        key "38cDi7eb"
+        doc "0 so far"
+    }
+
+    field friend_message type="str" {
+        key "bM7RLu5K"
+        doc "only when edited (options)"
+        optional #true
+    }
+
+    field handle_name type="str" {
+        key "B5JQyV8j"
+        doc "only when changed (UserState::getChangeHandleName)"
+        optional #true
+    }
+}

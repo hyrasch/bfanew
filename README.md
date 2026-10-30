@@ -15,8 +15,8 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
   with the 2013/2014 art) and plays quests: world map, mission list, battles with the 2014
   enemy data (from the community datamine captures), result screen.
 - Accounts are persistent (SQLite): one per device, with units, squads, wallet, level, energy,
-  cleared missions and unlocked places. Fusion, squad editing, items, town, arena and friends
-  are not implemented yet (see `GAP_ANALYSIS.md`).
+  cleared missions and unlocked places; squads can be edited. Fusion, items, town, arena and
+  friends are not implemented yet (see `GAP_ANALYSIS.md`).
 - `CLAUDE.md` is the working log: layout, build and run commands, what the client does on the
   wire, what was patched and why, and the next steps. Read it first.
 

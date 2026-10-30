@@ -103,8 +103,8 @@ missions 1, 2, 10 permitted, tutorial missions cleared). Stored: wallet, level, 
 point per `energy_regen_seconds`, 180), units (`UserUnitInfo` as JSON), squads, cleared missions,
 permitted places, mission runs, item pickups (counts only, not shown yet). Handlers that write:
 GachaAction (units, gems / honor points), MissionStart (energy, run), MissionEnd (rewards, level,
-clears, unlocks, items). Not implemented: fusion/evolution/sell, DeckEdit (stub: squads cannot be
-changed yet), items and warehouse packets, town, arena, gifts, friends, shop. Handler registry:
+clears, unlocks, items), DeckEdit (squads, helper squads, handle name). Not implemented:
+fusion/evolution/sell, items and warehouse packets, town, arena, gifts, friends, shop. Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
 version list is `deploy/system/version_info.json` (169 tables). Per-mission battle data is
@@ -465,6 +465,18 @@ next mission is permitted. Two handlers and a data pipeline:
 - The Java "Enjoying Brave Frontier? Please rate" dialog showed up after the second clear
   (`PTRateThisAppPopup`, which Revive patched to `ret`); "Remind me later" dismisses it.
 
+**DeckEdit (2026-10-30):** `m2Ve9PkJ` (key `d7UuQsq8`, `gimuserver/gme/DeckEdit.cpp`,
+`net/deck_edit.kdl`) is sent when leaving Manage Squad (`PartyEditTopScene2::touchEnded`), from
+the squad list, the player info screen and the options screen (handle name / friend message).
+Request: `dX7S2Lc1` every slot of every squad as strings (`U9ABSYEp` deck type 1, `zsiAn9P1`
+squad 0-9, `edy7fq3L` user unit id, `gr48vsdJ` 0 leader / 1 member, `XuJL4pc5` slot 0-4) and
+`Ti62XfZK` {`Z0Y4RoD7` active squad, `TwqMChon` helper squads "a,b,c", `gKNfIZiA` arena squad,
+`qvY4IVL7`/`K8U410zY`/`38cDi7eb` 0, plus `bM7RLu5K` friend message and `B5JQyV8j` handle name
+only when edited}. The reply carries the saved squads and the team info; slots pointing at a
+unit the player does not own are dropped. Note the request sends deck type / number as strings
+while `UserPartyDeckInfo` (the reply) has them as ints, hence the separate `DeckEditEntry`.
+Verified: a unit placed in squad 1 is still there after a relaunch (`player_decks`).
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -523,7 +535,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: DeckEdit (squads), fusion/evolution/sell, the warehouse (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: fusion/evolution/sell, the warehouse (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
 5. Test feature flags system by system.
 
 ## Conventions

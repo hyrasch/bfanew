@@ -40,6 +40,7 @@ import "../net/event.kdl"
 import "../net/featuring_gate.kdl"
 import "../net/mission_start.kdl"
 import "../net/mission_end.kdl"
+import "../net/deck_edit.kdl"
 
 json GachaActionParam {
     doc "Which summon the client wants to perform (GachaActionRequest::createBody)"
@@ -211,6 +212,49 @@ json MissionEndResp {
 
     field permit_place type="[PermitPlace]" {
         key "yXNM8kL3"
+        doc "TODO"
+    }
+}
+
+json DeckEditReq {
+    doc "DeckEdit command (request id m2Ve9PkJ): save the squads and team settings"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field decks type="[DeckEditEntry]" {
+        key "dX7S2Lc1"
+        doc "every slot of every squad"
+    }
+
+    field info type="[DeckEditInfo]::size(1)" {
+        key "Ti62XfZK"
+        doc "active squad, helper squads, arena squad"
+    }
+}
+
+json DeckEditResp {
+    doc "DeckEdit reply: the saved squads and the team info"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field party_deck_info type="[UserPartyDeckInfo]" {
+        key "dX7S2Lc1"
         doc "TODO"
     }
 }
