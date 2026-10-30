@@ -11,7 +11,7 @@
     "cooldown_timer": 5,
     "daily_dungeon_list": "100000,100050,100100,100200,100300,100310,100320,100400,100500",
     "dailylogin_gem": 1,
-    "dailytask_notify": 1,
+    "dailytask_notify": 0,
     "dict": 1,
     "dlc_popup_android": 1,
     "dungeon_key": 1,

@@ -39,10 +39,11 @@ HANDLEF(UserInfo)
         resp.party_deck_info.emplace_back(deck);
     }
 
-    resp.campaign_info.current_day = 1;
-    resp.campaign_info.total_days = 96;
-    resp.campaign_info.first_for_the_day = true;
-    resp.campaign_info.id = 1;
+    // phase 1: no login campaign (id 0 keeps the "Login Campaign" popup from showing)
+    resp.campaign_info.current_day = 0;
+    resp.campaign_info.total_days = 0;
+    resp.campaign_info.first_for_the_day = false;
+    resp.campaign_info.id = 0;
 
     resp.summoner_journal.user_id = req.login_info.user_id; // we are really trusting the client here (bad)
     resp.signal_key.key = "5EdKHavF";

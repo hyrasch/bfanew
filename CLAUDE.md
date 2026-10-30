@@ -106,6 +106,45 @@ Historical balance: 2014 stats come from the datamine snapshots (`cheahjs/bravef
 
 To rebuild the timelines: `git clone --filter=blob:none https://github.com/cheahjs/bravefrontier_data`, then `python data/build_timeline.py bravefrontier_data info.json data/unit_timeline.json` (and the same with `missions.json`). It takes a while, because the unit file is 80 MB × ~80 monthly snapshots.
 
+## Dev loop (use this, not the manual commands below)
+
+`tools/dev.py` does the whole iteration from one place (Python 3.14, no extra packages):
+
+```powershell
+cd D:\.Coderavefrontierfanew
+python tools/dev.py serve                 # run the server in THIS terminal (Ctrl-C stops it); logs visible
+python tools/dev.py build [--configure]   # VS dev shell + Ninja; --configure after adding a .cpp
+python tools/dev.py reload                # GET /bfanew/reload: re-read deploy/system/*.json, no restart
+python tools/dev.py bump M_GACHA_MST      # bump a table version in version_info.json (+reload)
+python tools/dev.py client --to summon    # relaunch the game on BlueStacks and drive it there (~30 s)
+python tools/dev.py summon [--rare] [--multi]   # from the Summon scene: summon, open the door (~25 s)
+python tools/dev.py shot name             # screenshot -> ..uild\shots
+ame.png (+ window frame)
+python tools/dev.py tapk tab_unit | tap X Y | swipe ... | key back
+python tools/dev.py logs -n 15 [--show ID]   # latest requests with handler names, errors flagged
+python tools/dev.py restart / stop / start   # detached server (when not using `serve`)
+```
+
+- **Data edits need no build and no restart**: edit `server/deploy/system/*.json`, `reload`.
+  Downloaded MSTs still need their version bumped (`bump`) before the client re-reads them.
+- `serve` runs the exe in the foreground; after a `build`, Ctrl-C it and run `serve` again
+  (`restart` is for the detached mode and would not restart a `serve` tab).
+- The client driver waits on the server's request log (DLS -> guest login -> HomeInfo)
+  instead of fixed sleeps, taps the title until the login shows up, and presses Back on the
+  Google Play Games prompt (BlueStacks is now signed in to Google, so it rarely appears).
+- Taps are fractions of the game's content area, computed from the window frame reported by
+  `dumpsys window windows` (`frame=[x0,y0][x1,y1]`): the whole frame when it is phone-like
+  (<= 1.8 tall), else the centred 2:3 rectangle (the default BlueStacks window letterboxes).
+  BlueStacks resets the window to its default size on every launch. If a tap misses, `shot`
+  prints the frame and content rect; measure on the PNG and fix `COORDS`.
+- Startup popups are gone from the data (phase 1 has no daily tasks and no login campaign:
+  `TEMP_daily_tasks*.json` lists emptied, `login_campaign*.json` zeroed, `dailytask_notify`
+  0, `UserInfo` campaign info zeroed), so the home screen is reachable without extra taps.
+- Known data gap: tapping a quest banner shows "Cost limit exceeded" because the stub team
+  has no cost limit (`UserTeamInfo.deck_cost` / level table); harmless until quests.
+- Rough timings now: build 10-60 s (only for C++), reload < 1 s, client to Summon 30 s,
+  summon 25 s. Before the script a round was 3-4 minutes.
+
 ## Android client: findings (2026-10-30, session 2)
 
 APK: `brave-frontier-2-19-6-0.apk`, package `sg.gumi.bravefrontier`, versionCode 11014182.

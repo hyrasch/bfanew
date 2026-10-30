@@ -34,6 +34,12 @@ public:
     inline auto& cache() { return m_cache; }
 
     /*!
+    * bfanew dev helper: re-reads deploy/system/*.json into the cache without a restart.
+    * Not thread-safe against in-flight requests; meant for local development only.
+    */
+    inline void reloadCache() { m_cache.Setup(m_serverConfigJson); }
+
+    /*!
     * Gets the DLC 404 logger.
     * @return DLC logger
     */
@@ -90,4 +96,9 @@ private:
     * Server cache.
     */
     ServerCache m_cache;
+
+    /*!
+    * Copy of the plugin's "server" config object, kept for reloadCache().
+    */
+    Json::Value m_serverConfigJson;
 };
