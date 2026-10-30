@@ -1,6 +1,7 @@
 #include "App.hpp"
 #include "Handlers.hpp"
-#include "StubPlayer.hpp"
+
+#include <gimuserver/gme/NewPlayer.hpp>
 
 #include <chrono>
 #include <ctime>
@@ -18,10 +19,8 @@
 * "yXNM8kL3" the newly permitted places, so the world map opens the next mission.
 *
 * The mission's own reward and what it unlocks come from deploy/battle/<mission_id>.json
-* (tools/build_battles.py: missions.json xp/zel/karma and the requires chain).
-*
-* STUB: nothing is persisted, so the next UserInfo forgets the clear; the level-up is computed
-* from the initial exp (0) + this mission's exp against the level table.
+* (tools/build_battles.py: missions.json xp/zel/karma and the requires chain). Everything is
+* written to the player (wallet, level, clears, permits, item pickups).
 */
 
 HANDLEF(MissionEnd)
@@ -35,20 +34,24 @@ HANDLEF(MissionEnd)
 		co_return HandleResult::error("Deserialization error", fmte);
 	}
 
+	auto player = co_await Db::LoadPlayer(req.login_info);
+	if (!player)
+		co_return HandleResult::error("Unknown user", req.login_info.user_id);
+	auto& p = *player;
+
 	// The request carries the serial id, not the mission id: MissionStart remembered the pair.
-	const int32_t lastMission = theServer()->missionForRun(req.mission.serial_id);
-	if (lastMission == 0)
+	const int32_t missionId = co_await Db::MissionForRun(req.mission.serial_id, p.user_id);
+	if (missionId == 0)
 	{
-		LOG_WARN << "MissionEnd: unknown run " << req.mission.serial_id;
+		LOG_WARN << "MissionEnd: unknown run " << req.mission.serial_id << " for user " << p.user_id;
 		co_return HandleResult::error("Unknown mission run", req.mission.serial_id);
 	}
 	const bool cleared = req.mission.state == 2;
-	LOG_DEBUG << "MissionEnd: serial " << req.mission.serial_id << " state " << req.mission.state
-		<< " mission " << lastMission << " zel " << req.result.zel << " karma " << req.result.karma
-		<< " items " << req.result.items;
+	LOG_DEBUG << "MissionEnd: user " << p.user_id << " mission " << missionId << " state " << req.mission.state
+		<< " zel " << req.result.zel << " karma " << req.result.karma << " items " << req.result.items;
 
 	MissionBattleData data = {};
-	const auto path = std::filesystem::path("battle") / (std::to_string(lastMission) + ".json");
+	const auto path = std::filesystem::path("battle") / (std::to_string(missionId) + ".json");
 	if (std::ifstream in(path, std::ios::binary); in)
 	{
 		std::stringstream ss;
@@ -60,12 +63,9 @@ HANDLEF(MissionEnd)
 	else
 		LOG_WARN << "MissionEnd: no battle data at " << path.string();
 
-	const auto& scfg = theServer()->cache().serverConfig();
 	MissionEndResp resp = {};
 
-	StubPlayer::FillTeam(resp.team_info, scfg);
-	const int32_t beforeLv = resp.team_info.level;
-	const int64_t beforeExp = resp.team_info.exp;
+	const int32_t beforeLv = p.team.level;
 
 	auto& r = resp.reward;
 	r.clear_bonus = "";
@@ -88,31 +88,22 @@ HANDLEF(MissionEnd)
 	r.e_token = 0;
 	r.repeat_clear_bonus = "";
 
-	resp.team_info.zel += r.zel;
-	resp.team_info.karma += r.karma;
-	resp.team_info.exp = beforeExp + r.inc_exp;
+	p.team.zel += r.zel;
+	p.team.karma += r.karma;
+	p.team.exp += r.inc_exp;
 
 	// level from the level table (user_level.json): the highest level whose exp is reached
 	int32_t newLv = beforeLv;
 	for (const auto& lv : theServer()->cache().initializeResp().progression)
-		if (lv.exp <= resp.team_info.exp && lv.level > newLv)
+		if (lv.exp <= p.team.exp && lv.level > newLv)
 			newLv = lv.level;
 	if (newLv != beforeLv)
 	{
 		r.lvup_flg = 1;
-		resp.team_info.level = newLv;
-		for (const auto& lv : theServer()->cache().initializeResp().progression)
-			if (lv.level == newLv)
-			{
-				resp.team_info.deck_cost = lv.deck_cost;
-				resp.team_info.max_action_point = resp.team_info.action_point = lv.action_points; // level up refills energy
-				resp.team_info.max_fight_point = resp.team_info.fight_point = lv.unk;
-				resp.team_info.max_friend_count = lv.friend_count;
-				break;
-			}
+		NewPlayer::ApplyLevel(p.team, newLv, true); // a level up refills the energy
 	}
-	else
-		resp.team_info.action_point = std::max<int32_t>(0, resp.team_info.action_point - data.energy_use);
+	Db::RegenEnergy(p);
+	co_await Db::SavePlayer(p);
 
 	if (cleared)
 	{
@@ -126,20 +117,25 @@ HANDLEF(MissionEnd)
 		localtime_r(&t, &tm);
 #endif
 		std::strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", &tm);
-		resp.clear_mission_info.emplace_back(StubPlayer::ClearedMission(lastMission, date));
+		co_await Db::AddClear(p.user_id, missionId, date);
+		co_await Db::AddItems(p.user_id, req.result.items);
 
 		for (const auto& u : data.unlocks)
 		{
 			if (r.clear_mission_id.empty()) r.clear_mission_id = u.mission_id;
-			StubPlayer::AddPermit(resp.permit_place, StubPlayer::Place::Mission, u.mission_id);
+			co_await Db::AddPermit(p.user_id, NewPlayer::Mission, u.mission_id);
 			if (!u.dungeon_id.empty() && u.dungeon_id != "0")
 			{
-				StubPlayer::AddPermit(resp.permit_place, StubPlayer::Place::Dungeon, u.dungeon_id);
-				StubPlayer::AddPermit(resp.permit_place, StubPlayer::Place::Area, u.area_id);
-				StubPlayer::AddPermit(resp.permit_place, StubPlayer::Place::Land, u.land_id);
+				co_await Db::AddPermit(p.user_id, NewPlayer::Dungeon, u.dungeon_id);
+				co_await Db::AddPermit(p.user_id, NewPlayer::Area, u.area_id);
+				co_await Db::AddPermit(p.user_id, NewPlayer::Land, u.land_id);
 			}
 		}
+		resp.clear_mission_info = co_await Db::LoadClears(p.user_id);
+		resp.permit_place = co_await Db::LoadPermits(p.user_id);
 	}
+
+	resp.team_info = p.team;
 
 	std::string buffer{};
 	const auto& ec2 = glz::write_json(resp, buffer);

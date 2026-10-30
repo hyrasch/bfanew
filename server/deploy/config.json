@@ -63,6 +63,7 @@
 					"initial_level": 1,
 					"initial_free_gems": 5,
 					"initial_friend_points": 1000, // honor points (Honor Summon costs 200)
+					"energy_regen_seconds": 180, // one energy point every 3 minutes
 					"initial_zel": 10000000,
 					"initial_karma": 10000000,
 					"initial_bcoins": 0

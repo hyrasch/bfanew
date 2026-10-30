@@ -1,6 +1,5 @@
 #include "App.hpp"
 #include "Handlers.hpp"
-#include "StubPlayer.hpp"
 
 #include <chrono>
 #include <random>
@@ -21,9 +20,9 @@
 *   Do NOT send "sdu3jvhH" (UserUnitResummonInfoSg) here: it switches the scene to the
 *   resummon flow whose manager was never initialised, and the client dies.
 *
-* STUB: no persistence, so the box is StubPlayer::StarterUnit() + this summon's units, and
-* the wallet is the initial one minus this summon. The pool is the six launch heroes; the
-* real pool/rates come with the phase-1 content work.
+* The new units are stored (gimuserver/db/Player.hpp) and the gems / honor points are
+* charged for good. The pool is still the six launch heroes; the real pool/rates come with
+* the phase-1 content work.
 */
 
 namespace
@@ -63,10 +62,14 @@ namespace
 		{ 60013, 4, "dark",    2651, 743, 860, 381, 151, 60013 }, // Dark Knight Magress
 	};
 
+	constexpr int32_t kRareGacha = 2000;
+	constexpr int32_t kGemCost = 5;
+	constexpr int32_t kHonorCost = 200;
+
 	// GachaEffectMst ids (deploy/system/gacha_effects.json) per gacha and rarity.
 	int32_t effectFor(int32_t gachaId, int32_t rarity)
 	{
-		if (gachaId == 2000) // Rare Summon: 8 gold->R, 11 red->SR, 16 rainbow->SSR
+		if (gachaId == kRareGacha) // Rare Summon: 8 gold->R, 11 red->SR, 16 rainbow->SSR
 			return rarity >= 5 ? 16 : rarity == 4 ? 11 : 8;
 		return rarity;        // Honor Summon: ids 1..5 map 1:1 to rarity
 	}
@@ -80,7 +83,7 @@ namespace
 	const PoolUnit& pick(int32_t gachaId)
 	{
 		std::uniform_int_distribution<int> six(0, 5);
-		if (gachaId == 2000)
+		if (gachaId == kRareGacha)
 		{
 			// launch Rare Summon: 3* most of the time, 4* sometimes
 			std::uniform_int_distribution<int> pct(0, 99);
@@ -101,31 +104,40 @@ HANDLEF(GachaAction)
 		co_return HandleResult::error("Deserialization error", fmte);
 	}
 
+	auto player = co_await Db::LoadPlayer(req.login_info);
+	if (!player)
+		co_return HandleResult::error("Unknown user", req.login_info.user_id);
+	auto& p = *player;
+
 	const auto gachaId = req.gacha.gacha_id;
 	const auto count = std::max<int32_t>(1, req.gacha.request_count);
-	LOG_DEBUG << "GachaAction: gacha " << gachaId << " x" << count << " ticket=" << req.gacha.use_ticket;
+	LOG_DEBUG << "GachaAction: user " << p.user_id << " gacha " << gachaId << " x" << count << " ticket=" << req.gacha.use_ticket;
 
-	const auto& scfg = theServer()->cache().serverConfig();
+	// pay first: free gems before paid gems for the Rare Summon, honor points otherwise
+	if (gachaId == kRareGacha)
+	{
+		const auto cost = kGemCost * count;
+		if (p.team.free_gems + p.team.paid_gems < cost)
+			co_return HandleResult::error("Not enough gems");
+		const auto fromFree = std::min(cost, p.team.free_gems);
+		p.team.free_gems -= fromFree;
+		p.team.paid_gems -= cost - fromFree;
+	}
+	else
+	{
+		const auto cost = kHonorCost * count;
+		if (p.team.friend_point < cost)
+			co_return HandleResult::error("Not enough honor points");
+		p.team.friend_point -= cost;
+	}
+
 	const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
-	const auto nowUnix = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 
 	GachaActionResp resp = {};
-
-	StubPlayer::FillTeam(resp.team_info, scfg);
-	if (gachaId == 2000)
-		resp.team_info.free_gems = std::max<int32_t>(0, resp.team_info.free_gems - 5 * count);
-	else
-		resp.team_info.friend_point = std::max<int32_t>(0, resp.team_info.friend_point - 200 * count);
-
-	// the whole box: the placeholder unit the decks point at, then what was just summoned
-	resp.unit_info.emplace_back(StubPlayer::StarterUnit());
-
 	for (int32_t i = 0; i < count; i++)
 	{
 		const auto& u = pick(gachaId);
 		UserUnitInfo d = {};
-		d.user_unit_id = static_cast<int32_t>((nowUnix % 100000000) * 10 + i); // unique enough for a stub
-		d.user_id = StubPlayer::kUserId;
 		d.unit_id = u.unit_id;
 		d.unit_type_id = u.rarity;
 		d.unit_lv = 1;
@@ -138,7 +150,7 @@ HANDLEF(GachaAction)
 		d.skill_lv = 1;
 		d.new_flag = true;
 		d.receive_date = now;
-		resp.unit_info.emplace_back(d);
+		co_await Db::AddUnit(p.user_id, d);
 
 		OpeUserUnit ope = {};
 		ope.user_unit_id = d.user_unit_id;
@@ -146,6 +158,10 @@ HANDLEF(GachaAction)
 		ope.gacha_effect_id = effectFor(gachaId, u.rarity);
 		resp.ope_units.emplace_back(ope);
 	}
+
+	co_await Db::SavePlayer(p);
+	resp.team_info = p.team;
+	resp.unit_info = co_await Db::LoadUnits(p.user_id); // the whole box
 
 	std::string buffer{};
 	const auto& ec2 = glz::write_json(resp, buffer);

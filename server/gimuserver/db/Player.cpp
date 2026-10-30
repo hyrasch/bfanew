@@ -1,0 +1,330 @@
+#include "App.hpp"
+#include "Player.hpp"
+
+#include <gimuserver/gme/NewPlayer.hpp>
+
+#include <chrono>
+#include <random>
+
+using namespace drogon;
+using namespace drogon::orm;
+
+namespace
+{
+	int64_t NowUnix()
+	{
+		return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	std::string RandomDigits(size_t n)
+	{
+		static std::mt19937_64 g{ std::random_device{}() };
+		std::uniform_int_distribution<int> d(0, 9);
+		std::string s;
+		for (size_t i = 0; i < n; i++)
+			s += static_cast<char>('0' + d(g));
+		if (s[0] == '0') s[0] = '1' + static_cast<char>(d(g) % 9); // keep the leading digit
+		return s;
+	}
+
+	std::string RandomToken(size_t n)
+	{
+		static constexpr char kChars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		static std::mt19937_64 g{ std::random_device{}() };
+		std::uniform_int_distribution<size_t> d(0, sizeof(kChars) - 2);
+		std::string s;
+		for (size_t i = 0; i < n; i++)
+			s += kChars[d(g)];
+		return s;
+	}
+
+	template <typename T>
+	std::string ToJson(T v) // by value: the generated glaze helpers want a non-const object
+	{
+		std::string s;
+		const auto ec = glz::write_json(v, s);
+		if (ec) LOG_ERROR << "Db: cannot serialize: " << glz::format_error(ec, s);
+		return s;
+	}
+
+	template <typename T>
+	T FromJson(const std::string& s)
+	{
+		T v = {};
+		const auto ec = glz::read<glz::opts{.error_on_unknown_keys = false}>(v, s);
+		if (ec) LOG_ERROR << "Db: cannot parse: " << glz::format_error(ec, s);
+		return v;
+	}
+
+	Db::Player RowToPlayer(const Row& r)
+	{
+		Db::Player p;
+		p.user_id = r["user_id"].as<std::string>();
+		p.gumi_user_id = r["gumi_user_id"].as<std::string>();
+		p.account_id = r["account_id"].as<std::string>();
+		p.handle_name = r["handle_name"].as<std::string>();
+		p.team = FromJson<UserTeamInfo>(r["team"].as<std::string>());
+		p.energy_at = r["energy_at"].as<int64_t>();
+		p.tutorial_end = r["tutorial_end"].as<int64_t>() != 0;
+		return p;
+	}
+}
+
+namespace Db
+{
+	const UserLevelMst* LevelRow(int32_t level)
+	{
+		for (const auto& lv : theServer()->cache().initializeResp().progression)
+			if (lv.level == level)
+				return &lv;
+		return nullptr;
+	}
+
+	Task<std::pair<std::string, std::string>> AccountForDevice(std::string vid, std::string deviceName)
+	{
+		if (vid.empty()) vid = "no-vid";
+		const auto res = co_await theDb()->execSqlCoro("SELECT gumi_user_id, token FROM accounts WHERE device_vid = $1", vid);
+		if (!res.empty())
+			co_return { res[0]["gumi_user_id"].as<std::string>(), res[0]["token"].as<std::string>() };
+
+		const auto cnt = co_await theDb()->execSqlCoro("SELECT COUNT(*) AS n FROM accounts");
+		const int64_t n = cnt[0]["n"].as<int64_t>() + 1;
+		char id[16];
+		std::snprintf(id, sizeof(id), "%08lld", static_cast<long long>(n));
+		const std::string token = RandomToken(16);
+		co_await theDb()->execSqlCoro("INSERT INTO accounts(gumi_user_id, device_vid, device_name, token, created_at) VALUES ($1, $2, $3, $4, $5)",
+			std::string(id), vid, deviceName, token, NowUnix());
+		LOG_INFO << "Db: new account " << id << " for device " << vid;
+		co_return { std::string(id), token };
+	}
+
+	Task<Player> PlayerForAccount(std::string gumiUserId)
+	{
+		const auto res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE gumi_user_id = $1", gumiUserId);
+		if (!res.empty())
+		{
+			auto p = RowToPlayer(res[0]);
+			RegenEnergy(p);
+			co_return p;
+		}
+
+		// new player: the template of NewPlayer.hpp
+		const auto& scfg = theServer()->cache().serverConfig();
+		Player p;
+		p.gumi_user_id = gumiUserId;
+		p.user_id = RandomDigits(16);
+		p.account_id = RandomDigits(8);
+		p.handle_name = NewPlayer::kHandleName;
+		p.team.user_id = p.user_id;
+		NewPlayer::FillTeam(p.team, scfg);
+		p.energy_at = NowUnix();
+
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO players(user_id, gumi_user_id, account_id, handle_name, team, energy_at, tutorial_end, created_at) VALUES ($1, $2, $3, $4, $5, $6, 1, $7)",
+			p.user_id, p.gumi_user_id, p.account_id, p.handle_name, ToJson(p.team), p.energy_at, p.energy_at);
+
+		// the starter unit in slot 0 of every squad, like the tutorial would leave it
+		auto starter = NewPlayer::StarterUnit();
+		starter.user_id = p.user_id;
+		co_await AddUnit(p.user_id, starter);
+		std::vector<UserPartyDeckInfo> decks;
+		for (int i = 0; i < 10; i++)
+		{
+			UserPartyDeckInfo d = {};
+			d.deck_num = i;
+			d.deck_type = 1;
+			d.user_unit_id = starter.user_unit_id;
+			d.member_type = 0;
+			d.disp_order = 0;
+			decks.emplace_back(d);
+		}
+		co_await SaveDecks(p.user_id, decks);
+
+		for (const auto& [kind, id] : NewPlayer::Permits())
+			co_await AddPermit(p.user_id, kind, id);
+		for (const auto mission : NewPlayer::ClearedMissions())
+			co_await AddClear(p.user_id, mission, "2013-11-01 00:00:00");
+
+		LOG_INFO << "Db: new player " << p.user_id << " (account " << p.account_id << ") for gumi user " << gumiUserId;
+		co_return p;
+	}
+
+	Task<std::optional<Player>> LoadPlayer(const LoginInfoReq& login)
+	{
+		Result res;
+		if (!login.user_id.empty())
+			res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE user_id = $1", login.user_id);
+		if (res.empty() && !login.gumi_live_userid.empty())
+			res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE gumi_user_id = $1", login.gumi_live_userid);
+		if (res.empty())
+			co_return std::nullopt;
+		auto p = RowToPlayer(res[0]);
+		RegenEnergy(p);
+		co_return p;
+	}
+
+	Task<void> SavePlayer(const Player& p)
+	{
+		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4 WHERE user_id = $5",
+			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.user_id);
+	}
+
+	void RegenEnergy(Player& p)
+	{
+		const auto now = NowUnix();
+		const auto regen = static_cast<int64_t>(theServer()->cache().serverConfig().energyRegenSeconds);
+		if (regen <= 0 || p.energy_at <= 0)
+		{
+			p.energy_at = now;
+			return;
+		}
+		if (p.team.action_point >= p.team.max_action_point)
+		{
+			p.energy_at = now;
+			p.team.action_rest_timer = 0;
+			return;
+		}
+		const auto elapsed = now - p.energy_at;
+		const auto points = elapsed / regen;
+		if (points > 0)
+		{
+			p.team.action_point = static_cast<int32_t>(std::min<int64_t>(p.team.max_action_point, p.team.action_point + points));
+			p.energy_at += points * regen;
+		}
+		if (p.team.action_point >= p.team.max_action_point)
+		{
+			p.energy_at = now;
+			p.team.action_rest_timer = 0;
+		}
+		else
+			p.team.action_rest_timer = static_cast<int32_t>(regen - (now - p.energy_at));
+	}
+
+	Task<std::vector<UserUnitInfo>> LoadUnits(std::string userId)
+	{
+		std::vector<UserUnitInfo> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT user_unit_id, data FROM player_units WHERE user_id = $1 ORDER BY user_unit_id", userId);
+		for (const auto& r : res)
+		{
+			auto u = FromJson<UserUnitInfo>(r["data"].as<std::string>());
+			u.user_unit_id = static_cast<int32_t>(r["user_unit_id"].as<int64_t>());
+			u.user_id = userId;
+			out.emplace_back(std::move(u));
+		}
+		co_return out;
+	}
+
+	Task<void> AddUnit(std::string userId, UserUnitInfo& unit)
+	{
+		unit.user_id = userId;
+		co_await theDb()->execSqlCoro("INSERT INTO player_units(user_id, unit_id, data) VALUES ($1, $2, $3)", userId, static_cast<int64_t>(unit.unit_id), ToJson(unit));
+		const auto res = co_await theDb()->execSqlCoro("SELECT last_insert_rowid() AS id");
+		unit.user_unit_id = static_cast<int32_t>(res[0]["id"].as<int64_t>());
+		// keep the stored copy consistent with the id the client will see
+		co_await theDb()->execSqlCoro("UPDATE player_units SET data = $1 WHERE user_unit_id = $2", ToJson(unit), static_cast<int64_t>(unit.user_unit_id));
+	}
+
+	Task<std::vector<UserPartyDeckInfo>> LoadDecks(std::string userId)
+	{
+		std::vector<UserPartyDeckInfo> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT deck_num, slot, user_unit_id, deck_type, member_type FROM player_decks WHERE user_id = $1 ORDER BY deck_num, slot", userId);
+		for (const auto& r : res)
+		{
+			UserPartyDeckInfo d = {};
+			d.deck_num = static_cast<int32_t>(r["deck_num"].as<int64_t>());
+			d.disp_order = static_cast<int32_t>(r["slot"].as<int64_t>());
+			d.user_unit_id = static_cast<int32_t>(r["user_unit_id"].as<int64_t>());
+			d.deck_type = static_cast<int32_t>(r["deck_type"].as<int64_t>());
+			d.member_type = static_cast<int32_t>(r["member_type"].as<int64_t>());
+			out.emplace_back(d);
+		}
+		co_return out;
+	}
+
+	Task<void> SaveDecks(std::string userId, const std::vector<UserPartyDeckInfo>& decks)
+	{
+		co_await theDb()->execSqlCoro("DELETE FROM player_decks WHERE user_id = $1", userId);
+		for (const auto& d : decks)
+			co_await theDb()->execSqlCoro("INSERT INTO player_decks(user_id, deck_num, slot, user_unit_id, deck_type, member_type) VALUES ($1, $2, $3, $4, $5, $6)",
+				userId, static_cast<int64_t>(d.deck_num), static_cast<int64_t>(d.disp_order), static_cast<int64_t>(d.user_unit_id), static_cast<int64_t>(d.deck_type), static_cast<int64_t>(d.member_type));
+	}
+
+	Task<std::vector<UserClearMissionInfo>> LoadClears(std::string userId)
+	{
+		std::vector<UserClearMissionInfo> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT mission_id, clear_date, clear_cnt, most_time, get_bc, get_hc FROM player_clears WHERE user_id = $1 ORDER BY mission_id", userId);
+		for (const auto& r : res)
+		{
+			UserClearMissionInfo c = {};
+			c.user_id = userId;
+			c.mission_id = static_cast<int32_t>(r["mission_id"].as<int64_t>());
+			c.clear_date = r["clear_date"].as<std::string>();
+			c.clear_cnt = static_cast<int32_t>(r["clear_cnt"].as<int64_t>());
+			c.most_time = static_cast<int32_t>(r["most_time"].as<int64_t>());
+			c.get_bc = static_cast<int32_t>(r["get_bc"].as<int64_t>());
+			c.get_hc = static_cast<int32_t>(r["get_hc"].as<int64_t>());
+			out.emplace_back(c);
+		}
+		co_return out;
+	}
+
+	Task<void> AddClear(std::string userId, int32_t missionId, std::string date)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_clears(user_id, mission_id, clear_date, clear_cnt, most_time, get_bc, get_hc) VALUES ($1, $2, $3, 1, 0, 0, 0) "
+			"ON CONFLICT(user_id, mission_id) DO UPDATE SET clear_cnt = clear_cnt + 1",
+			userId, static_cast<int64_t>(missionId), date);
+	}
+
+	Task<std::vector<PermitPlace>> LoadPermits(std::string userId)
+	{
+		std::vector<PermitPlace> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT kind, place_id FROM player_permits WHERE user_id = $1 ORDER BY kind, rowid", userId);
+		for (const auto& r : res)
+			NewPlayer::AddPermit(out, static_cast<int>(r["kind"].as<int64_t>()), r["place_id"].as<std::string>());
+		co_return out;
+	}
+
+	Task<void> AddPermit(std::string userId, int kind, std::string placeId)
+	{
+		co_await theDb()->execSqlCoro("INSERT OR IGNORE INTO player_permits(user_id, kind, place_id) VALUES ($1, $2, $3)", userId, static_cast<int64_t>(kind), placeId);
+	}
+
+	Task<void> RememberRun(std::string serialId, std::string userId, int32_t missionId)
+	{
+		co_await theDb()->execSqlCoro("INSERT OR REPLACE INTO player_runs(serial_id, user_id, mission_id, started_at) VALUES ($1, $2, $3, $4)",
+			serialId, userId, static_cast<int64_t>(missionId), NowUnix());
+	}
+
+	Task<int32_t> MissionForRun(std::string serialId, std::string userId)
+	{
+		const auto res = co_await theDb()->execSqlCoro("SELECT mission_id FROM player_runs WHERE serial_id = $1 AND user_id = $2", serialId, userId);
+		if (res.empty())
+			co_return 0;
+		co_return static_cast<int32_t>(res[0]["mission_id"].as<int64_t>());
+	}
+
+	Task<void> AddItems(std::string userId, std::string items)
+	{
+		size_t pos = 0;
+		while (pos < items.size())
+		{
+			const auto comma = items.find(',', pos);
+			const auto entry = items.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+			pos = comma == std::string::npos ? items.size() : comma + 1;
+			const auto colon = entry.find(':');
+			if (colon == std::string::npos) continue;
+			int64_t itemId = 0, count = 0;
+			try
+			{
+				itemId = std::stoll(entry.substr(0, colon));
+				count = std::stoll(entry.substr(colon + 1));
+			}
+			catch (...) { continue; }
+			if (itemId <= 0 || count <= 0) continue;
+			co_await theDb()->execSqlCoro(
+				"INSERT INTO player_items(user_id, item_id, count) VALUES ($1, $2, $3) ON CONFLICT(user_id, item_id) DO UPDATE SET count = count + $3",
+				userId, itemId, count);
+		}
+	}
+}

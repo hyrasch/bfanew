@@ -51,6 +51,7 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	m_serverConfig.initialBraveCoins = serverObj.get("initial_bcoins", 0).asUInt();
 	m_serverConfig.initialFreeGems = serverObj.get("initial_free_gems", 0).asUInt();
 	m_serverConfig.initialFriendPoints = serverObj.get("initial_friend_points", 0).asUInt();
+	m_serverConfig.energyRegenSeconds = serverObj.get("energy_regen_seconds", 180).asUInt();
 
 
 	{

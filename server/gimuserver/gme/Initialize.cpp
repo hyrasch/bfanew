@@ -61,12 +61,12 @@ HANDLEF(Initialize)
 #endif
 
 
-	// TODO: GET THIS FROM A CACHE TOKEN ETC
-	resp.login_info.account_id = "12345678";
-	resp.login_info.handle_name = "OfflineMod!";
-	resp.login_info.user_id = "0839899613932562"; // I think this is a random UUID according to packet-gen
-	// TEMP HACK!! Skip tutorial flag and put a real name
-	resp.login_info.tutorial_end_flag = true;
+	// bfanew: the player behind the gumi account from /accounts/guest/login/ (created on first login)
+	const auto player = co_await Db::PlayerForAccount(req.login_info.gumi_live_userid);
+	resp.login_info.account_id = player.account_id;
+	resp.login_info.handle_name = player.handle_name;
+	resp.login_info.user_id = player.user_id; // the client keeps it and sends it in every request
+	resp.login_info.tutorial_end_flag = player.tutorial_end;
 	resp.login_info.tutorial_status = 12;
 
 	//resp.user_info.gumi_live_token = req.user_info.gumi_live_token;

@@ -34,4 +34,9 @@ struct ServerConfig
 	* Initial honor (friend) points.
 	*/
 	uint32_t initialFriendPoints;
+
+	/*!
+	* bfanew: seconds per energy point regenerated (0 = no regeneration).
+	*/
+	uint32_t energyRegenSeconds;
 };

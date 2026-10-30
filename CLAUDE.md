@@ -93,7 +93,22 @@ Server routes: `/dls`, `/accounts/guest/login/`, `/bf/gme/action.php` (POST, enc
 
 ## Server state in one paragraph
 
-Login handshake, encryption (SREE/GME AES) and static serving work. There are 11 GME handlers, several of them stubs. **Every player is the same hard-coded user** (`12345678`, "OfflineMod!", one fake unit). The account-creation SQL is `#if 0`, and the DB has a single unused `userinfo` table. **Quests, rewards, summons, fusion/evolution, items, town, arena, gifts and friends are not implemented.** Handler registry: `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST version list is `deploy/system/version_info.json` (169 tables with version numbers). See `GAP_ANALYSIS.md` for the full gap table.
+Login handshake, encryption (SREE/GME AES) and static serving work. **Players are persistent
+since 2026-10-30** (`gimuserver/db/Player.hpp`, SQLite `deploy/gme.sqlite` through Drogon's
+db client, tables created by the migration in `gimuserver/db/MigrationManager.cpp`): one account
+per device (`/accounts/guest/login/` keys on the client's `vid`), one player per account created
+at the first Initialize from the `NewPlayer.hpp` template (wallet from `config.json`
+`initial_*`, the starter unit in every squad, gate 1 / Mistral / area 100 / dungeons 1 and 10 /
+missions 1, 2, 10 permitted, tutorial missions cleared). Stored: wallet, level, exp, energy (regen 1
+point per `energy_regen_seconds`, 180), units (`UserUnitInfo` as JSON), squads, cleared missions,
+permitted places, mission runs, item pickups (counts only, not shown yet). Handlers that write:
+GachaAction (units, gems / honor points), MissionStart (energy, run), MissionEnd (rewards, level,
+clears, unlocks, items). Not implemented: fusion/evolution/sell, DeckEdit (stub: squads cannot be
+changed yet), items and warehouse packets, town, arena, gifts, friends, shop. Handler registry:
+`gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
+loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
+version list is `deploy/system/version_info.json` (169 tables). Per-mission battle data is
+`deploy/battle/<id>.json`. See `GAP_ANALYSIS.md` for the full gap table.
 
 ## Phasing design (summary)
 
@@ -421,6 +436,30 @@ next mission is permitted. Two handlers and a data pipeline:
 - Dev loop: `client --to mission`, then `tapk mission_first`, `tap 886 557` (helper dialog Yes),
   `tap 960 752` (Begin Quest), `tap 1067 479` (AUTO); a mission takes ~2 min on auto.
 
+**Persistence (2026-10-30):** `gimuserver/db/Player.hpp/.cpp` + migration `30102026_PlayerTables`.
+- Identity: the client's guest login sends `vid` (a device UUID it keeps), `dn` (device name),
+  `ak` (the user id of its last login, empty on a fresh install) and `identifiers`
+  (`android_id`). `accounts` maps `vid` -> an 8-digit gumi user id + a random token (the client
+  echoes both as `iN7buP2h` / `iN7buP1i`); Initialize creates/loads the player by gumi id and
+  answers the 16-digit `user_id` (`h7eY3sAK`), which the client then sends in every request's
+  `IKqx1Cn9` login info; `Db::LoadPlayer` looks it up by user id, gumi id as fallback (that is
+  how an install that knew the old hard-coded id migrated silently). The token is not verified.
+- `players.team` is the `UserTeamInfo` JSON (wallet, level, exp, energy...), `player_units.data`
+  the `UserUnitInfo` JSON (ids assigned by the autoincrement, so `user_unit_id` starts at 1);
+  decks/clears/permits/runs/items are plain rows. Energy: `energy_at` is when the stored
+  value was computed; `Db::RegenEnergy` adds 1 point per `energy_regen_seconds` up to the max
+  from the level table and sets `action_rest_timer` (`f0IY4nj8`); MissionStart resets the
+  clock when it spends from a full bar; a level-up refills (`NewPlayer::ApplyLevel`).
+- Verified on BlueStacks: new account created at first login ("Summoner", 15/15 energy, 2/200
+  units after one Honor Summon, still there after a relaunch), mission 10 cleared on auto ->
+  level 2, 16/16, zel/karma/honor points updated, mission 11 on the list after a relaunch, the
+  pickups in `player_items`.
+- To start over: stop the server and delete `server/deploy/gme.sqlite` (the migrations recreate
+  it), then `adb shell pm clear sg.gumi.bravefrontier` is NOT needed (the device keeps its `vid`
+  and simply gets a new account).
+- The Java "Enjoying Brave Frontier? Please rate" dialog showed up after the second clear
+  (`PTRateThisAppPopup`, which Revive patched to `ret`); "Remind me later" dismisses it.
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -479,7 +518,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: DeckEdit (squads), fusion/evolution/sell, the warehouse (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
 5. Test feature flags system by system.
 
 ## Conventions

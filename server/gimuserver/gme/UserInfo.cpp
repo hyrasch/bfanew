@@ -1,7 +1,10 @@
 #include "App.hpp"
 #include "Handlers.hpp"
-#include "StubPlayer.hpp"
 
+/*
+* UserInfo ("cTZ3W2JG"): the player's state after Initialize. Everything player-specific comes
+* from the database (gimuserver/db/Player.hpp); the login-time tables come from the cache.
+*/
 HANDLEF(UserInfo)
 {
 	UserInfoReq req = {};
@@ -13,52 +16,49 @@ HANDLEF(UserInfo)
 		co_return HandleResult::error("Deserialization error", fmte);
 	}
 
+	auto player = co_await Db::LoadPlayer(req.login_info);
+	if (!player)
+	{
+		LOG_WARN << "UserInfo: unknown user " << req.login_info.user_id << " / gumi " << req.login_info.gumi_live_userid;
+		co_return HandleResult::error("Unknown user", req.login_info.user_id);
+	}
+	auto& p = *player;
+
 	UserInfoResp resp = theServer()->cache().userInfoResp(); // copy !!
 
-	// TODO: A real server should check if user_id == gumi token...
+	resp.login_info.user_id = p.user_id;
+	resp.login_info.account_id = p.account_id;
+	resp.login_info.handle_name = p.handle_name;
+	resp.login_info.tutorial_end_flag = p.tutorial_end;
+	resp.login_info.tutorial_status = 0;
+	resp.login_info.feature_gate = 0;
 
-    // TODO: GET THIS FROM A CACHE TOKEN ETC
-    resp.login_info.user_id = StubPlayer::kUserId;
+	p.team.user_id = p.user_id;
+	resp.team_info = p.team;
+	resp.unit_info = co_await Db::LoadUnits(p.user_id);
+	resp.party_deck_info = co_await Db::LoadDecks(p.user_id);
+	resp.clear_mission_info = co_await Db::LoadClears(p.user_id);
+	resp.permit_place = co_await Db::LoadPermits(p.user_id);
 
-    // TEMP HACK!! Skip tutorial flag and put a real name
-    resp.login_info.account_id = StubPlayer::kAccountId;
-    resp.login_info.handle_name = StubPlayer::kHandleName;
-    resp.login_info.tutorial_end_flag = true;
-    resp.login_info.tutorial_status = 0;
-    resp.login_info.feature_gate = 0;
+	// phase 1: no login campaign (id 0 keeps the "Login Campaign" popup from showing)
+	resp.campaign_info.current_day = 0;
+	resp.campaign_info.total_days = 0;
+	resp.campaign_info.first_for_the_day = false;
+	resp.campaign_info.id = 0;
 
-    StubPlayer::FillTeam(resp.team_info, theServer()->cache().serverConfig());
+	resp.summoner_journal.user_id = p.user_id;
+	resp.signal_key.key = "5EdKHavF";
 
-    resp.unit_info.emplace_back(StubPlayer::StarterUnit());
+	co_await Db::SavePlayer(p); // the energy regenerated since the last visit
 
-    StubPlayer::FillQuestProgress(resp);
+	std::string buffer{};
+	const auto& ec2 = glz::write_json(resp, buffer);
+	if (ec2)
+	{
+		const auto& glze = glz::format_error(ec2, buffer);
+		LOG_DEBUG << "Gme UserInfo Error during JSON writing: " << glze;
+		co_return HandleResult::error("Serialization error", glze);
+	}
 
-    for (int i = 0; i < 10; i++) {
-        UserPartyDeckInfo deck = {};
-        deck.deck_num = i;
-        deck.deck_type = 1;
-        deck.user_unit_id = 100; // Now maps to id from user_units
-        resp.party_deck_info.emplace_back(deck);
-    }
-
-    // phase 1: no login campaign (id 0 keeps the "Login Campaign" popup from showing)
-    resp.campaign_info.current_day = 0;
-    resp.campaign_info.total_days = 0;
-    resp.campaign_info.first_for_the_day = false;
-    resp.campaign_info.id = 0;
-
-    resp.summoner_journal.user_id = req.login_info.user_id; // we are really trusting the client here (bad)
-    resp.signal_key.key = "5EdKHavF";
-
-
-    std::string buffer{};
-    const auto& ec2 = glz::write_json(resp, buffer);
-    if (ec2)
-    {
-        const auto& glze = glz::format_error(ec2, buffer);
-        LOG_DEBUG << "Gme UserInfo Error during JSON writing: " << glze;
-        co_return HandleResult::error("Serialization error", glze);
-    }
-
-    co_return HandleResult::success(buffer);
+	co_return HandleResult::success(buffer);
 }

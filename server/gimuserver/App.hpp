@@ -29,3 +29,5 @@
 // utility
 #include <gimuserver/utils/Drogon.hpp>
 #include <gimuserver/utils/Macros.hpp>
+// bfanew persistence
+#include <gimuserver/db/Player.hpp>

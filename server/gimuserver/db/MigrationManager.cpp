@@ -49,6 +49,89 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: persistent players (gimuserver/db/Player.hpp)
+	migrate("30102026_PlayerTables", {
+		p->execSqlSync(
+			"CREATE TABLE accounts("
+			"gumi_user_id TEXT PRIMARY KEY NOT NULL,"
+			"device_vid TEXT NOT NULL,"
+			"device_name TEXT NOT NULL DEFAULT '',"
+			"token TEXT NOT NULL,"
+			"created_at INTEGER NOT NULL"
+			");"
+		);
+		p->execSqlSync("CREATE UNIQUE INDEX accounts_device ON accounts(device_vid);");
+		p->execSqlSync(
+			"CREATE TABLE players("
+			"user_id TEXT PRIMARY KEY NOT NULL,"
+			"gumi_user_id TEXT NOT NULL,"
+			"account_id TEXT NOT NULL,"
+			"handle_name TEXT NOT NULL DEFAULT '',"
+			"team TEXT NOT NULL,"
+			"energy_at INTEGER NOT NULL DEFAULT 0,"
+			"tutorial_end INTEGER NOT NULL DEFAULT 1,"
+			"created_at INTEGER NOT NULL"
+			");"
+		);
+		p->execSqlSync("CREATE UNIQUE INDEX players_gumi ON players(gumi_user_id);");
+		p->execSqlSync(
+			"CREATE TABLE player_units("
+			"user_unit_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+			"user_id TEXT NOT NULL,"
+			"unit_id INTEGER NOT NULL,"
+			"data TEXT NOT NULL"
+			");"
+		);
+		p->execSqlSync("CREATE INDEX player_units_user ON player_units(user_id);");
+		p->execSqlSync(
+			"CREATE TABLE player_decks("
+			"user_id TEXT NOT NULL,"
+			"deck_num INTEGER NOT NULL,"
+			"slot INTEGER NOT NULL,"
+			"user_unit_id INTEGER NOT NULL,"
+			"deck_type INTEGER NOT NULL DEFAULT 1,"
+			"member_type INTEGER NOT NULL DEFAULT 0,"
+			"PRIMARY KEY(user_id, deck_num, slot)"
+			");"
+		);
+		p->execSqlSync(
+			"CREATE TABLE player_clears("
+			"user_id TEXT NOT NULL,"
+			"mission_id INTEGER NOT NULL,"
+			"clear_date TEXT NOT NULL,"
+			"clear_cnt INTEGER NOT NULL DEFAULT 1,"
+			"most_time INTEGER NOT NULL DEFAULT 0,"
+			"get_bc INTEGER NOT NULL DEFAULT 0,"
+			"get_hc INTEGER NOT NULL DEFAULT 0,"
+			"PRIMARY KEY(user_id, mission_id)"
+			");"
+		);
+		p->execSqlSync(
+			"CREATE TABLE player_permits("
+			"user_id TEXT NOT NULL,"
+			"kind INTEGER NOT NULL,"
+			"place_id TEXT NOT NULL,"
+			"PRIMARY KEY(user_id, kind, place_id)"
+			");"
+		);
+		p->execSqlSync(
+			"CREATE TABLE player_runs("
+			"serial_id TEXT PRIMARY KEY NOT NULL,"
+			"user_id TEXT NOT NULL,"
+			"mission_id INTEGER NOT NULL,"
+			"started_at INTEGER NOT NULL"
+			");"
+		);
+		p->execSqlSync(
+			"CREATE TABLE player_items("
+			"user_id TEXT NOT NULL,"
+			"item_id INTEGER NOT NULL,"
+			"count INTEGER NOT NULL DEFAULT 0,"
+			"PRIMARY KEY(user_id, item_id)"
+			");"
+		);
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(
