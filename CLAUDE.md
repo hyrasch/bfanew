@@ -180,6 +180,23 @@ python tools/patch_apk.py --apk ..\brave-frontier-2-19-6-0.apk --host 192.168.1.
 adb install -r ..\build\bf-192.168.1.14-9960.apk
 ```
 
+**Revive's build, for reference** (pulled from the Ayn Thor on 2026-10-30 into
+`D:\.Code\bravefrontier\revive\revive-base.apk`, SHA-256 `2571a37a...753f1`, signed
+`CN=BF Local Server`, arm64 only, manifest and classes.dex byte-identical to the original).
+Diff of its `libgame.so` vs the original (60 regions, `scratchpad rvdiff.py`):
+- Networking: they **kept https** and swapped the pinned CA. The PEM at rodata `0x2318f4e`
+  (1414 bytes, Go Daddy Class 2) is replaced by their own EC "BF Revive Root CA";
+  `api-sl.bfww.gumi.sg` -> `api.bfrevive.net`, the S3 CDN string
+  `bravefrontier-dlc-130.s3-website-us-west-1.amazonaws.com` -> `cdn.bfrevive.net`;
+  `api-prod-player` untouched; `CommonUtils::getPurchasePhpUrl` switched from `http://`
+  to `https://`. So if we ever want TLS instead of plain http, replacing that PEM with
+  our CA is the known-good route.
+- Everything else is gameplay/UI: `PTRateThisAppPopup::showPopupIfRequired` -> `ret`,
+  Facebook login frame removed in `OptionTopScene`, credits button -> "reset" button,
+  unit fusion slots 5 -> 10 (`UnitMixMainScene`, `unit_mix_mn10.csv`), notice page,
+  `MissionResultScene`/`ReinforcementInfoList` hooks, several code caves with new code
+  (`0xe63080`, `0x12db460`, `0x16328e0`, `0x186b4e0`, ...). None of it is needed to log in.
+
 **Device:** a real device, the user's **Ayn Thor** (Android handheld, arm64), same as
 Revive. No emulator. Firewall rule for TCP 9960 inbound was added on 2026-10-30.
 
