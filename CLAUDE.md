@@ -117,6 +117,7 @@ python tools/dev.py build [--configure]   # VS dev shell + Ninja; --configure af
 python tools/dev.py reload                # GET /bfanew/reload: re-read deploy/system/*.json, no restart
 python tools/dev.py bump M_GACHA_MST      # bump a table version in version_info.json (+reload)
 python tools/dev.py client --to summon    # relaunch the game on BlueStacks and drive it there (~30 s)
+python tools/dev.py client --to mission   # ... or to the world map (quest) / the first mission list (mission)
 python tools/dev.py summon [--rare] [--multi]   # from the Summon scene: summon, open the door (~25 s)
 python tools/dev.py shot name             # screenshot -> ..uild\shots
 ame.png (+ window frame)
@@ -140,8 +141,6 @@ python tools/dev.py restart / stop / start   # detached server (when not using `
 - Startup popups are gone from the data (phase 1 has no daily tasks and no login campaign:
   `TEMP_daily_tasks*.json` lists emptied, `login_campaign*.json` zeroed, `dailytask_notify`
   0, `UserInfo` campaign info zeroed), so the home screen is reachable without extra taps.
-- Known data gap: tapping a quest banner shows "Cost limit exceeded" because the stub team
-  has no cost limit (`UserTeamInfo.deck_cost` / level table); harmless until quests.
 - Rough timings now: build 10-60 s (only for C++), reload < 1 s, client to Summon 30 s,
   summon 25 s. Before the script a round was 3-4 minutes.
 
@@ -330,6 +329,72 @@ with the honor points decremented. How the client consumes it (all from the disa
   response class, extracted from `GameResponseParser::getResponseObject`. Use it to know
   which key a handler must answer with.
 
+**Quest flow (2026-10-30):** the home carousel's QUEST page (peeking at the right edge,
+`banner_quest`) opens the **world map** (Mistral, `DungeonSelectScene2`), the area plate opens
+the **mission list** ("Adventurer's Prairie" / "Start of Adventure", energy 3, 5 battles), the
+mission opens the **reinforcement picker** ("Reinforcements could not be found. Proceed?" ->
+Yes, no request is sent for helpers yet), then the **squad/items screen** ("Begin Quest"),
+which sends `jE6Sp0q4` **MissionStart** (still the upstream "Unsupported" stub, the client
+shows the error and stays there). `python tools/dev.py client --to quest|mission` drives to
+the map / the mission list. What it took:
+- The Quest button first bounced straight back to the home screen (a `HomeInfo` request and
+  nothing else): `DungeonSelectScene2::initialize` picks the current area from
+  `AreaMstList::getActiveList`, which keeps only areas (and lands) present in
+  **`PermitPlaceInfoList`**, and with no area it `changeStepSceneWithFadeBlack(40)`s home.
+  That list is UserInfo `yXNM8kL3` (**PermitPlace**, now defined in `net/permit_place.kdl`):
+  one record per allowed place with exactly ONE id key (`0Cq2AlXW` gate, `9C64Qwe0` land,
+  `VjCY7rX4` area, `MHx05sXt` dungeon, `j28VNcUW` mission; the first key found sets the
+  type), plus `qY49LBjw` time limit, `nA95Bdj6`/`5Z1LNoyH`/`5ry19G4Y` quest bonus,
+  `s2gM3deu` period text, `C1vG0iKh` enterable flag (`isLockDungeon`). `StubPlayer::
+  FillQuestProgress` permits gate 1, land 1, area 100, dungeons 1 (tutorial) and 10,
+  missions 1, 2, 10, and marks missions 1 and 2 cleared in `UT1SVg59` (UserClearMissionInfo,
+  also defined now: `h7eY3sAK` user, `j28VNcUW` mission, `JATWnN57` clear date, `HIQoGb10`
+  count, `Wi4EFe6f` best time, `RWX38boG`/`bGx5ku0F` bc/hc). Ids come from the 2022
+  `F_GATE/LAND/AREA/DUNGEON/MISSION_MST` (downloaded MSTs, decoded copies in
+  `mst-decoded.zip`): dungeon 10 has missions 10/11/12 and mission 10 requires mission 2.
+- "You currently don't have enough energy": `UserTeamInfo` max/current action points were 0;
+  `FillTeam` now takes energy (15), arena orbs (3) and friend slots from the `user_level.json`
+  row (`UserLevelMst.action_points`, `.unk`, `.friend_count`).
+- `select_dlc_android` (features.json) was tried at 0: no effect on the bounce, so it is back
+  to 1. `DungeonSelectScene2::initialize` has a selective-DLC branch (`DLCManager::
+  checkIfDLCExistForActiveAreas`, `prepareDLCForActiveAreas`, confirmation text
+  `TUTORIAL_NODLC_GETDLC_CONFIRMATION`) that did not trigger here. "Begin Quest" downloads
+  ~1,750 files (`/content/item/*`, `/content/trial/*`...), all served or blanked.
+- The home carousel does not scroll with `input swipe` on BlueStacks (page dots stay on 1),
+  but the partly visible page still takes the tap. The Vortex Gate scene is
+  `AreaSPSelectScene`; its top-right button is scene 101800 (`RewardsTopScene`), not Quest.
+  Scene ids (`GameScene::getGameScene` jump tables): 40/41 HomeScene2, 61 DungeonSelectScene2,
+  82 MissionScene (battle), 112 MissionSelectScene2, 2000 LandScene, 2001 GateScene.
+
+**MissionStart contract** (`MissionStartRequest::createBody`, encode key `csiVLDKkxEwBfR70`),
+for the implementation to come. Request group `9Q1Lq5FS`: `h7eY3sAK` reinforcement user id
+("0" = none), `J3stQ7jd` friend points to spend, `j28VNcUW` mission id, `jkldTrhL`,
+`Z0Y4RoD7` deck number, `nA95Bdj6`/`5Z1LNoyH` quest bonus type/rate, `u1iPEVUq` helper deck
+no (-1), optional `1VagK32J` helper info; group `JzS3uxsZ` `{"0b4efi1W":"1"}`; frontier
+gate / challenge groups (`cvg8hzp9`, `Mg8K8Y1a`, `Che7rAre`...) only in those modes. The
+client then needs, in the reply:
+- `9Q1Lq5FS` **MissionStartInfo** (`MissionStartInfoResponse::readParam`): `h7eY3sAK`
+  reinforce user id, `J3stQ7jd` friend points, `j28VNcUW` mission id, `1VagK32J` reinforce
+  info, `Z0Y4RoD7` deck num.
+- `Kz7qfSs5` **MissionNum** (`MissionNumResponse::readParam`): `k9cxD7Ba` = the mission
+  serial id (`MissionInfo::setMissionSerialID`; `MissionStartScene::updateEvent` refuses an
+  empty one with `INVALID_MISSION_SERIAL_ID`), `nA95Bdj6`/`5Z1LNoyH` bonus, `LE6JkUp7`.
+  Then the scene switches to 82 `MissionScene` (the battle).
+- The battle data, which is NOT among the downloaded MSTs (only `F_MONSTER_CGG/CGS/IMG`,
+  the sprites, are): `pj41dy9g` **BattleGroupMst** (`ZSf8e1MG`, `Qzhp8B40` group id,
+  `j28VNcUW` mission, `VETu07N6`, `etM5TCb9`, `5aetPz3C`, `mFxqsc7Y`), `75t0sx9z`
+  **BattleMonsterGroupMst** (`Qzhp8B40`, `o49dYfpH` monster id, `hZtF1s8B`, `3g8PW6x0`,
+  `i30R8TAs`, `hw3L0uVj`, `5wB9SHAV`), `n64NOpfy` **BattleMonsterGroupPartsMst**
+  (`Qzhp8B40`, `o49dYfpH`, `7Hf3DnVj`, `2gZIRQ7D`, `2EF0d6ue`, `QqfI9mM4`, `0QxL2is7`,
+  `8GNxt1XE`), `U0v5IeJo` **MonsterMst** (38 keys, stats `e7DK0FQT` hp ... `d96tuT2E` exp,
+  `Najhr8m6` zel, `HTVh8a65` karma, `pn16CNah` unit id...), and `F5Vs19mb`
+  **MissionReward** (19 keys). The key order above is the parser order; the field meanings
+  still have to be read off the setters. **There is no local source for the per-mission
+  enemy groups and monster stats** (`mst-decoded.zip` only has `F_RAID_BATTLE_GROUP_MST`;
+  the community datamine has mission rewards, not enemies), so the battle data has to be
+  rebuilt (wiki / datamine of enemy stats) before MissionStart can answer for real. This is
+  the next client-side gap.
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -385,7 +450,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Next on the client side: Quest (Vortex Gate / world map, MissionStart is a stub) and the write operations (DeckEdit, fusion, sell) once persistence exists.
+1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quest flow reaches "Begin Quest" (world map, mission list, squad screen); next on the client side: MissionStart + the battle data (see "MissionStart contract"), then the write operations (DeckEdit, fusion, sell) once persistence exists.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.

@@ -1,9 +1,64 @@
 json PermitPlace {
-    doc "TODO"
+    doc "One place the server lets the player enter (PermitPlaceResponse::readParam). Exactly ONE of the id fields is present: the first key found sets the type (gate 5, land 4, area 1, dungeon 2, mission 3). AreaMstList::getActiveList / DungeonSelectScene2::isLockDungeon only show places that are in this list, so an empty list sends the Quest button straight back to the home screen."
 
-    field mock type="str" {
-      key "INVALID"
-      doc "TODO"
+    field gate_id type="str" {
+        key "0Cq2AlXW"
+        doc "F_GATE_MST missionGateId (type 5)."
+        optional #true
+    }
+
+    field land_id type="str" {
+        key "9C64Qwe0"
+        doc "F_LAND_MST missionLandId (type 4)."
+        optional #true
+    }
+
+    field area_id type="str" {
+        key "VjCY7rX4"
+        doc "F_AREA_MST missionAreaId (type 1)."
+        optional #true
+    }
+
+    field dungeon_id type="str" {
+        key "MHx05sXt"
+        doc "F_DUNGEON_MST missionDungeonId (type 2)."
+        optional #true
+    }
+
+    field mission_id type="str" {
+        key "j28VNcUW"
+        doc "F_MISSION_MST missionId (type 3)."
+        optional #true
+    }
+
+    field time_limit type="i32::str" {
+        key "qY49LBjw"
+        doc "Seconds the permit stays valid, 0 = no limit (PermitPlaceInfoList::exsitsTimeLimitOrverQuest triggers UpdatePermitPlaceInfo when expired)."
+    }
+
+    field quest_bonus_type type="i32::str" {
+        key "nA95Bdj6"
+        doc "Quest bonus type, 0 = none."
+    }
+
+    field quest_bonus_rate type="str" {
+        key "5Z1LNoyH"
+        doc "Quest bonus rate, parsed with StrToFloat."
+    }
+
+    field quest_bonus_time_limit type="i32::str" {
+        key "5ry19G4Y"
+        doc "Quest bonus end, 0 = none."
+    }
+
+    field period_text type="str" {
+        key "s2gM3deu"
+        doc "Text shown for limited-time places (empty for normal quests)."
+    }
+
+    field enterable_flg type="bool::str" {
+        key "C1vG0iKh"
+        doc "0 = shown but locked (DungeonSelectScene2::isLockDungeon), 1 = enterable."
     }
 }
 

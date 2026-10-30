@@ -72,6 +72,10 @@ COORDS = {
     "terms_checkbox": (0.142, 0.696),
     "terms_agree": (0.499, 0.854),
     "phone_ok": (0.499, 0.658),
+    "banner_quest": (0.978, 0.792),   # the QUEST page peeking at the right edge of the home carousel
+    "area_first": (0.790, 0.891),     # "Adventurer's Prairie" plate on the Mistral map (lower right)
+    "mission_first": (0.500, 0.339),  # first row of the mission list
+    "dlg_ok": (0.499, 0.555),         # OK of the mid-screen message box
 }
 
 DEVICE = os.environ.get("BF_DEVICE", "127.0.0.1:6610")
@@ -345,6 +349,10 @@ def cmd_client(a):
         tapk("tab_summon"); time.sleep(4); print("summon scene")
     elif a.to == "unit":
         tapk("tab_unit"); time.sleep(4); print("unit scene")
+    elif a.to in ("quest", "mission"):
+        tapk("banner_quest"); time.sleep(5); print("world map")
+        if a.to == "mission":
+            tapk("area_first"); time.sleep(4); print("mission list")
     p = shot(f"client_{a.to}")
     print(f"screenshot: {p}")
 
@@ -432,7 +440,7 @@ def main():
     sub.add_parser("restart").set_defaults(f=cmd_restart)
     sub.add_parser("reload").set_defaults(f=cmd_reload)
     p = sub.add_parser("bump"); p.add_argument("table"); p.set_defaults(f=cmd_bump)
-    p = sub.add_parser("client"); p.add_argument("--to", default="home", choices=["home", "summon", "unit"]); p.add_argument("--fresh", action="store_true"); p.set_defaults(f=cmd_client)
+    p = sub.add_parser("client"); p.add_argument("--to", default="home", choices=["home", "summon", "unit", "quest", "mission"]); p.add_argument("--fresh", action="store_true"); p.set_defaults(f=cmd_client)
     p = sub.add_parser("summon"); p.add_argument("--rare", action="store_true"); p.add_argument("--multi", action="store_true"); p.set_defaults(f=cmd_summon)
     p = sub.add_parser("shot"); p.add_argument("name", nargs="?", default="shot"); p.set_defaults(f=cmd_shot)
     p = sub.add_parser("tap"); p.add_argument("x", type=int); p.add_argument("y", type=int); p.set_defaults(f=cmd_tap)
@@ -440,7 +448,7 @@ def main():
     p = sub.add_parser("swipe"); [p.add_argument(n, type=int) for n in ("x1", "y1", "x2", "y2")]; p.set_defaults(f=cmd_swipe)
     p = sub.add_parser("key"); p.add_argument("key", choices=["back", "home"]); p.set_defaults(f=cmd_key)
     p = sub.add_parser("logs"); p.add_argument("-n", type=int, default=15); p.add_argument("--show"); p.add_argument("--chars", type=int, default=3000); p.set_defaults(f=cmd_logs)
-    p = sub.add_parser("loop"); p.add_argument("--to", default="home", choices=["home", "summon", "unit"]); p.add_argument("--fresh", action="store_true"); p.add_argument("--configure", action="store_true"); p.set_defaults(f=cmd_loop)
+    p = sub.add_parser("loop"); p.add_argument("--to", default="home", choices=["home", "summon", "unit", "quest", "mission"]); p.add_argument("--fresh", action="store_true"); p.add_argument("--configure", action="store_true"); p.set_defaults(f=cmd_loop)
     a = ap.parse_args()
     DEVICE = a.device
     a.f(a)

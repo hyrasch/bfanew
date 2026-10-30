@@ -1134,11 +1134,41 @@ json UserFavorite {
 }
 
 json UserClearMissionInfo {
-	doc "TODO"
-	
-	field mock type="str" {
-		key "INVALID"
+	doc "One cleared mission (UserClearMissionInfoResponse::readParam copies every value as a string). The client uses the list for CLEAR marks and for requiredMissionIds checks (DungeonSelectScene2::isClearDungeon)."
+
+	field user_id type="str" {
+		key "h7eY3sAK"
 		doc "TODO"
+	}
+
+	field mission_id type="i32::str" {
+		key "j28VNcUW"
+		doc "F_MISSION_MST missionId."
+	}
+
+	field clear_date type="str" {
+		key "JATWnN57"
+		doc "First clear, 'YYYY-MM-DD HH:MM:SS'."
+	}
+
+	field clear_cnt type="i32::str" {
+		key "HIQoGb10"
+		doc "Times cleared."
+	}
+
+	field most_time type="i32::str" {
+		key "Wi4EFe6f"
+		doc "Best clear time."
+	}
+
+	field get_bc type="i32::str" {
+		key "RWX38boG"
+		doc "Battle crystals obtained (best run)."
+	}
+
+	field get_hc type="i32::str" {
+		key "bGx5ku0F"
+		doc "Heart crystals obtained (best run)."
 	}
 }
 

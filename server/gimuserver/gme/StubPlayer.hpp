@@ -49,10 +49,20 @@ namespace StubPlayer
 		// Helper Squads" caution when leaving Manage Squad.
 		t.reinforcement_deck = { 0, 1, 2 };
 		t.level = 1;
-		// cost limit shown in Manage Squad ("COST x/limit"): from the level table
+		// from the level table (user_level.json): cost limit shown in Manage Squad ("COST
+		// x/limit"), energy (15 at level 1, "Energy x/max" on the home screen; the mission
+		// list refuses a quest with "You currently don't have enough energy" at 0/0), arena
+		// orbs and friend slots. A new player starts full.
 		t.deck_cost = 0;
 		for (const auto& lv : theServer()->cache().initializeResp().progression)
-			if (lv.level == t.level) { t.deck_cost = lv.deck_cost; break; }
+			if (lv.level == t.level)
+			{
+				t.deck_cost = lv.deck_cost;
+				t.max_action_point = t.action_point = lv.action_points;
+				t.max_fight_point = t.fight_point = lv.unk; // "YS2JG9no": arena orbs (3)
+				t.max_friend_count = lv.friend_count;
+				break;
+			}
 		t.exp = 0;
 		t.warehouse_count = 100;
 		t.add_unit_count = 100;
@@ -63,5 +73,57 @@ namespace StubPlayer
 		t.free_gems = scfg.initialFreeGems;
 		t.paid_gems = 0;
 		t.friend_point = scfg.initialFriendPoints;
+	}
+
+	/*!
+	* Quest progress of a brand-new player who just finished the tutorial.
+	*
+	* "yXNM8kL3" PermitPlace: the places the player may enter. The client shows ONLY what is in
+	* this list (AreaMstList::getActiveList filters on it, DungeonSelectScene2::isLockDungeon
+	* checks the enterable flag), and with an empty list DungeonSelectScene2::initialize finds
+	* no area and fades straight back to the home screen. Each record carries exactly one id.
+	* Ids from the 2022 tables (mst-decoded.zip): gate 1 "Grand Gaia", land 1 "Mistral",
+	* area 100 "Mistral", dungeon 1 = tutorial (missions 1, 2), dungeon 10 = first real dungeon
+	* (missions 10, 11, 12; mission 10 requires mission 2).
+	*
+	* "UT1SVg59" UserClearMissionInfo: cleared missions. The tutorial missions count as cleared
+	* so that requiredMissionIds checks pass.
+	*
+	* STUB: a real server derives both lists from the player's clear history (step 4).
+	*/
+	inline void FillQuestProgress(UserInfoResp& resp)
+	{
+		auto permit = [&](auto setter)
+		{
+			PermitPlace p = {};
+			p.time_limit = 0;
+			p.quest_bonus_type = 0;
+			p.quest_bonus_rate = "0";
+			p.quest_bonus_time_limit = 0;
+			p.period_text = "";
+			p.enterable_flg = true;
+			setter(p);
+			resp.permit_place.emplace_back(std::move(p));
+		};
+		permit([](PermitPlace& p) { p.gate_id = "1"; });
+		permit([](PermitPlace& p) { p.land_id = "1"; });
+		permit([](PermitPlace& p) { p.area_id = "100"; });
+		permit([](PermitPlace& p) { p.dungeon_id = "1"; });
+		permit([](PermitPlace& p) { p.dungeon_id = "10"; });
+		for (const char* m : { "1", "2", "10" })
+			permit([m](PermitPlace& p) { p.mission_id = m; });
+
+		for (int32_t m : { 1, 2 })
+		{
+			UserClearMissionInfo c = {};
+			c.user_id = kUserId;
+			c.mission_id = m;
+			c.clear_date = "2013-11-01 00:00:00";
+			c.clear_cnt = 1;
+			c.most_time = 0;
+			c.get_bc = 0;
+			c.get_hc = 0;
+			resp.clear_mission_info.emplace_back(c);
+		}
 	}
 }

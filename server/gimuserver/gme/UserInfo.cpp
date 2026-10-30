@@ -31,6 +31,8 @@ HANDLEF(UserInfo)
 
     resp.unit_info.emplace_back(StubPlayer::StarterUnit());
 
+    StubPlayer::FillQuestProgress(resp);
+
     for (int i = 0; i < 10; i++) {
         UserPartyDeckInfo deck = {};
         deck.deck_num = i;
