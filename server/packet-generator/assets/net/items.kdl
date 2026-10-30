@@ -43,3 +43,12 @@ json ItemSellEntry {
         doc "how many to sell"
     }
 }
+
+json ItemMixEntry {
+    doc "ItemMix request group JTf2jY5o: one node, ItemMixRequest::itemCsvData = recipeId:mixCount,... (ItemMixResultInfoList, one entry per recipe mixed since the last connection)"
+
+    field recipes type="str" {
+        key "4HqhTf3a"
+        doc "recipeId:count,recipeId:count,..."
+    }
+}

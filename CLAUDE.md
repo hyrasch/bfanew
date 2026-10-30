@@ -105,9 +105,9 @@ permitted places, mission runs, the warehouse (item pickups) and the items equip
 Handlers that write: GachaAction (units, gems / honor points), MissionStart (energy, run),
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
-UnitSell, ItemEdit (equipped items), ItemSell. Stubs: DungeonEventUpdate (story events watched,
+UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis). Stubs: DungeonEventUpdate (story events watched,
 not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: item synthesis (ItemMix), town facilities, arena, gifts, friends,
-shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+shop, town facility upgrades. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -620,6 +620,28 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   signal key) once the player has sat on the home screen for more than 300 s
   (`UpdateEventInfo::isNeedUpdate`). It was unregistered: "Unsupported request: rCB7ZI8x" popped
   up after the 20-minute download and the client restarted on OK. Stub answering `{}`.
+- `4P5GELTF` **ItemMix** (key `AFqKIJ8Z4mHPB9xg`, URL `/actionSymbol/cmk86pt4.php`,
+  `gimuserver/gme/ItemMix.cpp`, **verified 2026-10-30**): item synthesis on the village's
+  Synthesis screen. `MyTownItemMixScene::mixItem` does everything locally (karma -= recipe karma,
+  materials taken, result added, `ItemMixResultInfoList` counts the mixes per recipe) and one
+  request goes out with the next connection: group `JTf2jY5o` with a single node
+  `{4HqhTf3a: "recipeId:count,..."}` (`ItemMixRequest::itemCsvData`). The server replays the mixes
+  against the stored warehouse (materials present, key items owned but not consumed, karma) and
+  answers `fEi17cnx` + the whole warehouse. Recipes are F_RECIPE_MST (`system/receipes.json`,
+  Initialize `8f0bCciN`): `4HqhTf3a` id, `kixHbe54` result item, `wgV86x1q` result count,
+  `HTVh8a65` karma, `75YV2q1i` materials `itemId:count,...`, `7dEB1Kwj` key item ids,
+  `H6k1LIxC` mix limit (-1 unlimited, 75 event recipes are limited), `XuJL4pc5` display order,
+  `qA7M9EjP` / `SzV0Nps7` validity. Verified: Cure (recipe 1009 = Green Grass + Green Drop) twice ->
+  request `1009:2`, warehouse 10000 3->1, 10300 9->7, 20000 5->7.
+- **Synthesis List = permitted recipes.** `MyTownItemListScene::setRecipeList` lists exactly the
+  UserInfo `51yQrDBR` **PermitReceipe** records (`4HqhTf3a` recipe id, `H6k1LIxC` creations done,
+  `VDKB0Y5h` seconds left or -1; a 0 there reads as expired and hides the recipe, which cost an
+  hour): with an empty list the screen is blank. UserInfo now sends, for every town facility
+  (`Lh1I3dGo` TownFacilityMst) whose `need_mission_id` is 0 or cleared, a level-1
+  `UserTownFacilityInfo` and the recipes its level releases (`d0EkJ4TB` TownFacilityLvMst
+  `rGoJ6Ty9` release_receipe): facility 2 lv 1 = 29 item recipes including Cure, facility 1
+  (mission 21) lv 1 = 357 sphere recipes. Facility upgrades ("Upgrades" in the village, karma per
+  level, more recipes) are not implemented, creations done are not tracked.
 - Town records on the wire (from `MyTownTopScene`): `eip3MS5L` drop_item_info is
   `itemId:count[:zel[:karma]],...` indexed by `count - tap_cnt`, read only when `mDaE3t6A` tap_cnt
   >= 1 (collect animation, `TownUpdateRequest` queued); `qA7M9EjP` startdate is never read by the
@@ -686,7 +708,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell verified on the Sell Items screen; next: item synthesis (`ItemMix` `4P5GELTF`, key `AFqKIJ8Z4mHPB9xg`), energy purchase.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; next: energy purchase, town facility upgrades, item collection taps on the village locations (`TownUpdateRequest`).
 5. Test feature flags system by system.
 
 ## Conventions

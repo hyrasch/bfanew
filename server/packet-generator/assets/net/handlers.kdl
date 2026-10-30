@@ -517,6 +517,44 @@ json ItemSellResp {
     }
 }
 
+json ItemMixReq {
+    doc "ItemMix command (request id 4P5GELTF, key AFqKIJ8Z4mHPB9xg, URL /actionSymbol/cmk86pt4.php): item synthesis done on the village's Synthesis screen (MyTownItemMixScene::mixItem updates the client locally, the mixes are sent with the next connection)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field mix type="[ItemMixEntry]" {
+        key "JTf2jY5o"
+        doc "one node with the recipe csv"
+    }
+}
+
+json ItemMixResp {
+    doc "ItemMix reply: the wallet (karma spent) and the whole warehouse"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field warehouse_info type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "TODO"
+    }
+}
+
 json OpeUserUnit {
     doc "One summoned unit as the classic (non-resummon) GachaActionScene wants it: OpeUserUnitResponse sets UserState::setSelectUserUnitID / GachaUnitsList, setGachaChangeRateInfo and setGachaEffectID from these."
 

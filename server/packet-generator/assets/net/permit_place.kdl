@@ -81,21 +81,20 @@ json PermitPlaceSP {
 }
 
 json PermitReceipe {
-  doc "TODO"
+  doc "A recipe the player may synthesize (UserInfo 51yQrDBR, PermitRecipeResponse::readParam). The village's Synthesis List is exactly this list (MyTownItemListScene::setRecipeList): send the union of TownFacilityLvMst.release_receipe of the facility levels the player has."
 
-  field unk1 type="i32::str" {
+  field recipe_id type="i32::str" {
     key "4HqhTf3a"
-    doc "TODO"
+    doc "F_RECIPE_MST id"
   }
 
-  field unk2 type="i32::int" {
+  field cnt type="i32::int" {
     key "H6k1LIxC"
-    doc "TODO"
+    doc "PermitRecipeInfo::setCnt: creations already done; MyTownItemListScene hides the recipe once cnt >= the recipe limit (unless the limit is -1)"
   }
 
-  field unk3 type="i32::int" {
+  field limit type="i32::int" {
     key "VDKB0Y5h"
-    doc "TODO"
+    doc "PermitRecipeInfo::setLimit: seconds left, -1 no time limit (0 reads as expired: getRemainingTime < 1 hides the recipe)"
   }
-
 }

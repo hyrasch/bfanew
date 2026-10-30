@@ -1,6 +1,7 @@
 #include "App.hpp"
 #include "Handlers.hpp"
 #include <cstdlib>
+#include <unordered_set>
 
 /*
 * UserInfo ("cTZ3W2JG"): the player's state after Initialize. Everything player-specific comes
@@ -53,6 +54,42 @@ HANDLEF(UserInfo)
 		d.location_id = loc.id;
 		d.tap_cnt = 0;
 		resp.town_location_detail.emplace_back(d);
+	}
+
+	// town facilities: every facility whose need_mission_id is 0 or cleared is at level 1 (upgrades
+	// are not implemented), and the recipes the village's Synthesis List offers (51yQrDBR
+	// PermitReceipe, the only source of MyTownItemListScene::setRecipeList) are the union of
+	// TownFacilityLvMst.release_receipe of those levels. Creations done are not tracked (always 0).
+	{
+		std::unordered_set<int32_t> cleared;
+		for (const auto& c : resp.clear_mission_info) cleared.insert(c.mission_id);
+		const auto& init = theServer()->cache().initializeResp();
+		resp.town_facility_info.clear();
+		resp.permit_receipes.clear();
+		std::unordered_set<int32_t> seen;
+		for (const auto& f : init.town_facility)
+		{
+			if (f.need_mission_id != 0 && !cleared.contains(f.need_mission_id)) continue;
+			UserTownFacilityInfo fi = {};
+			fi.user_id = p.user_id;
+			fi.facility_id = f.id;
+			fi.lv = 1;
+			fi.karma = 0;
+			resp.town_facility_info.emplace_back(fi);
+			for (const auto& lv : init.town_facility_lv)
+			{
+				if (lv.id != f.id || lv.lv > 1) continue;
+				for (const auto rid : lv.release_receipe)
+				{
+					if (!seen.insert(rid).second) continue;
+					PermitReceipe pr = {};
+					pr.recipe_id = rid;
+					pr.cnt = 0;     // creations done (MyTownItemListScene skips a recipe once cnt >= its limit)
+					pr.limit = -1;  // time limit: -1 none (0 would read as expired, getRemainingTime < 1)
+					resp.permit_receipes.emplace_back(pr);
+				}
+			}
+		}
 	}
 
 	// dev aid: BFANEW_BLANK=warehouse,equip,town,clears,permits,units,decks blanks lists to bisect client
