@@ -159,15 +159,29 @@ neutralise the `:80` append, add `usesCleartextTraffic`, re-zip with `resources.
 aligned, sign v1+v2. With port 9960 the replacement must stay <= 19 chars
 (`192.168.1.14:9960` is 17, OK).
 
-**Status:** the automated patch/sign script for `bfanew/tools/` could not be produced in
-the Claude session (the response was stopped by Anthropic's safety classifier while
-writing it). Options: build it by hand with standard tools (`apktool` or plain zip +
-`zipalign` + `apksigner` from Android build-tools, needs a JDK), or redo it in a session
-with the above offsets. Nothing was installed or patched on a device yet.
+**Tooling (installed 2026-10-30):** Microsoft OpenJDK 17 (`C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot`,
+winget), Android platform-tools (`adb`, winget `Google.PlatformTools`, lands in
+`%LOCALAPPDATA%\Microsoft\WinGet\Packages\Google.PlatformTools_...\platform-tools`), Android
+SDK at `D:\.Codendroid-sdk` with `cmdline-tools/latest` and `build-tools/34.0.0`
+(`zipalign`, `apksigner`). Python packages: `cryptography`, `pyaxmlparser`, `capstone`, `pyelftools`.
 
-**Device:** still to decide (real phone vs emulator). Emulator needs an arm64 system
-image with ARM translation (x86_64 images on API 30+), the APK has no x86 libs.
-From the emulator the PC is `10.0.2.2`; from a phone it is the LAN IP.
+**Patch script:** `tools/patch_apk.py` applies the byte patches above to both `libgame.so`,
+re-zips (signature files dropped, compression kept per entry), then runs `zipalign` and
+`apksigner` (v1+v2, self-signed key `build/bfanew-debug.keystore`, created on first run).
+It checks the input SHA-256 and every original byte before patching. The manifest is NOT
+changed (no `usesCleartextTraffic`): libcurl ignores the cleartext policy; revisit if the
+WebView pages (news/notice) matter.
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"; $env:Path = "$env:JAVA_HOMEin;$env:Path"
+cd D:\.Coderavefrontierfanew
+python tools/patch_apk.py --apk ..rave-frontier-2-19-6-0.apk --host 192.168.1.14 --sdk D:\.Codendroid-sdk --out ..uild
+# -> ..uildf-192.168.1.14-9960.apk  (verified: v1 true, v2 true)
+adb install -r ..uildf-192.168.1.14-9960.apk
+```
+
+**Device:** a real device, the user's **Ayn Thor** (Android handheld, arm64), same as
+Revive. No emulator. Firewall rule for TCP 9960 inbound was added on 2026-10-30.
 
 **Server side done:** `deploy/config.json` now has two listeners, `192.168.1.14:9960`
 first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile is
@@ -177,7 +191,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: analysis done (see above). Still to do: the patch/sign tool in `bfanew/tools/` (blocked in-session, see Status), pick a device, install, and read the server request log (`deploy/log/`, TRACE level) to see how far the client gets. Done = client reaches Initialize/UserInfo on our server.
+1. Android patch: analysis and `tools/patch_apk.py` done, APK built. Still to do: install on the Ayn Thor, read the server request log (`deploy/log/`, TRACE level) to see how far the client gets, stub what is missing. Done = client reaches Initialize/UserInfo on our server.
 2. Fork decompfrontier/server into bfanew (keep AGPL, keep upstream history if possible), and add the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.
