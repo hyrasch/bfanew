@@ -1,0 +1,611 @@
+import "../mst/version_info.kdl"
+import "../mst/login_campaign.kdl"
+import "../mst/user_level.kdl"
+import "../mst/town.kdl"
+import "../mst/dungeon_key.kdl"
+import "../mst/arena.kdl"
+import "../mst/gacha.kdl"
+import "../mst/define.kdl"
+import "../mst/npc.kdl"
+import "../mst/slots.kdl"
+import "../mst/banner.kdl"
+import "../mst/excluded_dungeon.kdl"
+import "../mst/passive_skill.kdl"
+import "../mst/notice_info.kdl"
+import "../mst/daily_task.kdl"
+import "../mst/gift.kdl"
+import "../mst/unit.kdl"
+import "../mst/receipe.kdl"
+import "../mst/info.kdl"
+import "../mst/trophy.kdl"
+import "../mst/help.kdl"
+import "../mst/url.kdl"
+import "../mst/event.kdl"
+import "../mst/sound.kdl"
+import "../mst/first_desc.kdl"
+import "../mst/frontier_hunter.kdl"
+import "../net/signal_key.kdl"
+import "../net/challenge_arena.kdl"
+import "../net/guild.kdl"
+import "../net/daily_login.kdl"
+import "../net/summoner_journal.kdl"
+import "../net/user.kdl"
+import "../net/items.kdl"
+import "../net/permit_place.kdl"
+import "../net/mission.kdl"
+import "../net/raid.kdl"
+import "../net/npc.kdl"
+import "../net/friends.kdl"
+import "../net/event.kdl"
+import "../net/featuring_gate.kdl"
+
+json InitializeReq {
+    doc "Initialization command"
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST that should be sent"
+     }
+}
+
+
+// @json
+json InitializeResp {
+    doc "Response of the initialize command"
+
+    // # cachable
+    field loginCampagin  type="[LoginCampaignMst]::size(1)" {
+        key Bd29Pqw0
+        doc "Configuration about the current login progression"
+    }
+
+    field loginCampaignReward type="[LoginCampaignReward]" {
+        key "bD18x9Ti"
+        doc "Configuration about each day of the login campaign"
+    }
+
+    field progression type="[UserLevelMst]" {
+        key "YDv9bJ3s"
+        doc "Configuration of the user stats progression"
+    }
+
+    field mst type="[VersionInfo]" {
+        key "KeC10fuL"
+        doc "Configuration of the versions of the MSTs"
+    }
+
+    field townFacility type="[TownFacilityMst]" {
+        key "Lh1I3dGo"
+        doc TODO
+    }
+
+    field townFacilityLv type="[TownFacilityLvMst]" {
+        key "d0EkJ4TB"
+        doc TODO
+    }
+
+    field townLocation type="[TownLocationMst]" {
+        key "1y2JDv79"
+        doc TODO
+    }
+
+    field townLocationLv type="[TownLocationLvMst]" {
+        key "9ekQ4tZq"
+        doc TODO
+    }
+
+    field dungeonKeys type="[DungeonKeyMst]" {
+        key "4NG79sX1"
+        doc "Configuration of the Vortex dungeon with keys"
+    }
+
+    field arenaRanks type="[ArenaRankMst]" {
+        key "6kWq78zx"
+        doc "PVP Arena rankings"
+    }
+
+    field gachaEffects type="[GachaEffectMst]" {
+        key "Pf97SzVw"
+        doc TODO
+    }
+
+    field gachas type="[GachaMst]" {
+        key "5Y4GJeo3"
+        doc "Configuration of current Gacha banners"
+    }
+
+    field defines type="DefineMst" {
+        key "VkoZ5t3K"
+        doc "Configuration of the server"
+    }
+
+    field npcs type="[NpcMst]" {
+        key "hV5vWu6C"
+        doc TODO
+    }
+
+    field bannerInfo type="[BannerInfoMst]" {
+        key "Pk5F1vhx"
+        doc TODO
+    }
+
+    field extraPassiveSkills type="[ExtraPassiveSkillMst]" {
+        key "z5U7utsm"
+        doc TODO
+    }
+
+    field noticeInfo type="NoticeInfo" {
+        key "Pj6zDW3m"
+        doc "Configuration of notices"
+    }
+
+    field expPattern type="[UnitExpPatternMst]" {
+        key "JYFGe9y6"
+        doc "TODO"
+    }
+
+    field receipe type="[ReceipeMst]" {
+        key "8f0bCciN"
+        doc "TODO"
+    }
+
+    field trophy type="[TrophyMst]" {
+        key "6CTU8m2v"
+        doc "TODO"
+    }
+
+    field trophy_group type="[TrophyGroupMst]" {
+        key "1NTG2oVZ"
+        doc "TODO"
+    }
+
+    field trophy_grade type="[TrophyGradeMst]" {
+        key "Ked15IpH"
+        doc "TODO"
+    }
+
+    field information type="[InformationMst]" {
+        key "5nBa3CAe"
+        doc "TODO"
+    }
+
+    field help type="[HelpMst]" {
+        key "9x4zZCeN"
+        doc "TODO"
+    }
+
+    field help_sub type="[HelpSubMst]" {
+        key "5C9LuNrk"
+        doc "TODO"
+    }
+
+    field url type="[UrlMst]" {
+        key "At7Gny2V"
+        doc "TODO"
+    }
+
+    field challenge type="[ChallengeMst]" {
+        key "mQC4s5ka"
+        doc "TODO"
+    }
+
+    field challenge_hr type="[ChallengeHrMst]" {
+        key "h09mEvDR"
+        doc "TODO"
+    }
+
+    field challenge_mis type="[ChallengeMisMst]" {
+        key "5M8jI4cP"
+        doc "TODO"
+    }
+
+    field challenge_grade type="[ChallengeGradeMst]" {
+        key "zW1i02aG"
+        doc "TODO"
+    }
+
+    field challenge_reward type="[ChallengeRewardMst]" {
+        key "4C1Wt8sS"
+        doc "TODO"
+    }
+
+    field challenge_item type="[ChallengeItemMst]" {
+        key "dn0NfRy1"
+        doc "TODO"
+    }
+
+    field challenge_mvp type="[ChallengeMvpMst]" {
+        key "nUmaEC41"
+        doc "TODO"
+    }
+
+    field challenge_rank_reward type="[ChallengeRankRewardMst]" {
+        key "P8V71kbw"
+        doc "TODO"
+    }
+
+    field interactive_banner type="[InteractiveBannerInfoMst]" {
+        key "B8lchAPr"
+        doc "TODO"
+    }
+
+    field sound type="[SoundMst]" {
+        key "36Sd0Aub"
+        doc "TODO"
+    }
+
+    // # user specific
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field settings type="[UserSettings]::size(1)" {
+        key "4ZfpSQv1"
+        doc "TODO"
+        // NOTE: not used in last version
+    }
+
+    field challengeArenaUserInfo type="[ChallengeArenaUserInfo]::size(1)" {
+        key "XGmGpmYW"
+        doc "User current progression in Challenge Arena"
+    }
+
+    field dailyTaskBonuses type="[DailyTaskBonusMst]::size(1)" {
+        key "p283g07d"
+        doc TODO
+    }
+
+    field dailyTaskPrizes type="[DailyTaskPrizeMst]" {
+        key "a739yK18"
+        doc TODO
+    }
+
+    field dailyTasks type="[DailyTaskMst]" {
+        key "k23D7d43"
+        doc TODO
+    }
+
+    field dailyLoginRewards type="DailyLoginRewardsUserInfo" {
+        key "Drudr2w5"
+        doc TODO
+    }
+
+    field guild type="GuildInfo" {
+        key "IkdSufj5"
+        doc "Guild information"
+    }
+
+    field videoAdSlots type="[VideoAdsSlotGameInfo]::size(1)" {
+        key "mebW7mKD"
+        doc TODO
+    }
+
+    field summonerJournal type="SummonerJournalUserInfo" {
+        key "M3dw18eB"
+        doc TODO
+    }
+
+    field loginInfo type="[LoginInfoResp]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+}
+
+json UnkUserInfoNetReq {
+    doc "TODO"
+
+    field unk type="i32::str" {
+        key "ad37Bdr1"
+        doc "TODO"
+    }
+}
+
+json UnkUserInfoNetResp {
+    doc "TODO"
+
+    field mock type="str" {
+        key "INVALID"
+        doc "TODO"
+    }
+}
+
+json UserInfoReq {
+    doc "TODO"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc TODO
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST that should be sent"
+    }
+
+    field unk type="[UnkUserInfoNetReq]::size(1)" {
+        key "563Dtye3"
+        doc "TODO"
+    }
+}
+
+json UserInfoResp {
+    doc "TODO"
+
+    field loginInfo type="[LoginInfoResp]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field teamInfo type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+	field unitInfo type="[UserUnitInfo]" {
+        key "4ceMWH6k"
+        doc "TODO"
+    }
+    field partyDeckInfo type="[UserPartyDeckInfo]" {
+        key "dX7S2Lc1"
+        doc "TODO"
+    }
+    field unitDictionary type="[UserUnitDictionary]" {
+        key "GV81ctzR"
+        doc "TODO"
+    }
+    field favorite type="[UserFavorite]" {
+        key "3kcmQy7B"
+        doc "TODO"
+    }
+    field clearMissionInfo type="[UserClearMissionInfo]" {
+        key "UT1SVg59"
+        doc "TODO"
+    }
+    field warehouseInfo type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "TODO"
+    }
+    field itemFavorite type="[ItemFavorite]" {
+        key "VSRPkdId"
+        doc "TODO"
+    }
+    field itemDictionaryInfo type="[UserItemDictionaryInfo]" {
+        key "bd5Rj6pN"
+        doc "TODO"
+    }
+    field arenaInfo type="[UserArenaInfo]" {
+        key "8jBJ7uKR"
+        doc "TODO"
+    }
+    field archive type="[UserTeamArchive]" {
+        key "zI2tJB7R"
+        doc "TODO"
+    }
+    field arena_archive type="[UserTeamArenaArchive]" {
+        key "PQ56vbkI"
+        doc "TODO"
+    }
+    field giftInfo type="[UserGiftInfo]" {
+        key "30uygM9m"
+        doc "TODO"
+    }
+    field campaignInfo type="[UserLoginCampaignInfo]::size(1)" {
+        key "3da6bd0a"
+        doc "TODO"
+    }
+    field summonerJournal type="SummonerJournalUserInfo" {
+        key "M3dw18eB"
+        doc "TODO"
+    }
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+    field permitPlace type="[PermitPlace]" {
+        key "yXNM8kL3"
+        doc "TODO"
+    }
+    field permitPlaceSP type="[PermitPlaceSP]" {
+        key "Y73tHKS8"
+        doc "TODO"
+    }
+    field permitPlaceML type="[PermitPlaceML]" {
+        key "Y73mHKS8"
+        doc "TODO"
+    }
+    field soundInfo type="[UserSoundInfo]::size(1)" {
+        key "d98mjNDc"
+        doc "TODO"
+    }
+    field medalInfo type="[UserBraveMedalInfo]" {
+        key "6C0kzwM5"
+        doc "TODO"
+    }
+    field achievementInfo type="UserAchievementInfo" {
+        key "Bnc4LpM8"
+        doc "TODO"
+        optional #true
+    }
+    field townFacilityInfo type="[UserTownFacilityInfo]" {
+        key "YRgx49WG"
+        doc "TODO"
+    }
+    field townLocationInfo type="[UserTownLocationInfo]" {
+        key "yj46Q2xw"
+        doc "TODO"
+    }
+    field townLocationDetail type="[UserTownLocationDetail]" {
+        key "s8TCo2MS"
+        doc "TODO"
+    }
+    field permitReceipes type="[PermitReceipe]" {
+        key "51yQrDBR"
+        doc "TODO"
+    }
+    field settings type="[UserSettings]::size(1)" {
+        key "4ZfpSQv1"
+        doc "TODO"
+        // NOTE: not used in last version
+    }
+    field dungeonKeyInfo type="[UserDungeonKeyInfo]" {
+        key "eFU7Qtb0"
+        doc "TODO"
+    }
+    field missionBreak type="[MissionBreakInfo]::size(1)" {
+        key "5PR2VmH1"
+        doc "TODO"
+    }
+    field raidUserInfo type="RaidUserInfo" {
+        doc "TODO"
+        key "1ry6BKoe"
+    }
+    field purchaseInfo type="UserPurchaseInfo" {
+        doc "TODO"
+        key "4W6EhXLS"
+    }
+    field releaseInfo type="[UserReleaseInfo]" {
+        doc "TODO"
+        key "Dp0MjKAf"
+    }
+    field equipInfo type="[UserEquipItemInfo]" {
+        doc "TODO"
+        key "71U5wzhI"
+    }
+    field equipBoostItemInfo type="[UserEquipBoostItemInfo]" {
+        doc "TODO"
+        key "nAligJSQ"
+    }
+    field summonTicketV2User type="[SummonTicketV2UserInfo]" {
+        doc "TODO"
+        key "a3d5d12i"
+    }
+    field npcMesssageOverwriteInfo type="[NpcMessageOverwriteInfo]" {
+        key "yNnvj59x"
+        doc "TODO"
+    }
+    field friendPointInfo type="[FriendPointInfo]" {
+        key "6e4b7sQt"
+        doc "TODO"
+    }
+    field summonerInfo type="[UserSummonerInfo]" {
+        key "n5mdIUqj"
+        doc "TODO"
+    }
+    field summonerArmInfo type="[UserSummonerArmsInfo]" {
+        key "dhMmbm5p"
+        doc "TODO"
+    }
+    field dbbInfo type="[UserUnitDbbInfo]" {
+        key "sxorQ3Mb"
+        doc "TODO"
+    }
+    field dbbLevelInfo type="[UserUnitDbbLevelInfo]" {
+        key "tR4katob"
+        doc "TODO"
+    }
+    field eventTokenInfo type="[EventTokenInfo]" {
+        key "l234vdKs"
+        doc "TODO"
+    }
+    field unkType type="[UnkUserInfoNetResp]" {
+        key "62Dz13dP"
+        doc "TODO"
+        // NOTE: not used in last binary
+    }
+
+    field featureGateInfo type="[FeatureGatingInfo]" {
+        doc "TODO"
+        key "2375D38i"
+    }
+
+    // Cachable!
+
+    field summonTicketV2 type="[SummonTicketV2Mst]" {
+        doc "TODO"
+        key "hE1d083b"
+    }
+    field resummonGacha type="[ResummonGachaMst]" {
+        doc "TODO"
+        key "da3qD39b"
+    }
+    field firstDesc type="[FirstDescMst]" {
+        key "8UawtzHw"
+        doc "TODO"
+    }
+    field generalEvent type="[GeneralEventMst]" {
+        key "Md9gG3c0"
+        doc "TODO"
+    }
+    field gift type="[GiftItemMst]" {
+        key "Bm1WNDQ0"
+        doc "TODO"
+    }
+    field gachaInfo type="[GachaInfoMst]" {
+        key "1IR86sAv"
+        doc "TODO"
+    }
+    field videoAdInfo type="[VideoAdInfo]" {
+        key "j129kD6r"
+        doc "TODO"
+    }
+    field videoAdRegion type="[VideoAdRegion]" {
+        key "bpD29eiQ"
+        doc "TODO"
+    }
+    field noticeInfo type="NoticeInfo" {
+        key "Pj6zDW3m"
+        doc "Configuration of notices"
+    }
+    field excludedDungeonMissions type="[ExcludedDungeonMissionMst]" {
+        key "3aDk1xk7"
+        doc "TODO"
+    }
+}
+
+json ReinforcementInfo {
+    doc "TODO"
+
+    field mock type="str" {
+        doc "TODO"
+        key "INVALID"
+    }
+}
+
+json FriendGetResp {
+    doc "TODO"
+
+    field info type="[ReinforcementInfo]" {
+        key "xZH6EIQ7"
+        doc "TODO"
+    }
+}
+
+json ChallengeArenaResetInfoResp {
+    doc "Challenge Arena cooling/reset timer snapshot"
+
+    field reset_info type="ChallengeArenaResetInfo" {
+        key "t6bRQfln"
+        doc "Timestamps for daily cooling and weekly reset"
+    }
+}
+
+json BadgeInfoResp {
+    doc "TODO"
+
+    field badge_info type="BadgeInfo" {
+        key "h23iRjGN"
+        doc "TODO"
+    }
+}

@@ -1,0 +1,54 @@
+json ReceipeMst {
+    doc "TODO"
+    
+    field id type="i32::str"  {
+        key "4HqhTf3a"
+        doc "TODO"
+    }
+
+    field item_id type="i32::str"  {
+        key "kixHbe54"
+        doc "TODO"
+    }
+
+    field item_count type="i32::str"  {
+        key "wgV86x1q"
+        doc "TODO"
+    }
+
+    field karma type="i32::str" {
+        key "HTVh8a65"
+        doc "TODO"
+    }
+
+    // TODO(arves): This is actually [i32::str => i32::str]::str
+    field materials type="str" {
+        key "75YV2q1i"
+        doc "TODO"
+    }
+
+    field keyitem_ids type="str" {
+        key "7dEB1Kwj"
+        doc "TODO"
+    }
+
+    field unk2 type="i32::str" {
+        key "H6k1LIxC"
+        doc "TODO"
+    }
+
+    field unk type="i32::str" {
+        key "XuJL4pc5"
+        doc "TODO"
+    }
+
+    field unk3 type="datetime" {
+        key "qA7M9EjP"
+        doc "TODO"
+    }
+
+    field unk4 type="datetime" {
+        key "SzV0Nps7"
+        doc "TODO"
+    }
+}
