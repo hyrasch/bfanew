@@ -1,0 +1,237 @@
+{
+ "energy_use": 50,
+ "battle_count": 1,
+ "exp": 20000,
+ "zel": 500000,
+ "karma": 0,
+ "unlocks": [
+  {
+   "mission_id": "2000001",
+   "dungeon_id": "2000000",
+   "area_id": "2000000",
+   "land_id": "99"
+  },
+  {
+   "mission_id": "8300031",
+   "dungeon_id": "2000000",
+   "area_id": "2000000",
+   "land_id": "99"
+  },
+  {
+   "mission_id": "8360021",
+   "dungeon_id": "2000000",
+   "area_id": "2000000",
+   "land_id": "99"
+  },
+  {
+   "mission_id": "8360041",
+   "dungeon_id": "2000000",
+   "area_id": "2000000",
+   "land_id": "99"
+  },
+  {
+   "mission_id": "8360051",
+   "dungeon_id": "2000000",
+   "area_id": "2000000",
+   "land_id": "99"
+  }
+ ],
+ "pj41dy9g": [
+  {
+   "ZSf8e1MG": "200000001",
+   "Qzhp8B40": "200000001",
+   "j28VNcUW": "2000000",
+   "VETu07N6": "1",
+   "etM5TCb9": "1",
+   "5aetPz3C": "0",
+   "mFxqsc7Y": "0"
+  }
+ ],
+ "75t0sx9z": [
+  {
+   "Qzhp8B40": "200000001",
+   "o49dYfpH": "2000000011",
+   "hZtF1s8B": "1",
+   "3g8PW6x0": "320:330",
+   "i30R8TAs": "",
+   "hw3L0uVj": "",
+   "5wB9SHAV": ""
+  }
+ ],
+ "n64NOpfy": [],
+ "U0v5IeJo": [
+  {
+   "o49dYfpH": "2000000011",
+   "3evIn0zZ": "Brave Knight Karl",
+   "e7DK0FQT": "400000",
+   "67CApcti": "1300",
+   "q08xLEsy": "500",
+   "iNy0ZU5M": "2",
+   "eyUo6a8c": "16:122:1,16:660:1,19:122:1,19:190:1,22:122:1,22:190:1,22:200030:1",
+   "6Aou5M9r": "22:40:2:4,25:30:2:4,28:30:2:4",
+   "n9h7p02P": "3",
+   "d96tuT2E": "0",
+   "Rs7bCE3t": "0",
+   "2EF0d6ue": "",
+   "QqfI9mM4": "",
+   "pn16CNah": "20233",
+   "qp37xTDh": "説明71",
+   "J2hPXGo5": "4",
+   "mv4o39Uz": "1",
+   "h2L1YI90": "1",
+   "i74vGUFa": "10650",
+   "D4Y5bWK7": "1",
+   "oMGC3hW0": "5",
+   "m4EK7Gt6": "4",
+   "6fwL59FT": "100",
+   "F4bQ7r8C": "",
+   "XE7Yi5c3": "1",
+   "CEeqs63b": "90:100:100:100:100:100",
+   "Najhr8m6": "0",
+   "9FN0GAei": "0",
+   "HTVh8a65": "0",
+   "vNk2sI4X": "0",
+   "3BpHN6VD": "0,26",
+   "hjAy9St3": "",
+   "2Smu5Mtq": "",
+   "CYk84E3W": "0,0",
+   "Y6bd4fXp": "",
+   "jm6JSK2D": "",
+   "9pXSKmn1": "0",
+   "Lkh6gYkT": ""
+  }
+ ],
+ "89ausgc4": [
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "1",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75@limited_act:1@skill:4@skill_unuse:0",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "100.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "2",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75@actbetween:5@skill:1@skill_unuse:0",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "100.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "3",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75@skill:2",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "20.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "4",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75@skill:3",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "20.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "5",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "hp_50pr_under",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "30.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "6",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "hp_75pr_under",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "50.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "7",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "weakness",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "30.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "8",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "hp_50pr_under",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "30.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "9",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:75",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "100.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "10",
+   "q7Nit8JW": "0:0:0:0#actbetween:5@skill:1@skill_unuse:0",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "100.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "11",
+   "q7Nit8JW": "0:0:0:0#non:0",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "bad_status",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "25.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "12",
+   "q7Nit8JW": "0:0:0:0#non:0",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "bb_50pr_over",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "25.0",
+   "L8PCsu0K": "試練_カル"
+  },
+  {
+   "4eEVw5hL": "10650",
+   "yu18xScw": "13",
+   "q7Nit8JW": "0:0:0:0#non:0",
+   "4xctV8gF": "2",
+   "VBj9u0ot": "random",
+   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "ug9xV4Fz": "100.0",
+   "L8PCsu0K": "試練_カル"
+  }
+ ],
+ "m9Ada1PN": []
+}
