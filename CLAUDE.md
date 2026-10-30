@@ -221,14 +221,39 @@ ControlCenterEnter -> `ynB7X5P9` UpdateInfoLight -> `NiYWKdzs` HomeInfo (x3, stu
 accepted) -> `Zw3WIoWu` ChallengeArenaResetInfo. The home screen renders fully (party, Vortex Gate /
 Light Featured Summon banners, bottom menu) after two startup popups ("Today's Tasks" ->
 Close, "Brave Burst 2022 Login Campaign" -> Claim). Opening the **Summon** tab sends
-`Uo86DcRh` **GatchaList**, now implemented (commit below): the Summon scene opens and the
-game keeps running, but its banner list is **empty** ("Select a type of Summon." with nothing
-to pick). The six banners in `deploy/system/gacha_info.json` are 2016-2022 entries with
-`TCnm1F4v` category ids 201..1549; the client (`SummonsCategorizationScene`,
-`GachaCategoryMstList`) matches them against the downloaded `F_GACHA_CATEGORY_MST` and
-start/end dates, so phase-1 banners will need consistent category + date data. Nothing
-else was requested on the Summon tab (no new `webpage`/MST fetches). Between those it
-downloads `/content/...` assets and `/mst/...` tables (the `webpage` logs).
+`Uo86DcRh` **GatchaList**, now implemented. **The Summon scene shows the two launch
+banners** (Honor Summon with the April 2014 art, Rare Summon with the six starter heroes),
+swipe left/right between them. What it took, and what was learned about the summon data:
+
+- `features.json` `gacha_category` **1 -> 0**: with 1 the client uses the 2018+
+  `SummonsCategorizationScene` (needs `F_GACHA_CATEGORY_MST` categories matching
+  `gacha_info` group ids; showed an empty list) and calls GatchaList; with 0 it uses the
+  original flat `SummonsTopScene` and does not call GatchaList at all. 0 is the phase-1 look.
+- The flat scene lists `gacha_info` (UserInfo `1IR86sAv`) ids but renders them from
+  `GachaMst` (`gacha.json`, Initialize `5Y4GJeo3`): `bg_img`, `btn_img`, dates, caption.
+  `SummonsTopScene::getGachaInfoList` **skips type 20000 outside the tutorial** (it is the
+  tutorial-only summon; the 2022 "Rare Summon" 2000 had that type), so Rare Summon got
+  type 2 (regular gem summon; 1 = honor). Type 20000 should come back as a separate id
+  when the tutorial is implemented.
+- **The client caches every MST locally and only re-reads it when its version in
+  `version_info.json` changes** (`M_GACHA_MST` 952 -> 954 now). Editing `gacha.json`
+  without a bump shows nothing new; `adb shell pm clear sg.gumi.bravefrontier` is the
+  brute-force alternative (then the first-run flow replays: Terms, phone-permission notice,
+  147-file MST download).
+- Launch-era art in the archive: `gacha_normal_bg_img_20140425.png` (Honor Summon, Vargas +
+  mascots, oldest dated honor art), `gacha_rare_bg_img.png` (undated = original Rare Summon,
+  also the client's hard-coded fallback in `SummonsScrlItem::addObject`), buttons
+  `gacha_normal_summons_btn1.png` / `gacha_rare_summons_btn1.png`, doors
+  `gacha_normal_door.png` / `gacha_rare_door.png`. The undated `gacha_normal_bg_img.png` is
+  the 2017 "Super Honor Summon" art, and `gacha_banner_1000/1001/2000.png` are JP placeholders.
+- Captions: the Rare Summon shows `caption_msg` from `gacha.json` verbatim; the Honor
+  Summon ignores it and shows a localized text ("[SUPER Honor Summon!] ...") from the
+  `sgtext` tables (`content/sgtext/sgtext_summonData_9.zip`, `sgtext_summonTypes_9.zip`:
+  zips of a base64-encoded `key^text` CSV; `MST_SUMMONDATA_<id>_SHORT/LONGDESCRIPTION`).
+  Changing those means re-zipping with a bumped suffix; not done yet.
+- `deploy/system` now holds only the two phase-1 banners (the four 2018-2022 ones were
+  removed from `gacha_info.json`; `gacha.json` keeps all 1,305 rows, only 1000/2000 edited).
+  The proper `phases/NN/` folder mechanism is still to do (step 2).
 
 Fixed on the way (both in the fork):
 1. `6K7LToCD` (advertising id) in `LoginInfoReq` + `error_on_unknown_keys=false` in the
@@ -273,7 +298,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK; the client reaches the home screen and the Summon scene). Next on the client side: make a banner show up in the Summon scene (category/date data), then follow the request log through Unit, Town, Quest.
+1. Android patch: **done** (script, APK; home screen and the Summon scene with the two launch banners). Next on the client side: follow the request log through Unit, Town, Quest, and the Summon button itself (GachaAction).
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.

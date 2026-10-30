@@ -33,7 +33,7 @@
     "old_video_ads_slot": 0,
     "raid_battle_restart": 1,
     "sg_resummon_gacha_enable": 1,
-    "gacha_category": 1,
+    "gacha_category": 0,
     "exclude_ca_fusion_unit": 0,
     "exp_window": 1,
     "facebook_stories": 0,
