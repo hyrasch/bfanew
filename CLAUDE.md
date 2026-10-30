@@ -414,12 +414,17 @@ next mission is permitted. Two handlers and a data pipeline:
   `tools/build_battles.py --datamine ... --mst ..\assets\mst-decoded.zip --out server/deploy/battle`
   turns them into **`server/deploy/battle/<mission_id>.json`** (MissionBattleData, wire keys,
   read by the handler per request, so edits need no restart): it numbers battles and monsters
-  itself (`<mission><battle:02><slot>`), lays enemies out (`LAYOUTS`, guessed, y 300-380 looks
-  right), fills the animation fields from F_UNIT_MST, rebuilds AI rows from `ai.json`, and adds
-  the mission's xp/zel/karma and what clearing it unlocks (`unlocks`: missions whose `requires`
-  is this one, with their dungeon/area/land from F_MISSION_MST). 204 missions covered (199
-  distinct captured names); enemy skills (`skills` in the captures) are not converted yet
-  (warned), and captures whose name is not in `missions.json` are skipped.
+  itself (`<mission><battle:02><slot>`), lays enemies out on the LEFT of the field, staggered
+  top to bottom like the original (`LAYOUTS`; calibrated on BlueStacks: x lands where written,
+  y shows ~165 units lower than written, so y 340 is ~40% up the field and y 440 ~60%), fills
+  the animation fields from F_UNIT_MST, rebuilds AI rows from `ai.json`, and adds the mission's
+  xp/zel/karma and what clearing it unlocks (`unlocks`: missions whose `requires` is this one,
+  with their dungeon/area/land from F_MISSION_MST). **Coverage:** 204 missions have a capture
+  (199 distinct names), 121 more **borrow** the battles of the nearest captured mission of the
+  same dungeon (`borrowed_from` in the file; e.g. mission 12 plays mission 11's enemies); that
+  leaves ~970 of the 1,292 phase-1 missions without enemy data (the whole of Cordelica
+  onwards is thin), which needs another source (wiki enemy lists, JP datamine). Enemy skills
+  (`skills` in the captures) are not converted yet (warned).
 - `9TvyNR5H` **MissionEnd** (`gimuserver/gme/MissionEnd.cpp`, key `oINq0rfUFPx5MgmT`), sent
   by `MissionResultScene::initConnect` (then a FriendGet). Request: `Kz7qfSs5` {serial id,
   `j3g5P4cq` state, 2 = cleared}, `rXvA1E5y` battle stats (`Najhr8m6` zel and `HTVh8a65` karma

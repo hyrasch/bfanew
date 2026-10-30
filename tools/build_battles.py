@@ -31,22 +31,25 @@ import zipfile
 
 ELEMENTS = {"fire": 1, "water": 2, "earth": 3, "thunder": 4, "light": 5, "dark": 6}
 
-# enemy positions (x:y) on the 640x440 field, by number of enemies in the battle
+# enemy positions (x:y) on the 640x440 field, by number of enemies in the battle.
+# The enemies stand on the LEFT, staggered top to bottom, the squad on the right (like the
+# original game). Calibrated on BlueStacks: the x value lands where written, the y value shows
+# about 165 units lower than written, so y 300 is ~30% up the field and y 400 ~53%.
 LAYOUTS = {
-    1: [(320, 330)],
-    2: [(210, 350), (430, 310)],
-    3: [(150, 360), (320, 300), (490, 360)],
-    4: [(120, 370), (250, 310), (390, 370), (520, 310)],
-    5: [(100, 370), (210, 310), (320, 380), (430, 310), (540, 370)],
-    6: [(100, 380), (200, 310), (300, 380), (400, 310), (500, 380), (580, 310)],
+    1: [(170, 390)],
+    2: [(150, 435), (205, 340)],
+    3: [(130, 445), (205, 395), (140, 340)],
+    4: [(120, 455), (210, 415), (130, 365), (220, 320)],
+    5: [(110, 460), (200, 425), (120, 385), (210, 345), (130, 305)],
+    6: [(100, 465), (190, 435), (110, 395), (200, 360), (120, 325), (210, 290)],
 }
 
 
 def layout(n):
     if n in LAYOUTS:
         return LAYOUTS[n]
-    step = 440 / max(1, n - 1)
-    return [(int(100 + i * step), 370 if i % 2 == 0 else 310) for i in range(n)]
+    step = 180 / max(1, n - 1)
+    return [(100 if i % 2 == 0 else 200, int(470 - i * step)) for i in range(n)]
 
 
 def capture_date(fname):
@@ -260,9 +263,33 @@ def main():
             with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
                 json.dump(out, fo, ensure_ascii=False, indent=1)
             written += 1
+    # missions without a capture: borrow the battles of the nearest captured mission of the
+    # same dungeon (same enemies, the mission's own energy / reward / unlocks), flagged in the file
+    captured_ids = {}
+    for name, f in captures.items():
+        for mid, info in by_name.get(name, []):
+            captured_ids[mid] = f
+    by_dungeon = {}
+    for mid, info in missions.items():
+        by_dungeon.setdefault((info.get("land"), info.get("area"), info.get("dungeon")), []).append(mid)
+    borrowed = 0
+    for mid, info in missions.items():
+        if mid in captured_ids or (only and mid not in only):
+            continue
+        siblings = [m for m in by_dungeon.get((info.get("land"), info.get("area"), info.get("dungeon")), []) if m in captured_ids]
+        if not siblings:
+            continue
+        src = min(siblings, key=lambda m: abs(int(m) - int(mid)) if m.isdigit() and mid.isdigit() else 1 << 30)
+        data = json.load(open(captured_ids[src], encoding="utf-8"))
+        battles = next(iter(data.values())).get("battles", [])
+        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()))
+        out["borrowed_from"] = src
+        with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
+            json.dump(out, fo, ensure_ascii=False, indent=1)
+        borrowed += 1
     for w in sorted(set(warnings)):
         print("warning:", w)
-    print(f"{written} mission files written to {a.out} from {len(captures)} captures")
+    print(f"{written} mission files written to {a.out} from {len(captures)} captures, {borrowed} more borrowed from a captured mission of the same dungeon")
 
 
 if __name__ == "__main__":
