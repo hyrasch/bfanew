@@ -62,6 +62,7 @@
                     "mst_root": "./system", // MST cache directory
 					"initial_level": 1,
 					"initial_free_gems": 5,
+					"initial_friend_points": 1000, // honor points (Honor Summon costs 200)
 					"initial_zel": 10000000,
 					"initial_karma": 10000000,
 					"initial_bcoins": 0

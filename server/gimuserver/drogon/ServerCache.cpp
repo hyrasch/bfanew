@@ -44,6 +44,14 @@ void ServerCache::Setup(const Json::Value& serverObj)
 {
 	const auto& mstRoot = serverObj["mst_root"].asString();
 
+	// bfanew: upstream declared ServerConfig but never filled it (every handler saw zeros)
+	m_serverConfig.initialLevel = serverObj.get("initial_level", 1).asUInt();
+	m_serverConfig.initialZel = serverObj.get("initial_zel", 0).asUInt();
+	m_serverConfig.initialKarma = serverObj.get("initial_karma", 0).asUInt();
+	m_serverConfig.initialBraveCoins = serverObj.get("initial_bcoins", 0).asUInt();
+	m_serverConfig.initialFreeGems = serverObj.get("initial_free_gems", 0).asUInt();
+	m_serverConfig.initialFriendPoints = serverObj.get("initial_friend_points", 0).asUInt();
+
 
 	{
 		GameDls dls;

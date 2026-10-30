@@ -255,6 +255,36 @@ swipe left/right between them. What it took, and what was learned about the summ
   removed from `gacha_info.json`; `gacha.json` keeps all 1,305 rows, only 1000/2000 edited).
   The proper `phases/NN/` folder mechanism is still to do (step 2).
 
+**Summoning works (2026-10-30):** `F7JvPk5H` **GachaAction** is implemented
+(`server/gimuserver/gme/GachaAction.cpp`). Honor Summon -> door animation -> "ACQUIRED!!"
+-> unit detail (Fencer Vargas 2*, stats/LS/BB from our reply) -> back to the Summon scene
+with the honor points decremented. How the client consumes it (all from the disassembly):
+- Request: `1IR86sAv` group with `7Ffmi96v` gacha id, `a329kbl8` request count,
+  `324b023k` ticket flag, all **strings**. Encode key `bL9fipzaSy7xN2w1`.
+- Response (classic path of `GachaActionScene`): `Km35HAXv` **OpeUserUnit** list
+  (`edy7fq3L` user_unit_id -> `UserState::setSelectUserUnitID`, `g30VnzQh` change-rate info,
+  `u0vkt9yH` GachaEffectMst id -> door animation), `4ceMWH6k` **the whole unit box**
+  (`UserUnitInfoResponse::readParam` calls `UserUnitInfoList::removeAllObjects` first, and
+  `GachaActionScene::updateEvent` then looks the new unit up in that list: a missing unit is
+  a null deref), `fEi17cnx` updated team info. `UserState::setGachaEffectID` picks the
+  `gacha_effects.json` row (rarity -> gWait*/gOpen* files).
+- Do **not** send `sdu3jvhH` (`UserUnitResummonInfoSg`): `checkConnectResult` only uses it
+  when a global "resummon" flag is set; otherwise `updateEvent` sees the list and enters the
+  resummon flow with an uninitialised `ResummonGachaObjectManager` and the process dies.
+- Every `UserTeamInfo` must carry `TwqMChon` (reinforcement deck) as `"0,0,0"`: an empty
+  string there crashes `UserTeamInfoResponse::readParam` in `CommonUtils::StrToInt`
+  (Houdini gives readable backtraces for these: `adb logcat | grep houdini`).
+- `StubPlayer.hpp` now holds the one hard-coded player (unit box, wallet) shared by UserInfo
+  and GachaAction, and `ServerConfig` is finally filled from `config.json` (upstream never
+  did; `initial_free_gems`, new `initial_friend_points`).
+- Multi Summon (5x) ended with `StoreController: opening store` -> `startBillingService()`
+  -> the app killing itself (`SIG 9`): the multi-summon result goes through the IAP flow,
+  which has no Google Play here. Multi summon did not exist in 2013, so
+  `features.json` `multisummon` is now 0 (button greyed out). Revisit with the shop.
+- `data/response_keys.txt`: the client's full table (489 rows) of top-level JSON key ->
+  response class, extracted from `GameResponseParser::getResponseObject`. Use it to know
+  which key a handler must answer with.
+
 Fixed on the way (both in the fork):
 1. `6K7LToCD` (advertising id) in `LoginInfoReq` + `error_on_unknown_keys=false` in the
    Initialize/UserInfo reads (commit 80d33eb).
@@ -298,7 +328,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK; home screen and the Summon scene with the two launch banners). Next on the client side: follow the request log through Unit, Town, Quest, and the Summon button itself (GachaAction).
+1. Android patch: **done** (script, APK; home screen, Summon scene with the two launch banners, a working Honor/Rare summon). Next on the client side: follow the request log through Unit, Town, Quest; summons need a real pool/rates and persistence (step 4).
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.

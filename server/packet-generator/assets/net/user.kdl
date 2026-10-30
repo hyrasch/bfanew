@@ -747,6 +747,266 @@ json UserUnitInfo {
 
 }
 
+json UserUnitResummonInfoSg {
+    doc "A unit obtained from a summon (GachaAction result, top-level key sdu3jvhH, client class UserUnitResummonInfoSg). Same fields as UserUnitInfo plus the summon details."
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "TODO"
+    }
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "ID of the user for this session."
+    }
+
+    field unit_id type="i32::str" {
+        key "pn16CNah"
+        doc "TODO"
+    }
+
+    field unit_type_id type="i32::str" {
+        key "nBTx56W9"
+        doc "TODO"
+    }
+
+    field unit_lv type="i32::str" {
+        key "D9wXQI2V"
+        doc "TODO"
+    }
+
+    field exp type="i32::str" {
+        key "d96tuT2E"
+        doc "TODO"
+    }
+
+    field total_exp type="i32::str" {
+        key "gQInj3H6"
+        doc "TODO"
+    }
+
+    field base_hp type="i32::str" {
+        key "e7DK0FQT"
+        doc "TODO"
+    }
+
+    field add_hp type="i32::str" {
+        key "cuIWp89g"
+        doc "TODO"
+    }
+
+    field ext_hp type="i32::str" {
+        key "TokWs1B3"
+        doc "TODO"
+    }
+
+    field limit_over_hp type="i32::int" {
+        key "ISj9u5VL"
+        doc "TODO"
+    }
+
+    field base_atk type="i32::str" {
+        key "67CApcti"
+        doc "TODO"
+    }
+
+    field add_atk type="i32::str" {
+        key "RT4CtH5d"
+        doc "TODO"
+    }
+
+    field ext_atk type="i32::str" {
+        key "t4m1RH6Y"
+        doc "TODO"
+    }
+
+    field limit_over_atk type="i32::int" {
+        key "D6bKH5eV"
+        doc "TODO"
+    }
+
+    field base_def type="i32::str" {
+        key "q08xLEsy"
+        doc "TODO"
+    }
+
+    field add_def type="i32::str" {
+        key "GcMD0hy6"
+        doc "TODO"
+    }
+
+    field ext_def type="i32::str" {
+        key "e6mY8Z0k"
+        doc "TODO"
+    }
+
+    field limit_over_def type="i32::int" {
+        key "3CsiQA0h"
+        doc "TODO"
+    }
+
+    field base_heal type="i32::str" {
+        key "PWXu25cg"
+        doc "TODO"
+    }
+
+    field add_heal type="i32::str" {
+        key "C1HZr3pb"
+        doc "TODO"
+    }
+
+    field ext_heal type="i32::str" {
+        key "X6jf8DUw"
+        doc "TODO"
+    }
+
+    field limit_over_heal type="i32::int" {
+        key "XJs2rPx0"
+        doc "TODO"
+    }
+
+    field unk type="i32::str" {
+        key "xujp1nz2"
+        doc "TODO"
+    }
+
+    field element type="str" {
+        key "iNy0ZU5M"
+        doc "TODO"
+    }
+
+    field leader_skill_id type="i32::str" {
+        key "oS3kTZ2W"
+        doc "TODO"
+    }
+
+
+    field skill_id type="i32::str" {
+        key "nj9Lw7mV"
+        doc "TODO"
+    }
+
+    field skill_lv type="i32::str" {
+        key "3NbeC8AB"
+        doc "TODO"
+    }
+
+    field extra_skill_id type="i32::str" {
+        key "iEFZ6H19"
+        doc "TODO"
+    }
+
+    field extra_skill_lv type="i32::str" {
+        key "RQ5GnFE2"
+        doc "TODO"
+    }
+
+    field equipitem_frame_id type="i32::str" {
+        key "0R3qTPK9"
+        doc "TODO"
+    }
+
+    field equipitem_id type="i32::str" {
+        key "Ge8Yo32T"
+        doc "TODO"
+    }
+
+    field equipitem_frame_id2 type="i32::str" {
+        key "RXfC31FA"
+        doc "TODO"
+    }
+
+    field equipitem_id2 type="i32::str" {
+        key "mZA7fH2v"
+        doc "TODO"
+    }
+
+    field receive_date type="datetime-unix" {
+        key "Bvkx8s6M"
+        doc "TODO"
+    }
+
+    field unk2 type="i32::str" {
+        key "DbMVG16I"
+        doc "TODO"
+    }
+
+    field new_flag type="bool::str" {
+        key "dJNpLc81"
+        doc "TODO"
+    }
+
+    field extra_passive_skill_id type="i32::str" {
+        key "cP83zNsv"
+        doc "TODO"
+    }
+
+    field extra_passive_skill_id2 type="i32::str" {
+        key "LjY4DfRg"
+        doc "TODO"
+    }
+
+    field add_extra_passive_skill_id type="i32::str" {
+        key "T4rewHa9"
+        doc "TODO"
+    }
+
+    field unit_img_type type="i32::int" {
+        key "2pAyFjmZ"
+        doc "TODO"
+    }
+     // # TODO: is this really a str?
+    field omni_level type="i32::int" {
+        key "49sa3sld"
+        doc "TODO"
+    }
+
+    field ext_count type="i32::int" {
+        key "5gXxT7LZ"
+        doc "TODO"
+    }
+
+    field fe_bp type="i32::str" {
+        key "bFQbZh3x"
+        doc "TODO"
+    }
+
+    field fe_used_bp type="i32::str" {
+        key "3RgneFpP"
+        doc "TODO"
+    }
+
+    field fe_max_usable_bp type="i32::str" {
+        key "GIO9DTif"
+        doc "TODO"
+    }
+
+    field fe_skill_info type="str" {
+        key "Fnxab5CN"
+        doc "TODO"
+    }
+
+    field do_ymd type="str" {
+        key "49JHDi30"
+        doc "Date of the summon (yyyy-mm-dd hh:mm:ss)"
+    }
+
+    field hist_id type="str" {
+        key "8DklN394"
+        doc "Summon history id"
+    }
+
+    field gacha_effect_id type="i32::str" {
+        key "u0vkt9yH"
+        doc "GachaEffectMst id: picks the door animation (gWait*/gOpen* files) for this unit's rarity"
+    }
+
+    field gacha_id type="i32::str" {
+        key "7Ffmi96v"
+        doc "Gacha the unit came from"
+    }
+}
+
 // ## --- request
 
 json LoginInfoReq {  // # TODO: actually support (GumiLiveInfo), as it's not support right now....

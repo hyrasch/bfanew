@@ -24,4 +24,14 @@ struct ServerConfig
 	* Initial brave coins.
 	*/
 	uint32_t initialBraveCoins;
+
+	/*!
+	* Initial free gems.
+	*/
+	uint32_t initialFreeGems;
+
+	/*!
+	* Initial honor (friend) points.
+	*/
+	uint32_t initialFriendPoints;
 };

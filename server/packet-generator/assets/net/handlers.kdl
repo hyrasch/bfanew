@@ -39,6 +39,88 @@ import "../net/friends.kdl"
 import "../net/event.kdl"
 import "../net/featuring_gate.kdl"
 
+json GachaActionParam {
+    doc "Which summon the client wants to perform (GachaActionRequest::createBody)"
+
+    field gacha_id type="i32::str" {
+        key "7Ffmi96v"
+        doc "GachaInfoMst / GachaMst id"
+    }
+
+    field request_count type="i32::str" {
+        key "a329kbl8"
+        doc "UserState::noOfGachaRequests, 1 for a single summon"
+    }
+
+    field use_ticket type="i32::str" {
+        key "324b023k"
+        doc "UserState::isUsingGachaTicket"
+    }
+}
+
+json GachaActionReq {
+    doc "GachaAction command (request id F7JvPk5H): perform a summon"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field gacha type="[GachaActionParam]::size(1)" {
+        key "1IR86sAv"
+        doc "The summon to perform"
+    }
+}
+
+json OpeUserUnit {
+    doc "One summoned unit as the classic (non-resummon) GachaActionScene wants it: OpeUserUnitResponse sets UserState::setSelectUserUnitID / GachaUnitsList, setGachaChangeRateInfo and setGachaEffectID from these."
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "user_unit_id of the new unit; it must also be present in the unit box list (4ceMWH6k) of the same response"
+    }
+
+    field change_rate_info type="str" {
+        key "g30VnzQh"
+        doc "UserState::setGachaChangeRateInfo, empty when the summon has no rate-change"
+    }
+
+    field gacha_effect_id type="i32::str" {
+        key "u0vkt9yH"
+        doc "GachaEffectMst id: picks the door animation (gWait*/gOpen* files) for the unit's rarity"
+    }
+}
+
+json GachaActionResp {
+    doc "Response of the GachaAction command. GachaActionScene::updateEvent reads Km35HAXv (OpeUserUnitResponse), then looks the unit up in the unit box, so 4ceMWH6k must carry the WHOLE box (UserUnitInfoResponse clears the list before adding). fEi17cnx carries the updated wallet."
+
+    field teamInfo type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "Updated team info (gems, honor points)"
+    }
+
+    field unitInfo type="[UserUnitInfo]" {
+        key "4ceMWH6k"
+        doc "The user's whole unit box including the new units"
+    }
+
+    field opeUnits type="[OpeUserUnit]" {
+        key "Km35HAXv"
+        doc "The units obtained by this summon"
+    }
+}
+
+
 json GatchaListResp {
     doc "Response of the GatchaList command (summons top / categorization scenes). The client maps the top-level key to GachaInfoResponse, i.e. the same banner list UserInfo sends."
 

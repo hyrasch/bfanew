@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "StubPlayer.hpp"
 
 HANDLEF(UserInfo)
 {
@@ -17,70 +18,18 @@ HANDLEF(UserInfo)
 	// TODO: A real server should check if user_id == gumi token...
 
     // TODO: GET THIS FROM A CACHE TOKEN ETC
-    resp.login_info.user_id = "0839899613932562"; // I think this is a random UUID according to packet-gen
+    resp.login_info.user_id = StubPlayer::kUserId;
 
     // TEMP HACK!! Skip tutorial flag and put a real name
-    resp.login_info.account_id = "12345678";
-    resp.login_info.handle_name = "OfflineMod!";
+    resp.login_info.account_id = StubPlayer::kAccountId;
+    resp.login_info.handle_name = StubPlayer::kHandleName;
     resp.login_info.tutorial_end_flag = true;
     resp.login_info.tutorial_status = 0;
     resp.login_info.feature_gate = 0;
 
-    UserTeamInfo team = {};
-    resp.team_info.reinforcement_deck.emplace_back(0);
-    resp.team_info.reinforcement_deck.emplace_back(0);
-    resp.team_info.reinforcement_deck.emplace_back(0);
-    resp.team_info.user_id = resp.login_info.user_id;
-    resp.team_info.level = 1;
-    resp.team_info.exp = 0;
-    resp.team_info.warehouse_count = 100;
-    resp.team_info.add_unit_count = 100;
-    resp.team_info.max_unit_count = 100;
+    StubPlayer::FillTeam(resp.team_info, theServer()->cache().serverConfig());
 
-
-    {
-        UserUnitInfo d = {};
-        d.user_id = resp.login_info.user_id;
-        d.user_unit_id = 100;
-        d.unit_type_id = 1;
-        d.element = "fire";
-        d.base_hp = 1000;
-        d.add_hp = 1001;
-        d.ext_hp = 1002;
-
-        d.base_def = 1100;
-        d.add_def = 1101;
-        d.ext_def = 1102;
-
-        d.base_heal = 1200;
-        d.add_heal = 1201;
-        d.ext_heal = 1202;
-
-        d.base_atk = 1300;
-        d.add_atk = 1301;
-        d.ext_atk = 1302;
-
-        d.limit_over_atk = 1400;
-        d.limit_over_def = 1401;
-        d.limit_over_heal = 1402;
-        d.limit_over_hp = 1403;
-
-        d.unit_lv = 1;
-        d.new_flag = 1;
-
-        d.ext_count = 1500;
-        d.fe_bp = 100;
-        d.fe_used_bp = 0;
-        d.fe_max_usable_bp = 200;
-        d.unit_img_type = 0;
-
-
-        d.exp = 1;
-        d.total_exp = 1;
-
-        d.unit_id = 50253;
-        resp.unit_info.emplace_back(d);
-    }
+    resp.unit_info.emplace_back(StubPlayer::StarterUnit());
 
     for (int i = 0; i < 10; i++) {
         UserPartyDeckInfo deck = {};

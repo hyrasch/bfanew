@@ -1,0 +1,160 @@
+#include "App.hpp"
+#include "Handlers.hpp"
+#include "StubPlayer.hpp"
+
+#include <chrono>
+#include <random>
+
+/*
+* GachaAction ("F7JvPk5H"): the Summon button. Sent by GachaActionScene::initConnect.
+*
+* Request: group "1IR86sAv" with the gacha id, the number of summons and the ticket flag
+* (GachaActionRequest::createBody).
+*
+* Response, as the classic (non-"resummon") GachaActionScene path consumes it:
+*   - "Km35HAXv" OpeUserUnit list: user_unit_id (-> UserState::setSelectUserUnitID and
+*     GachaUnitsList), change-rate info, GachaEffectMst id (-> door animation);
+*   - "4ceMWH6k" the WHOLE unit box including the new units: UserUnitInfoResponse clears the
+*     client's list before adding, and GachaActionScene::updateEvent then looks the new
+*     unit up in that list (a missing unit is a null deref, i.e. a crash);
+*   - "fEi17cnx" updated team info (gems / honor points).
+*   Do NOT send "sdu3jvhH" (UserUnitResummonInfoSg) here: it switches the scene to the
+*   resummon flow whose manager was never initialised, and the client dies.
+*
+* STUB: no persistence, so the box is StubPlayer::StarterUnit() + this summon's units, and
+* the wallet is the initial one minus this summon. The pool is the six launch heroes; the
+* real pool/rates come with the phase-1 content work.
+*/
+
+namespace
+{
+	struct PoolUnit
+	{
+		int32_t unit_id;
+		int32_t rarity;
+		const char* element;
+		int32_t hp, atk, def, rec;
+		int32_t leader_skill_id, bb_id;
+	};
+
+	// F_UNIT_MST base stats (Ver1084). Element: 1 fire, 2 water, 3 earth, 4 thunder, 5 light, 6 dark.
+	constexpr PoolUnit kStarters2[] = {
+		{ 10011, 2, "fire",    1030, 500, 410, 320, 100, 10011 }, // Vargas
+		{ 20011, 2, "water",   1000, 490, 360, 420, 110, 20011 }, // Selena
+		{ 30011, 2, "earth",   1010, 500, 500, 150, 120, 30011 }, // Lance
+		{ 40011, 2, "thunder", 1180, 580, 320, 120, 130, 40011 }, // Eze
+		{ 50011, 2, "light",    970, 500, 500, 500, 140, 50011 }, // Atro
+		{ 60011, 2, "dark",    1500, 430, 530, 120, 150, 60011 }, // Magress
+	};
+	constexpr PoolUnit kStarters3[] = {
+		{ 10012, 3, "fire",    1484, 630, 517, 404, 100, 10012 }, // Burning Vargas
+		{ 20012, 3, "water",   1377, 636, 422, 624, 110, 20012 }, // Glacial Selena
+		{ 30012, 3, "earth",   1419, 648, 630, 223, 120, 30012 }, // Jade Lance
+		{ 40012, 3, "thunder", 1593, 731, 378, 189, 130, 40012 }, // Thunder Eze
+		{ 50012, 3, "light",   1397, 630, 630, 630, 140, 50012 }, // Light Atro
+		{ 60012, 3, "dark",    2228, 542, 715, 195, 150, 60012 }, // Dark Magress
+	};
+	constexpr PoolUnit kStarters4[] = {
+		{ 10013, 4, "fire",    1995, 826, 725, 632, 101, 10013 }, // Fire Dragon Vargas
+		{ 20013, 4, "water",   1928, 826, 661, 743, 111, 20013 }, // Ice Knight Selena
+		{ 30013, 4, "earth",   1980, 832, 844, 410, 121, 30013 }, // Earth Knight Lance
+		{ 40013, 4, "thunder", 2205, 906, 618, 384, 131, 40013 }, // Thunder Knight Eze
+		{ 50013, 4, "light",   1887, 819, 819, 819, 141, 50013 }, // Holy Knight Atro
+		{ 60013, 4, "dark",    2651, 743, 860, 381, 151, 60013 }, // Dark Knight Magress
+	};
+
+	// GachaEffectMst ids (deploy/system/gacha_effects.json) per gacha and rarity.
+	int32_t effectFor(int32_t gachaId, int32_t rarity)
+	{
+		if (gachaId == 2000) // Rare Summon: 8 gold->R, 11 red->SR, 16 rainbow->SSR
+			return rarity >= 5 ? 16 : rarity == 4 ? 11 : 8;
+		return rarity;        // Honor Summon: ids 1..5 map 1:1 to rarity
+	}
+
+	std::mt19937& rng()
+	{
+		static std::mt19937 g{ std::random_device{}() };
+		return g;
+	}
+
+	const PoolUnit& pick(int32_t gachaId)
+	{
+		std::uniform_int_distribution<int> six(0, 5);
+		if (gachaId == 2000)
+		{
+			// launch Rare Summon: 3* most of the time, 4* sometimes
+			std::uniform_int_distribution<int> pct(0, 99);
+			return pct(rng()) < 25 ? kStarters4[six(rng())] : kStarters3[six(rng())];
+		}
+		return kStarters2[six(rng())];
+	}
+}
+
+HANDLEF(GachaAction)
+{
+	GachaActionReq req = {};
+	const auto& ec = glz::read<glz::opts{.error_on_unknown_keys = false}>(req, json);
+	if (ec)
+	{
+		const auto& fmte = glz::format_error(ec, json);
+		LOG_DEBUG << "Gme GachaAction Error during JSON read: " << fmte;
+		co_return HandleResult::error("Deserialization error", fmte);
+	}
+
+	const auto gachaId = req.gacha.gacha_id;
+	const auto count = std::max<int32_t>(1, req.gacha.request_count);
+	LOG_DEBUG << "GachaAction: gacha " << gachaId << " x" << count << " ticket=" << req.gacha.use_ticket;
+
+	const auto& scfg = theServer()->cache().serverConfig();
+	const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+	const auto nowUnix = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+	GachaActionResp resp = {};
+
+	StubPlayer::FillTeam(resp.team_info, scfg);
+	if (gachaId == 2000)
+		resp.team_info.free_gems = std::max<int32_t>(0, resp.team_info.free_gems - 5 * count);
+	else
+		resp.team_info.friend_point = std::max<int32_t>(0, resp.team_info.friend_point - 200 * count);
+
+	// the whole box: the placeholder unit the decks point at, then what was just summoned
+	resp.unit_info.emplace_back(StubPlayer::StarterUnit());
+
+	for (int32_t i = 0; i < count; i++)
+	{
+		const auto& u = pick(gachaId);
+		UserUnitInfo d = {};
+		d.user_unit_id = static_cast<int32_t>((nowUnix % 100000000) * 10 + i); // unique enough for a stub
+		d.user_id = StubPlayer::kUserId;
+		d.unit_id = u.unit_id;
+		d.unit_type_id = u.rarity;
+		d.unit_lv = 1;
+		d.exp = 0;
+		d.total_exp = 0;
+		d.base_hp = u.hp;  d.base_atk = u.atk;  d.base_def = u.def;  d.base_heal = u.rec;
+		d.element = u.element;
+		d.leader_skill_id = u.leader_skill_id;
+		d.skill_id = u.bb_id;
+		d.skill_lv = 1;
+		d.new_flag = true;
+		d.receive_date = now;
+		resp.unit_info.emplace_back(d);
+
+		OpeUserUnit ope = {};
+		ope.user_unit_id = d.user_unit_id;
+		ope.change_rate_info = "";
+		ope.gacha_effect_id = effectFor(gachaId, u.rarity);
+		resp.ope_units.emplace_back(ope);
+	}
+
+	std::string buffer{};
+	const auto& ec2 = glz::write_json(resp, buffer);
+	if (ec2)
+	{
+		const auto& glze = glz::format_error(ec2, buffer);
+		LOG_DEBUG << "Gme GachaAction Error during JSON writing: " << glze;
+		co_return HandleResult::error("Serialization error", glze);
+	}
+
+	co_return HandleResult::success(buffer);
+}
