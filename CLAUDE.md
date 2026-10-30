@@ -212,22 +212,47 @@ For testing the user installed **BlueStacks** on the PC instead; it runs the arm
 through ARM translation and reports itself as `SM-S928B`, Android 16 to the server.
 Firewall rule for TCP 9960 inbound was added on 2026-10-30.
 
-**First run against our server (2026-10-30, BlueStacks):** the client went
-`GET /dls` -> `GET /content/wallpaper/title_logo20151028.jpg` -> `GET /accounts/guest/login/`
--> `POST /bf/gme/action.php` request `MfZyu1q9` = **Initialize**. So DLS, scheme patch,
-gumi-live login and GME encryption all work; the milestone call is reached.
-The server answered `Unable to handle request: "MfZyu1q9", Error: "Deserialization error"`
-(`1:206: unknown_key`): the Android client sends login-info key `6K7LToCD`
-(= `CommonUtils::getDeviceAdvertisingID()`, also sent by `CreateUserRequest`,
-`InitializeRequest2`, `TransferRequest`), which `LoginInfoReq` in
-`packet-generator/assets/net/user.kdl` does not define, and glaze defaults to
-`error_on_unknown_keys = true`. The WinRT client the upstream devs used never sent it.
-Fix (needs the server fork, next step 2): add
-`field advertising_id type="str" { key "6K7LToCD" }` to `LoginInfoReq`, regenerate
-`gimuserver/packets`, rebuild; and consider `glz::opts{.error_on_unknown_keys=false}`
-in the handlers' `read_json` calls so other Android-only keys don't stop the flow.
-Each request is dumped decrypted to `deploy/log/http_log_<id>_<time>.log` (request and
-response), which is the way to see the next missing piece.
+**Runs against our server (2026-10-30, BlueStacks, forked server):** the client now gets to the
+**home screen**. Request order seen in `server/deploy/log` (one `http_log_<id>_<time>.log` per
+request, decrypted body + response):
+`GET /dls` -> wallpaper -> `GET /accounts/guest/login/` -> `MfZyu1q9` Initialize (7.6 MB reply)
+-> `cTZ3W2JG` UserInfo -> `2o4axPIC` FriendGet -> `nJ3A7qFp` BadgeInfo -> `uYF93Mhc`
+ControlCenterEnter -> `ynB7X5P9` UpdateInfoLight -> `NiYWKdzs` HomeInfo (x3, stub `{}` is
+accepted) -> `Zw3WIoWu` ChallengeArenaResetInfo -> `Uo86DcRh` **GatchaList**, whose stub
+answers `error "Unsupported"`; the client process dies one second later (no tombstone in
+BlueStacks' logcat). Between those it downloads `/content/...` assets and `/mst/...` tables
+(the `webpage` logs). **Next missing piece: a real GatchaList handler** (summon list, data in
+`deploy/system/gacha_info.json`), since the home screen opens the summons top on its own.
+
+Fixed on the way (both in the fork):
+1. `6K7LToCD` (advertising id) in `LoginInfoReq` + `error_on_unknown_keys=false` in the
+   Initialize/UserInfo reads (commit 80d33eb).
+2. Missing `/content/*.png|jpg` now get a valid 1x1 transparent PNG (200) instead of 404; the
+   path is still appended to `deploy/log/dlc_404.log`. The client shows a blocking "Error
+   occurred during download" popup on any failed image, and the archive lacks ~850 files
+   (`decompfrontier/docs/source/pages/Status/missing-asset.rst`), first hit:
+   `/gacha/gacha_Light_Featured_img_2022_s2.png` (commit df95d7a).
+
+Client-side quirks: on first launch the Java side opens a **Google Play Games sign-in**
+(`com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity`); press Back, the game
+continues. The title screen waits for a tap ("TOUCH SCREEN"). The server clock is shown as
+PST in the client ("Oct 30, 02:39 PST"), harmless for now.
+
+**Driving BlueStacks from the PC** (ADB enabled in BlueStacks settings > Advanced; it listens
+on `127.0.0.1:6610` here, the port may differ):
+```powershell
+$adb = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Google.PlatformTools_Microsoft.Winget.Source_8wekyb3d8bbwe\platform-tools\adb.exe"
+& $adb connect 127.0.0.1:6610
+& $adb -s 127.0.0.1:6610 install -r D:\.Code\bravefrontier\build\bf-192.168.1.14-9960.apk
+& $adb -s 127.0.0.1:6610 shell am force-stop sg.gumi.bravefrontier
+& $adb -s 127.0.0.1:6610 shell monkey -p sg.gumi.bravefrontier -c android.intent.category.LAUNCHER 1
+& $adb -s 127.0.0.1:6610 shell input tap 960 520          # title screen (BlueStacks is 1920x1080)
+& $adb -s 127.0.0.1:6610 shell input keyevent 4           # Back (dismiss the Google sign-in)
+& $adb -s 127.0.0.1:6610 shell dumpsys window | Select-String mCurrentFocus
+& $adb -s 127.0.0.1:6610 logcat -d -t 500 | Select-String "cocos2d|bravefrontier"
+```
+Screenshots: `adb shell screencap -p /sdcard/s.png` then `adb pull` (from Git Bash set
+`MSYS_NO_PATHCONV=1`; piping `exec-out` through PowerShell corrupts the PNG).
 
 **Server side done:** `deploy/config.json` now has two listeners, `192.168.1.14:9960`
 first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile is
@@ -237,7 +262,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: **done** (script, APK, client reaches Initialize). Next blocker is server-side (see "First run"), so it folds into step 2.
+1. Android patch: **done** (script, APK; the client reaches the home screen). Next blocker: implement `GatchaList` (`Uo86DcRh`, stub kills the client), then whatever the summons top / home screen asks for next.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.
