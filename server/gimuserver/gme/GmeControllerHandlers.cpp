@@ -72,7 +72,10 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("2o4axPIC", FriendGet, "EoYuZ2nbImhCU1c0");
 	REGISTER("Uo86DcRh", GatchaList, "8JbxFvuSaB2CK7Ln");
 	REGISTER("F7JvPk5H", GachaAction, "bL9fipzaSy7xN2w1");
+	REGISTER("BjAt1D6b", DungeonEventUpdate, "k5EiNe9x");
 	REGISTER("NiYWKdzs", HomeInfo, "f6uOewOD");
+	REGISTER("ruoB7bD8", ItemEdit, "DHEfRexCu0q5TAQm");
+	REGISTER("qDQerU74", ItemSell, "73aFNjPu");
 	REGISTER("jE6Sp0q4", MissionStart, "csiVLDKkxEwBfR70");
 	REGISTER("9TvyNR5H", MissionEnd, "oINq0rfUFPx5MgmT");
 	REGISTER("Mw08CIg2", UnitMix, "JnegC7RrN3FoW8dQ");

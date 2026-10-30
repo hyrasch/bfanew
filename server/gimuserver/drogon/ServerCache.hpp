@@ -59,6 +59,16 @@ public:
 	/*! bfanew: the evolution table (deploy/evos.json). */
 	inline const EvoTable& evos() const { return m_evos; }
 
+	/*! bfanew: the item table (deploy/items.json). */
+	inline const ItemTable& items() const { return m_items; }
+
+	/*! An item definition, nullptr if unknown. */
+	inline const ItemDef* item(const std::string& itemId) const
+	{
+		const auto it = m_items.find(itemId);
+		return it == m_items.end() ? nullptr : &it->second;
+	}
+
 	/*! The evolution of a unit, nullptr if it has none. */
 	inline const EvoDef* evo(int32_t unitId) const
 	{
@@ -107,6 +117,11 @@ private:
 	* bfanew: evolution table.
 	*/
 	EvoTable m_evos;
+
+	/*!
+	* bfanew: item table.
+	*/
+	ItemTable m_items;
 
 	/*!
 	* Cached data of response.

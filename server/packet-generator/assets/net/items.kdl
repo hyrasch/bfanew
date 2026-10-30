@@ -1,8 +1,45 @@
+// Items: the warehouse records live in user.kdl (UserWarehouseInfo, UserEquipItemInfo). The request
+// shapes below are what ItemEditRequest::createBody / ItemSellRequest::createBody build
+// (JsonNode::addParam(const char*, int) still writes the numbers as strings).
+
 json ItemFavorite {
     doc "TODO"
 
     field mock type="str" {
         key "INVALID"
         doc "TODO"
+    }
+}
+
+json ItemEditEntry {
+    doc "ItemEdit request list 71U5wzhI: one entry per item equipped for quests (the whole list every time)"
+
+    field item_id type="str" {
+        key "kixHbe54"
+        doc "F_ITEM_MST id"
+    }
+
+    field disp_order type="i32::str" {
+        key "XuJL4pc5"
+        doc "slot, 0.."
+    }
+
+    field item_num type="i32::str" {
+        key "wgV86x1q"
+        doc "how many are equipped"
+    }
+}
+
+json ItemSellEntry {
+    doc "ItemSell request list M73i1c5U"
+
+    field item_index type="i32::str" {
+        key "n6E8iMf3"
+        doc "the warehouse record's item index (we use the item id)"
+    }
+
+    field item_num type="i32::str" {
+        key "wgV86x1q"
+        doc "how many to sell"
     }
 }

@@ -11,7 +11,7 @@
 * brave burst level and type kept, exp reset).
 *
 * Reply: "I82p0wCL" UnitOpeEvo (new unit id, user unit id, the ids before), the wallet and the
-* whole box. Item materials (type 2) are not supported yet: no warehouse.
+* whole box and the warehouse (item materials, type 2, are taken from it).
 */
 
 HANDLEF(UnitEvo)
@@ -39,10 +39,14 @@ HANDLEF(UnitEvo)
 	// the client sends only the typed list: order 1 = base, 2.. = materials (type 1 unit, 2 item)
 	UserUnitInfo* base = nullptr;
 	std::vector<UserUnitInfo*> materials;
+	std::vector<int32_t> itemMaterials;
 	for (const auto& m : req.materials)
 	{
 		if (m.material_type == 2)
-			co_return HandleResult::error("Item materials are not supported yet");
+		{
+			itemMaterials.emplace_back(m.id);
+			continue;
+		}
 		auto* u = find(m.id);
 		if (!u)
 			co_return HandleResult::error("Unknown unit", std::to_string(m.id));
@@ -64,12 +68,30 @@ HANDLEF(UnitEvo)
 	if (!evoDef)
 		co_return HandleResult::error("Unknown evolved unit", std::to_string(evo->evo_unit_id));
 
-	// every required unit material must be among the materials sent, each used once
+	// every required material must be among the materials sent, each used once; items from the warehouse
+	const auto warehouse = co_await Db::LoadItems(p.user_id);
 	std::vector<UserUnitInfo*> pool = materials;
+	std::vector<int32_t> itemPool = itemMaterials;
+	std::string itemsUsed;
 	for (const auto& need : evo->materials)
 	{
-		if (need.type != 1)
-			co_return HandleResult::error("Item materials are not supported yet");
+		if (need.type == 2)
+		{
+			const auto it = std::find(itemPool.begin(), itemPool.end(), need.id);
+			if (it == itemPool.end())
+				co_return HandleResult::error("Missing evolution material", std::to_string(need.id));
+			itemPool.erase(it);
+			int32_t have = 0;
+			for (const auto& w : warehouse) if (w.item_index == need.id) have = w.item_num;
+			// the same item can be needed several times
+			int32_t already = 0;
+			for (const auto& m : evo->materials) if (m.type == 2 && m.id == need.id && &m < &need) already++;
+			if (have <= already)
+				co_return HandleResult::error("Not enough of item", std::to_string(need.id));
+			if (!itemsUsed.empty()) itemsUsed += ',';
+			itemsUsed += std::to_string(need.id) + ":1";
+			continue;
+		}
 		bool found = false;
 		for (auto it = pool.begin(); it != pool.end(); ++it)
 			if ((*it)->unit_id == need.id && *it != base)
@@ -107,16 +129,19 @@ HANDLEF(UnitEvo)
 	for (const auto* m : materials) gone.emplace_back(m->user_unit_id);
 	co_await Db::UpdateUnit(p.user_id, *base);
 	co_await Db::RemoveUnits(p.user_id, gone);
+	if (!itemsUsed.empty())
+		co_await Db::TakeItems(p.user_id, itemsUsed);
 	p.team.zel -= evo->zel;
 	p.team.karma -= evo->karma;
 	co_await Db::SavePlayer(p);
 	LOG_DEBUG << "UnitEvo: user " << p.user_id << " unit " << base->user_unit_id << " " << res.unit_id_before << " -> " << res.unit_id
-		<< ", " << gone.size() << " materials, " << evo->zel << " zel";
+		<< ", " << gone.size() << " unit materials, items " << itemsUsed << ", " << evo->zel << " zel";
 
 	UnitEvoResp resp = {};
 	resp.result = res;
 	resp.team_info = p.team;
 	resp.unit_info = co_await Db::LoadUnits(p.user_id);
+	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
 
 	std::string buffer{};
 	const auto& ec2 = glz::write_json(resp, buffer);

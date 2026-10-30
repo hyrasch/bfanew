@@ -101,11 +101,14 @@ at the first Initialize from the `NewPlayer.hpp` template (wallet from `config.j
 `initial_*`, the starter unit in every squad, gate 1 / Mistral / area 100 / dungeons 1 and 10 /
 missions 1, 2, 10 permitted, tutorial missions cleared). Stored: wallet, level, exp, energy (regen 1
 point per `energy_regen_seconds`, 180), units (`UserUnitInfo` as JSON), squads, cleared missions,
-permitted places, mission runs, item pickups (counts only, not shown yet). Handlers that write:
-GachaAction (units, gems / honor points), MissionStart (energy, run), MissionEnd (rewards, level,
-clears, unlocks, items), DeckEdit (squads, helper squads, handle name), UnitMix (fusion), UnitEvo
-(evolution), UnitSell. Not implemented: items and warehouse packets (so no item materials, no
-item pickups shown), town, arena, gifts, friends, shop. Handler registry:
+permitted places, mission runs, the warehouse (item pickups) and the items equipped for quests.
+Handlers that write: GachaAction (units, gems / honor points), MissionStart (energy, run),
+MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
+helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
+UnitSell, ItemEdit (equipped items), ItemSell. Stubs: DungeonEventUpdate (story events watched,
+not stored). Not implemented: item synthesis (ItemMix), town facilities, arena, gifts, friends,
+shop. Known client issue: the **village** (Town tab, "Village" button of the Randall map) dies on
+BlueStacks with a heap double free when its scene starts (see "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
 version list is `deploy/system/version_info.json` (169 tables). Per-mission battle data is
@@ -525,16 +528,70 @@ the `Km35HAXv` list of the summoner-unit variant is NOT sent. Reply: `I82p0wCL` 
 **`server/deploy/evos.json`** (`tools/build_units.py --evos`, from the decoded F_UNIT_EVO_MST:
 evolved id, zel, karma, materials), requires max level, consumes the unit materials and the
 zel, and rewrites the base as the evolved unit at level 1 (same user unit id, BB level and type
-kept). Item materials (type 2) are refused until the warehouse exists. Verified: Selena lv 12 +
+kept). Item materials (type 2) are taken from the warehouse (see "Items / warehouse"). Verified: Selena lv 12 +
 Water Nymph (20130) -> Glacial Selena (20012) with the evolution animation, "RARE!!" reveal,
 2,500 zel.
-- Dev route **`GET /bfanew/give?user=<gumi user id or user id>&unit=<unit id>&count=1&lv=1`**
-  (`DevController::HandleGive`) puts units in a box, for materials and max-level bases (there
-  is no drop source for Nymphs yet). `NewPlayer::UnitFromTable` / `SetUnitLevel` build the
+- Dev route **`GET /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1`**
+  (`DevController::HandleGive`) puts units in a box or items in the warehouse, for materials and
+  max-level bases (there is no drop source for Nymphs yet). `NewPlayer::UnitFromTable` / `SetUnitLevel` build the
   record from `units.json`.
 - Unit **type** (`nBTx56W9` unit_type_id: 1 Lord, 2 Anima, 3 Breaker, 4 Guardian, 5 Oracle) was
   being filled with the rarity by the summon (the sell list said "[Anima] Fencer Vargas"); now
   random 1-5 on summon, 1 for given units, kept through evolution.
+
+**Items / warehouse (2026-10-30):** the warehouse is `player_items` (item id -> count, equipped
+items included) and the items equipped for quests `player_equip` (slot -> item id, count; migration
+`30102026_PlayerEquip`). `Db::LoadItems / AddItems / TakeItems / LoadEquip / SaveEquip`
+(`gimuserver/db/Player.cpp`); `TakeItems` clamps the equipped counts to what is left.
+- UserInfo `9wjrh74P` **UserWarehouseInfo** (`net/user.kdl`, from `UserWarehouseInfoResponse::
+  readParam`, which clears the client's list first, so every reply carries the whole warehouse):
+  `n6E8iMf3` item index (the record id the client echoes when selling; we use the item id),
+  `kixHbe54` item id, `wgV86x1q` count, `dJNpLc81` new flag. `71U5wzhI` **UserEquipItemInfo**:
+  `kixHbe54` item id, `XuJL4pc5` slot, `wgV86x1q` count (also replaces the client's list).
+  MissionEnd and UnitEvo replies carry both lists too.
+- `ruoB7bD8` **ItemEdit** (key `DHEfRexCu0q5TAQm`, `gimuserver/gme/ItemEdit.cpp`): Manage Items on
+  the quest squad screen. The request is queued (`ConnectRequestList`) when leaving the screen and
+  sent with the next connection (it showed up right before MissionStart on Begin Quest): the WHOLE
+  equipped list as `71U5wzhI` {`kixHbe54`, `XuJL4pc5`, `wgV86x1q`, all strings} plus `nAligJSQ`
+  bonus items (ignored). The server stores it, capped at the warehouse counts, and answers the
+  stored list and the warehouse. Verified: 5 Cures (20000) equipped, shown in battle's Items tray,
+  still equipped after a relaunch.
+- `qDQerU74` **ItemSell** (key `73aFNjPu`, `gimuserver/gme/ItemSell.cpp`): like UnitSell the client
+  sells locally and sends `M73i1c5U` {`n6E8iMf3` item index, `wgV86x1q` count} through
+  `ItemSellConnectScene`; the server removes the items, credits `sell_price` from
+  **`server/deploy/items.json`** (`tools/build_units.py --items`, from the decoded F_ITEM_MST: name,
+  type 1 consumable / 2 material / 3 sphere, rarity, sell price, max stack, max equipped) and
+  answers wallet + warehouse. **Not exercised on the client yet**: the Sell Items screen lives in
+  the village, which crashes on BlueStacks (below); the contract is from the disassembly only.
+- MissionEnd request `47cJBUxz` = items used during the battles, `itemId:count,...`
+  (`BattleUseItemLogList::getCsv`; the key is absent when nothing was used): removed from the
+  warehouse and the equipped counts. Not exercised either: the Cure cannot be used at full HP and
+  mission 10's enemies never hit back (do it on a harder mission).
+- UnitEvo item materials (`29MgiJIQ` type 2, `inU8Q4gL` item id) are now checked against the
+  warehouse and consumed (`itemId:1` per material).
+- `BjAt1D6b` **DungeonEventUpdate** (key `k5EiNe9x`, URL `/actionSymbol/4iqcLm1s.php`,
+  `gimuserver/gme/DungeonEventUpdate.cpp`): the client reports a story event as watched (area /
+  dungeon / mission event scenes, the town's first visit with Karl); the body is the login info with
+  `9yVsu21R` the scenario id (`randall,`) and `N4XVE1uA` `|0,0`. Stub answering `{}`; the watched
+  events are not stored (UserScenarioInfo is still a mock), so the dialogues replay.
+- Town: `UserTownLocationDetail` (`s8TCo2MS`: `un80kW9Y` location id, `qA7M9EjP` start date,
+  `mDaE3t6A` tap count, `eip3MS5L` drop item info) is now sent for every `town_location.json` row:
+  `MyTownTopScene::downloadFiles` dereferences the record of every location whose `need_mission_id`
+  is cleared (mission 11 -> location 3 crashed the Town tab in `getTapCnt` once mission 11 was
+  cleared).
+- **Village crash (open):** after that fix the village still dies on BlueStacks when its scene
+  starts (Town tab, or the "Village" button of the Randall facility map): logcat shows
+  `scudo ERROR: invalid chunk state when deallocating` in the game process right when the BGM
+  switches (`MediaPlayer` reset + new mp3), then a main-thread SIGSEGV with pc 0 and no usable
+  backtrace. Reproduced three times (17:00, 17:01, 17:04). The Randall map itself (home screen item
+  icon with the NEW badge -> Karl's dialogue -> facilities) works, the Official Guild of
+  Synthesizers (raid item synthesis) opens. Candidates: something in the new UserInfo lists
+  (warehouse, equipped items, town details), the cleared missions, or a BlueStacks-only heap
+  bug in the client; the town worked this morning with the stub player (level 1, missions 1-2, no
+  items). Bisect by blanking those lists one at a time.
+- Where things are in the client: the Units tab has no item menu; the home MENU has only the
+  guides; item screens (`ItemTopScene`, scene reached from `GameScene::getGameScene`) are in the
+  village. The Randall facility map is `RandallTopScene` (home icon next to MENU).
 
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
@@ -594,7 +651,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); next: the warehouse / items (`UserWarehouseInfo` packet, item pickups, item evolution materials) (item pickups are stored but `UserWarehouseInfo` is still a mock), energy purchase.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; ItemSell and items used in battle still unverified on the client); next: the village crash on BlueStacks (blocks Sell Items / item list), item synthesis (`ItemMix` `4P5GELTF`, key `AFqKIJ8Z4mHPB9xg`), energy purchase.
 5. Test feature flags system by system.
 
 ## Conventions

@@ -87,7 +87,10 @@ namespace GmeHandlers
 	HANDLE(FriendGet);
 	HANDLE(GachaAction);
 	HANDLE(GatchaList);
+	HANDLE(DungeonEventUpdate);
 	HANDLE(HomeInfo);
+	HANDLE(ItemEdit);
+	HANDLE(ItemSell);
 	HANDLE(MissionStart);
 	HANDLE(MissionEnd);
 	HANDLE(UnitMix);

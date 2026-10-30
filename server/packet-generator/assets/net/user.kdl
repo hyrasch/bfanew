@@ -1117,7 +1117,7 @@ json MstUrlList {
 
 json UserUnitDictionary {
 	doc "TODO"
-	
+
 	field mock type="str" {
 		key "INVALID"
 		doc "TODO"
@@ -1126,7 +1126,7 @@ json UserUnitDictionary {
 
 json UserFavorite {
 	doc "TODO"
-	
+
 	field mock type="str" {
 		key "INVALID"
 		doc "TODO"
@@ -1173,17 +1173,32 @@ json UserClearMissionInfo {
 }
 
 json UserWarehouseInfo {
-	doc "TODO"
-	
-	field mock type="str" {
-		key "INVALID"
-		doc "TODO"
+	doc "One warehouse record (UserInfo / ItemSell / MissionEnd 9wjrh74P). Keys from UserWarehouseInfoResponse::readParam, which clears the client's list first, so always send the whole warehouse."
+
+	field item_index type="i32::str" {
+		key "n6E8iMf3"
+		doc "record id the client echoes in ItemSell (we use the item id)"
+	}
+
+	field item_id type="str" {
+		key "kixHbe54"
+		doc "F_ITEM_MST id"
+	}
+
+	field item_num type="i32::str" {
+		key "wgV86x1q"
+		doc "count owned (equipped items included)"
+	}
+
+	field new_flg type="i32::str" {
+		key "dJNpLc81"
+		doc "1 = show the NEW frame (UserState::addNewUserWarehouseFrameIdList)"
 	}
 }
 
 json UserGiftInfo {
 	doc "TODO"
-	
+
     field unk1 type="i32::str" {
         key "gNE76SLp"
         doc "TODO"
@@ -1277,7 +1292,7 @@ json UserGiftInfo {
 
 json UserSummonerInfo {
     doc "TODO"
-	
+
 	field mock type="str" {
 		key "INVALID"
 		doc "TODO"
@@ -1286,7 +1301,7 @@ json UserSummonerInfo {
 
 json UserSummonerArmsInfo {
     doc "TODO"
-	
+
 	field mock type="str" {
 		key "INVALID"
 		doc "TODO"
@@ -1295,7 +1310,7 @@ json UserSummonerArmsInfo {
 
 json UserItemDictionaryInfo {
 	doc "TODO"
-	
+
 	field mock type="str" {
 		key "INVALID"
 		doc "TODO"
@@ -1304,7 +1319,7 @@ json UserItemDictionaryInfo {
 
 json UserArenaInfo {
 	doc "TODO"
-	
+
 	field mock type="str" {
 		key "INVALID"
 		doc "TODO"
@@ -1491,29 +1506,29 @@ json UserSettings {
 }
 
 json UserTownLocationDetail {
-    doc "TODO"
+    doc "Per town location state (UserInfo s8TCo2MS). MyTownTopScene::downloadFiles dereferences the record of every location whose need_mission_id is cleared, so send one per TownLocationMst row (setters: setLocationID, setStartdate, setTapCnt, setDropItemInfo)."
 
     field user_id type="str" {
         key "h7eY3sAK"
         doc "ID of the user for this session."
     }
 
-    field unk type="i32::str" {
+    field location_id type="i32::str" {
         key "un80kW9Y"
-        doc "TODO"
+        doc "TownLocationMst id"
     }
 
-    field unk2 type="datetime" {
+    field startdate type="datetime" {
         key "qA7M9EjP"
         doc "TODO"
     }
 
-    field unk3 type="i32::str" {
+    field tap_cnt type="i32::str" {
         key "mDaE3t6A"
-        doc "TODO"
+        doc "taps collected on the location (town item collection)"
     }
 
-    field unk4 type="str" {
+    field drop_item_info type="str" {
         key "eip3MS5L"
         doc "TODO"
     }
@@ -1521,7 +1536,7 @@ json UserTownLocationDetail {
 
 json UserDungeonKeyInfo {
     doc "TODO"
- 
+
     field user_id type="str" {
         key "h7eY3sAK"
         doc "ID of the user for this session."
@@ -1585,32 +1600,31 @@ json UserReleaseInfo {
         key "dJNpLc81"
         doc "TODO"
     }
-    
+
 }
 
 json UserEquipItemInfo {
-    doc "TODO"
-    
-    field unk type="i32::str" {
+    doc "An item equipped for quests (UserInfo / ItemEdit / MissionEnd 71U5wzhI). Keys from UserEquipItemInfoResponse::readParam, which clears the client's list first."
+
+    field item_id type="str" {
         key "kixHbe54"
-        doc "TODO"
+        doc "F_ITEM_MST id"
     }
 
-    field unk2 type="i32::str" {
+    field disp_order type="i32::str" {
         key "XuJL4pc5"
-        doc "TODO"
+        doc "slot, 0.."
     }
 
-    field unk3 type="i32::str" {
+    field item_num type="i32::str" {
         key "wgV86x1q"
-        doc "TODO"
+        doc "how many are equipped"
     }
-
 }
 
 json UserEquipBoostItemInfo {
     doc "TODO"
-    
+
     field unk1 type="i32::str" {
         key "Kn51uR4Y"
         doc "TODO"

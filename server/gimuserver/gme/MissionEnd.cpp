@@ -119,6 +119,18 @@ HANDLEF(MissionEnd)
 		std::strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", &tm);
 		co_await Db::AddClear(p.user_id, missionId, date);
 		co_await Db::AddItems(p.user_id, req.result.items);
+	}
+	// items used during the battles are gone whatever the outcome
+	if (!req.result.items_used.empty())
+	{
+		LOG_DEBUG << "MissionEnd: user " << p.user_id << " used items " << req.result.items_used;
+		co_await Db::TakeItems(p.user_id, req.result.items_used);
+	}
+	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
+	resp.equip_info = co_await Db::LoadEquip(p.user_id);
+
+	if (cleared)
+	{
 
 		for (const auto& u : data.unlocks)
 		{

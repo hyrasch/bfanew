@@ -8,9 +8,10 @@ the server uses:
   units.json  unit id -> rarity, cost, element, max level, exp pattern, base/lord stats,
               adjust exp, skills, sell price, family (group)
   evos.json   unit id -> evolved unit id, zel, karma, materials [{type, id}] (type 1 = unit)
+  items.json  item id -> name, type, rarity, sell price, max stack, max equipped, thumbnail
 
 Usage:
-  python tools/build_units.py --mst ..\\assets\\mst-decoded.zip --out server\\deploy\\units.json --evos server\\deploy\\evos.json
+  python tools/build_units.py --mst ..\\assets\\mst-decoded.zip --out server\\deploy\\units.json --evos server\\deploy\\evos.json --items server\\deploy\\items.json
 """
 import argparse
 import json
@@ -29,10 +30,12 @@ def main():
     ap.add_argument("--mst", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--evos", help="also write the evolution table (F_UNIT_EVO_MST) to this file")
+    ap.add_argument("--items", help="also write the item table (F_ITEM_MST) to this file")
     a = ap.parse_args()
 
     units = {}
     evos = {}
+    items = {}
     with zipfile.ZipFile(a.mst) as z:
         for n in sorted(z.namelist()):
             if n.startswith("3-mst-translated/F_UNIT_MST"):
@@ -59,6 +62,20 @@ def main():
                         "sell_price": to_int(u.get("sellPrice")),
                         "group": to_int(u.get("group")),
                     }
+            elif n.startswith("3-mst-translated/F_ITEM_MST"):
+                for it in json.loads(z.read(n)):
+                    iid = it.get("itemId")
+                    if not iid or iid == "0":
+                        continue
+                    items[iid] = {
+                        "name": it.get("itemName", ""),
+                        "type": to_int(it.get("itemType")),
+                        "rarity": to_int(it.get("rarity")),
+                        "sell_price": to_int(it.get("sellPrice")),
+                        "max_stack": to_int(it.get("itemMaxStack"), 999),
+                        "max_equipped": to_int(it.get("itemMaxEquipped")),
+                        "thumbnail": it.get("itemThumbnail", ""),
+                    }
             elif n.startswith("3-mst-translated/F_UNIT_EVO_MST"):
                 for e in json.loads(z.read(n)):
                     mats = []
@@ -80,6 +97,10 @@ def main():
         with open(a.evos, "w", encoding="utf-8", newline="\n") as f:
             json.dump(evos, f, ensure_ascii=False, indent=0, sort_keys=True)
         print(f"{len(evos)} evolutions written to {a.evos}")
+    if a.items:
+        with open(a.items, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(items, f, ensure_ascii=False, indent=0, sort_keys=True)
+        print(f"{len(items)} items written to {a.items}")
 
 
 if __name__ == "__main__":

@@ -62,6 +62,20 @@ struct EvoDef
 
 using EvoTable = std::unordered_map<std::string, EvoDef>;
 
+/*! deploy/items.json (F_ITEM_MST): what the server needs to know about an item. */
+struct ItemDef
+{
+	std::string name;
+	int32_t type = 0;
+	int32_t rarity = 0;
+	int32_t sell_price = 0;
+	int32_t max_stack = 999;
+	int32_t max_equipped = 0;
+	std::string thumbnail;
+};
+
+using ItemTable = std::unordered_map<std::string, ItemDef>;
+
 namespace Units
 {
 	/*! A stat at a level: linear between the level-1 and the max-level value (good enough until the real curve is known). */

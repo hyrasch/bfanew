@@ -319,8 +319,10 @@ namespace Db
 		co_return static_cast<int32_t>(res[0]["mission_id"].as<int64_t>());
 	}
 
-	Task<void> AddItems(std::string userId, std::string items)
+	/*! "itemId:count,..." -> pairs (bad entries skipped). */
+	static std::vector<std::pair<int64_t, int64_t>> ParseItemList(const std::string& items)
 	{
+		std::vector<std::pair<int64_t, int64_t>> out;
 		size_t pos = 0;
 		while (pos < items.size())
 		{
@@ -337,9 +339,75 @@ namespace Db
 			}
 			catch (...) { continue; }
 			if (itemId <= 0 || count <= 0) continue;
+			out.emplace_back(itemId, count);
+		}
+		return out;
+	}
+
+	Task<std::vector<UserWarehouseInfo>> LoadItems(std::string userId)
+	{
+		std::vector<UserWarehouseInfo> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT item_id, count FROM player_items WHERE user_id = $1 AND count > 0 ORDER BY item_id", userId);
+		for (const auto& r : res)
+		{
+			UserWarehouseInfo w = {};
+			w.item_index = static_cast<int32_t>(r["item_id"].as<int64_t>());
+			w.item_id = std::to_string(w.item_index);
+			w.item_num = static_cast<int32_t>(r["count"].as<int64_t>());
+			w.new_flg = 0;
+			out.emplace_back(w);
+		}
+		co_return out;
+	}
+
+	Task<void> AddItems(std::string userId, std::string items)
+	{
+		for (const auto& [itemId, count] : ParseItemList(items))
 			co_await theDb()->execSqlCoro(
 				"INSERT INTO player_items(user_id, item_id, count) VALUES ($1, $2, $3) ON CONFLICT(user_id, item_id) DO UPDATE SET count = count + $3",
 				userId, itemId, count);
+	}
+
+	Task<void> TakeItems(std::string userId, std::string items)
+	{
+		for (const auto& [itemId, count] : ParseItemList(items))
+		{
+			co_await theDb()->execSqlCoro("UPDATE player_items SET count = MAX(0, count - $3) WHERE user_id = $1 AND item_id = $2", userId, itemId, count);
+			co_await theDb()->execSqlCoro("DELETE FROM player_items WHERE user_id = $1 AND item_id = $2 AND count <= 0", userId, itemId);
+			// the equipped count cannot exceed what is left
+			co_await theDb()->execSqlCoro(
+				"UPDATE player_equip SET count = MIN(count, COALESCE((SELECT count FROM player_items WHERE user_id = $1 AND item_id = $2), 0)) WHERE user_id = $1 AND item_id = $2",
+				userId, itemId);
+			co_await theDb()->execSqlCoro("DELETE FROM player_equip WHERE user_id = $1 AND count <= 0", userId);
+		}
+	}
+
+	Task<std::vector<UserEquipItemInfo>> LoadEquip(std::string userId)
+	{
+		std::vector<UserEquipItemInfo> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT slot, item_id, count FROM player_equip WHERE user_id = $1 AND count > 0 ORDER BY slot", userId);
+		for (const auto& r : res)
+		{
+			UserEquipItemInfo e = {};
+			e.disp_order = static_cast<int32_t>(r["slot"].as<int64_t>());
+			e.item_id = std::to_string(r["item_id"].as<int64_t>());
+			e.item_num = static_cast<int32_t>(r["count"].as<int64_t>());
+			out.emplace_back(e);
+		}
+		co_return out;
+	}
+
+	Task<void> SaveEquip(std::string userId, const std::vector<UserEquipItemInfo>& equip)
+	{
+		co_await theDb()->execSqlCoro("DELETE FROM player_equip WHERE user_id = $1", userId);
+		for (const auto& e : equip)
+		{
+			int64_t itemId = 0;
+			try { itemId = std::stoll(e.item_id); } catch (...) { continue; }
+			if (itemId <= 0 || e.item_num <= 0) continue;
+			co_await theDb()->execSqlCoro(
+				"INSERT INTO player_equip(user_id, slot, item_id, count) VALUES ($1, $2, $3, $4) ON CONFLICT(user_id, slot) DO UPDATE SET item_id = $3, count = $4",
+				userId, static_cast<int64_t>(e.disp_order), itemId, static_cast<int64_t>(e.item_num));
 		}
 	}
 }

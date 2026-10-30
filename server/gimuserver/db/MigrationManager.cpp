@@ -132,6 +132,19 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: items equipped for quests (ItemEdit)
+	migrate("30102026_PlayerEquip", {
+		p->execSqlSync(
+			"CREATE TABLE player_equip("
+			"user_id TEXT NOT NULL,"
+			"slot INTEGER NOT NULL,"
+			"item_id INTEGER NOT NULL,"
+			"count INTEGER NOT NULL DEFAULT 1,"
+			"PRIMARY KEY(user_id, slot)"
+			");"
+		);
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

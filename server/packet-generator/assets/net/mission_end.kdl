@@ -29,6 +29,11 @@ json MissionEndResult {
         doc "karma picked up in battle"
     }
 
+    field items_used type="str" {
+        key "47cJBUxz"
+        doc "items used during the battles, itemId:count,... (BattleUseItemLogList::getCsv)"
+    }
+
     field items type="str" {
         key "4T0Q2Bh5"
         doc "item drops picked up, itemId:count joined with a comma"

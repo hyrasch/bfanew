@@ -39,6 +39,20 @@ HANDLEF(UserInfo)
 	resp.party_deck_info = co_await Db::LoadDecks(p.user_id);
 	resp.clear_mission_info = co_await Db::LoadClears(p.user_id);
 	resp.permit_place = co_await Db::LoadPermits(p.user_id);
+	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
+	resp.equip_info = co_await Db::LoadEquip(p.user_id);
+
+	// one town location detail per location: MyTownTopScene::downloadFiles dereferences the record of
+	// every location whose need_mission_id is cleared (mission 11 -> location 3 crashed the Town tab)
+	resp.town_location_detail.clear();
+	for (const auto& loc : theServer()->cache().initializeResp().town_location)
+	{
+		UserTownLocationDetail d = {};
+		d.user_id = p.user_id;
+		d.location_id = loc.id;
+		d.tap_cnt = 0;
+		resp.town_location_detail.emplace_back(d);
+	}
 
 	// phase 1: no login campaign (id 0 keeps the "Login Campaign" popup from showing)
 	resp.campaign_info.current_day = 0;

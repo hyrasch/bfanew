@@ -213,6 +213,16 @@ json MissionEndResp {
         doc "TODO"
     }
 
+    field warehouse_info type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "the whole warehouse after the pickups and the items used"
+    }
+
+    field equip_info type="[UserEquipItemInfo]" {
+        key "71U5wzhI"
+        doc "the equipped items after the ones used"
+    }
+
     field permit_place type="[PermitPlace]" {
         key "yXNM8kL3"
         doc "TODO"
@@ -422,6 +432,87 @@ json UnitEvoResp {
 
     field unit_info type="[UserUnitInfo]" {
         key "4ceMWH6k"
+        doc "TODO"
+    }
+
+    field warehouse_info type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "the whole warehouse (item materials consumed)"
+    }
+}
+
+json ItemEditReq {
+    doc "ItemEdit command (request id ruoB7bD8): the items equipped for quests (Manage Items)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field equip type="[ItemEditEntry]" {
+        key "71U5wzhI"
+        doc "the whole equipped list"
+    }
+}
+
+json ItemEditResp {
+    doc "ItemEdit reply: the equipped list as stored and the warehouse"
+
+    field equip_info type="[UserEquipItemInfo]" {
+        key "71U5wzhI"
+        doc "TODO"
+    }
+
+    field warehouse_info type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "TODO"
+    }
+}
+
+json ItemSellReq {
+    doc "ItemSell command (request id qDQerU74): items sold on the Sell Items screen"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field items type="[ItemSellEntry]" {
+        key "M73i1c5U"
+        doc "TODO"
+    }
+}
+
+json ItemSellResp {
+    doc "ItemSell reply: the wallet and the whole warehouse"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field warehouse_info type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
         doc "TODO"
     }
 }

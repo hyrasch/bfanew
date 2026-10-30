@@ -19,7 +19,8 @@
 *   player_clears  cleared missions (UserClearMissionInfo fields)
 *   player_permits permitted places (kind 1 area 2 dungeon 3 mission 4 land 5 gate)
 *   player_runs    MissionStart serial id -> mission id
-*   player_items   item id -> count (pickups; not sent to the client yet, UserWarehouseInfo is a mock)
+*   player_items   item id -> count: the warehouse (UserWarehouseInfo), equipped items included
+*   player_equip   slot -> item id, count: the items equipped for quests (UserEquipItemInfo)
 *
 * The packet structs are stored as JSON (glaze) so that the schema does not have to mirror
 * their 40-odd fields; the columns next to them are the ones queried.
@@ -76,6 +77,13 @@ namespace Db
 	/*! Mission id of a run of this player, 0 if unknown. */
 	drogon::Task<int32_t> MissionForRun(std::string serialId, std::string userId);
 
+	/*! The warehouse: one record per item owned (item_index = item id). */
+	drogon::Task<std::vector<UserWarehouseInfo>> LoadItems(std::string userId);
 	/*! Adds pickups given as "itemId:count,...". */
 	drogon::Task<void> AddItems(std::string userId, std::string items);
+	/*! Removes items given as "itemId:count,..." (clamped at 0; equipped counts follow). */
+	drogon::Task<void> TakeItems(std::string userId, std::string items);
+
+	drogon::Task<std::vector<UserEquipItemInfo>> LoadEquip(std::string userId);
+	drogon::Task<void> SaveEquip(std::string userId, const std::vector<UserEquipItemInfo>& equip);
 }
