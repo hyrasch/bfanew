@@ -119,8 +119,7 @@ python tools/dev.py bump M_GACHA_MST      # bump a table version in version_info
 python tools/dev.py client --to summon    # relaunch the game on BlueStacks and drive it there (~30 s)
 python tools/dev.py client --to mission   # ... or to the world map (quest) / the first mission list (mission)
 python tools/dev.py summon [--rare] [--multi]   # from the Summon scene: summon, open the door (~25 s)
-python tools/dev.py shot name             # screenshot -> ..uild\shots
-ame.png (+ window frame)
+python tools/dev.py shot name             # screenshot -> ..\build\shots\name.png (+ window frame)
 python tools/dev.py tapk tab_unit | tap X Y | swipe ... | key back
 python tools/dev.py logs -n 15 [--show ID]   # latest requests with handler names, errors flagged
 python tools/dev.py restart / stop / start   # detached server (when not using `serve`)
