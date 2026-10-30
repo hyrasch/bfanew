@@ -18,7 +18,7 @@ The base is the open-source emulator **decompfrontier** (C++/Drogon, AGPL-3.0). 
 ## Layout (`D:\.Code\bravefrontier`)
 
 ```
-bfanew/                      <- this repo (git, branch main)
+bfanew/                      <- this repo (git, branch main, origin = https://github.com/hyrasch/bfanew, public)
   CLAUDE.md                  <- this file
   GAP_ANALYSIS.md            <- full analysis: server state, phasing design, gap table, plan
   server/                    <- OUR FORK of decompfrontier/server (git subtree, upstream 7cc0ebd, AGPL-3.0)
@@ -307,6 +307,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 ## Conventions
 
 - Don't modify the `decompfrontier/*` clones at all any more; all server work happens in `bfanew/server`. To pull upstream later: `git subtree pull --prefix=server ../decompfrontier/server main` (and the same for `server/packet-generator`).
+- Published at https://github.com/hyrasch/bfanew (public, AGPL-3.0). Push `main` after each milestone (`git push`). Never commit the APK, assets, keystore or Revive's build.
 - Git identity: `Sylvain Franco <sylvain.franco@outlook.fr>`. End commit messages with:
   ```
   Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
