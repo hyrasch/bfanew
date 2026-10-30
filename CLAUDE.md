@@ -97,18 +97,87 @@ Historical balance: 2014 stats come from the datamine snapshots (`cheahjs/bravef
 
 To rebuild the timelines: `git clone --filter=blob:none https://github.com/cheahjs/bravefrontier_data`, then `python data/build_timeline.py bravefrontier_data info.json data/unit_timeline.json` (and the same with `missions.json`). It takes a while, because the unit file is 80 MB × ~80 monthly snapshots.
 
-## Android client: findings so far (next task)
+## Android client: findings (2026-10-30, session 2)
 
-- The APK contains `lib/arm64-v8a/libgame.so` (42.5 MB) and `lib/armeabi-v7a/libgame.so` (27.6 MB), Cocos2d-x v2, networking via libcurl in native code. There's also a Java Apache HttpClient fork (`ch/boye/httpclientandroidlib`).
-- Server hosts written into `libgame.so` (from `strings`): `api-sl.bfww.gumi.sg`, `api-prod-player.bfww.gumi.sg`, `ios.bfww.gumi.sg`, `https://api-sl.gl.gumi.sg/`. **The game-server and CDN addresses come from our `/dls` reply** (`ServerCache.cpp` builds it from the listener host), so only these entry points need patching.
-- Plan (from the old emufrontier README): hex-patch those strings (`https://` → `http://`, host → our server, same byte length, NUL-padded), patch **both** ABIs, re-zip, zipalign, re-sign (v1+v2), install.
-- **Still to check:** targetSdk and minSdk in the manifest (decides whether v1 signing is enough and whether cleartext HTTP is blocked for the Java client), which host each code path uses, and whether anything checks certificates.
-- **Still to decide with the user:** a real phone or an Android emulator. An emulator needs ARM translation, since the APK has no x86 libs.
-- **Before a device can connect:** change `deploy/config.json` listener `address` from `127.0.0.1` to `0.0.0.0` (or the LAN IP). From the Android emulator the PC is reachable at `10.0.2.2`.
+APK: `brave-frontier-2-19-6-0.apk`, package `sg.gumi.bravefrontier`, versionCode 11014182.
+
+**Manifest** (decoded with `pyaxmlparser`): `minSdkVersion 16`, `targetSdkVersion 30`, no
+`usesCleartextTraffic`, no `networkSecurityConfig`, no `extractNativeLibs` (defaults to true,
+libs may stay compressed). Consequences: a re-signed APK needs **v1 + v2** signatures
+(v1 for API < 24, v2 because targetSdk >= 30); plain `http://` is blocked for the Java/WebView
+side unless `android:usesCleartextTraffic="true"` is added (native libcurl is not affected).
+Original signing: v1 + v2 only (no v3), 1024-bit RSA cert `CN=gumi Asia`. `resources.arsc`
+is stored uncompressed (must stay so and 4-byte aligned).
+
+**libgame.so** (Cocos2d-x v2, libcurl; symbols are NOT stripped, which made this easy).
+File offset == virtual address for every site below. Analysis tooling: `pyelftools` +
+`capstone` (pip). The client's URL flow:
+
+- `ServiceRequestManager::serviceRequest` sends `GET <HOST 3>/dls` where HOST 3 is set in
+  `GumiLiveManager::init` as `"https://" + SERVICE_PHP_URL()`.
+  `SERVICE_PHP_URL()` returns the C string `api-sl.bfww.gumi.sg` (arm64 `0x232711f`,
+  armv7 `0x1861ed2`), `SERVICE_PHP_URL2()` returns `api-prod-player.bfww.gumi.sg`
+  (`0x2327133` / `0x1861ee6`, HOST 4, player API). Both are `std::string(const char*)`,
+  so a shorter NUL-padded replacement is fine.
+- `ServiceRequestManager::reinitEndPoints` parses the DLS JSON (`game`, `gumilive`,
+  `resource`, `mstv`, `bgimage`, `force`, `force_msg`) and rebuilds `NetworkManager`'s
+  host table (`this+0x30 + HOST*0x18` on arm64, `+0x20 + HOST*0xc` on armv7) as
+  `"https://" + value`. HOST 2 (= scheme + `game`) is used by `featureCheck.php`,
+  `getServerTime.php`, `languageCheck.php`, `maintenanceClient.php`, Daily_login.
+  HOST 1 gets `":80"` appended unless the game value already contains `:80`
+  (would produce `host:9960:80`; who uses HOST 1 is unknown).
+- GME action URLs come from `get_PhpReid()` / `PHP_URL()` =
+  `"http://" + getServiceEndpoint("game", default "ios.bfww.gumi.sg") + "/" ...`, i.e. the
+  game server is already plain http with the host taken from the DLS reply.
+  `CommonUtils::getPhpUrl` and friends use a `"https://"` literal (arm64 `0x2369ce3`,
+  armv7 `0x1892d2d`).
+- `NetworkManager` ctor / `sharedInstance` initialise HOST 0 with
+  `"https://api-sl.gl.gumi.sg/"` (arm64 `0x2319e64`, armv7 `0x185b6c3`) using
+  `assign(ptr, 26)` with a hard-coded length (`mov w2,#0x1a` at arm64 `0xf5c0d4`,
+  `mov w6,#0x1a` at `0xf5c278`; armv7 ARM-mode `mov r2,#0x1a` at `0xccb920`, `0xccbaac`).
+  This default is overwritten by the DLS `gumilive` value.
+- arm64 is heavily inlined: `"https://"` is also built with `mov/movk` immediates in
+  `GumiLiveManager::init+0x90` (`0xf5fbe4..0xf5fbf4`) and `reinitEndPoints+0x3c`
+  (`0x1c7a5c8..0x1c7a5e0`); the `PHP_URL` default is a 16-byte copy with an SSO size
+  byte (`mov w8,#0x20` at `0x1162cb0`, `0x1162e10`); the `:80` append is
+  `append(ptr, 3)` with `mov w2,#3` at `0x1c7a918`. armv7 is plain: it uses the string
+  literals everywhere, and the `:80` decision is a `cbz r4` at `0x1383f90`.
+- `BFCertificateProvider` installs a curl `CURLOPT_SSL_CTX_FUNCTION` (certificate pinning)
+  but it only matters for https, so switching every scheme to http sidesteps it.
+- `SaveData::set/getServiceRequestEndpoint` persists an endpoint from `UserInfo`
+  (`UserInfo::setServiceRequestEndpointParam`); a fresh install has none.
+- `CCUserDefault::getStringForKey` in `GumiLiveManager::init` can override the scheme
+  prefix if a saved value exists (empty on a fresh install).
+- Java side: `ch.boye.httpclientandroidlib` and OkHttp are present (ads/analytics);
+  `android.security.NetworkSecurityPolicy` is referenced, so the cleartext flag matters
+  for those paths.
+
+**Patch recipe that follows from this** (both ABIs): swap the two API host C strings for
+`host:port`, turn the `https://` literals/immediates into `http://`, fix the two
+hard-coded lengths of the gumi-live default (or make the replacement exactly 26 chars),
+neutralise the `:80` append, add `usesCleartextTraffic`, re-zip with `resources.arsc`
+aligned, sign v1+v2. With port 9960 the replacement must stay <= 19 chars
+(`192.168.1.14:9960` is 17, OK).
+
+**Status:** the automated patch/sign script for `bfanew/tools/` could not be produced in
+the Claude session (the response was stopped by Anthropic's safety classifier while
+writing it). Options: build it by hand with standard tools (`apktool` or plain zip +
+`zipalign` + `apksigner` from Android build-tools, needs a JDK), or redo it in a session
+with the above offsets. Nothing was installed or patched on a device yet.
+
+**Device:** still to decide (real phone vs emulator). Emulator needs an arm64 system
+image with ARM translation (x86_64 images on API 30+), the APK has no x86 libs.
+From the emulator the PC is `10.0.2.2`; from a phone it is the LAN IP.
+
+**Server side done:** `deploy/config.json` now has two listeners, `192.168.1.14:9960`
+first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile is
+"Public", so Windows Firewall will drop inbound 9960 until a rule is added (admin):
+`netsh advfirewall firewall add rule name="gimuserver 9960" dir=in action=allow protocol=TCP localport=9960`.
+The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
 ## Next steps (in order)
 
-1. Android patch: inspect the manifest and `libgame.so` string references, write a **repeatable patch script** in `bfanew/tools/` (Python), produce a signed APK, and get the client to log in against the local server, using the server request log (`deploy/log/`, TRACE level) to see what it asks for.
+1. Android patch: analysis done (see above). Still to do: the patch/sign tool in `bfanew/tools/` (blocked in-session, see Status), pick a device, install, and read the server request log (`deploy/log/`, TRACE level) to see how far the client gets. Done = client reaches Initialize/UserInfo on our server.
 2. Fork decompfrontier/server into bfanew (keep AGPL, keep upstream history if possible), and add the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
 4. Core loop: accounts and persistence → unit box → quests and rewards → summon → fusion/evolution.
@@ -119,6 +188,6 @@ To rebuild the timelines: `git clone --filter=blob:none https://github.com/cheah
 - Don't modify the `decompfrontier/*` clones beyond local build files. Real changes go into bfanew (step 2 forks the server there).
 - Git identity: `Sylvain Franco <sylvain.franco@outlook.fr>`. End commit messages with:
   ```
-  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
   ```
 - Non-commercial fan project. Server code stays AGPL-3.0, so source must be offered to anyone using a public server. The APK, art and data belong to Alim/gumi.
