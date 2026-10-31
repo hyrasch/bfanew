@@ -86,6 +86,7 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("0gUSE84e", UnitEvo, "biHf01DxcrPou5Qt");
 	REGISTER("Ri3uTq9b", UnitSell, "92VqcGFWuPkmT60U");
 	REGISTER("CuQ5oB8U", TownUpdate, "w1eo2ZDJ");
+	REGISTER("1MJT6L3W", UpdatePermitPlaceInfo, "3zip5Htw");
 	REGISTER("ynB7X5P9", UpdateInfoLight, "7kH9NXwC");
 	REGISTER("cTZ3W2JG", UserInfo, "ScJx6ywWEb0A3njT");
 

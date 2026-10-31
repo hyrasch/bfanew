@@ -41,6 +41,7 @@ K = {
     "unit_id": "pn16CNah",
     "mission_id": "j28VNcUW", "land_id": "9C64Qwe0", "area_id": "VjCY7rX4", "dungeon_id": "MHx05sXt",
     "evo_from": "pn16CNah", "evo_to": "74VFwuTd",
+    "area_parent": "sHMai2ZG",  # F_AREA_MST: the folder area a Vortex area is listed under (AreaMstList::getActiveList)
 }
 # F_UNIT_EVO_MST material columns evoMaterialType1..10 (1 = unit, 2 = item) / evoMaterialId1..10
 EVO_MAT_TYPES = ["Xyt6rhx2", "0tna4Idu", "6GwnugW3", "hdF8ND2H", "nB7pFdR0", "IZUvR489", "bNRUuatB", "2BFgYLjg", "18Oz7z8k", "EK7jR4rB"]
@@ -126,6 +127,16 @@ def build(cutoff: str, bump: int, write_versions: bool = True) -> dict:
         "F_MISSION_SCRIPT_MST": [r for r in tables["F_MISSION_SCRIPT_MST"] if int(r[K["mission_id"]]) in mission_ids],
         "F_MISSION_EP3_MST": [r for r in tables["F_MISSION_EP3_MST"] if int(r[K["mission_id"]]) in mission_ids],
     }
+    # the Vortex list shows folder areas; an area under one needs the folder permitted too
+    parents = {str(r[K["area_id"]]): ints(r.get(K["area_parent"]))[0]
+               for r in out["F_AREA_MST"] if int(r[K["land_id"]]) == 99 and ints(r.get(K["area_parent"])) and ints(r.get(K["area_parent"]))[0] > 0}
+    # a folder area is served whenever one of its children is (the mission filter alone may drop it)
+    all_areas = {int(r[K["area_id"]]): r for r in tables["F_AREA_MST"]}
+    for parent in set(parents.values()):
+        if parent not in areas and parent in all_areas:
+            areas.add(parent)
+            out["F_AREA_MST"].append(all_areas[parent])
+
     # unlock chains: a kept mission / dungeon must not require a dropped mission
     for name, key in (("F_MISSION_MST", "HSRhkf70"), ("F_DUNGEON_MST", "HSRhkf70"), ("F_AREA_MST", "HSRhkf70"), ("F_LAND_MST", "HSRhkf70")):
         broken = [r for r in out[name] if any(x not in mission_ids and x != 0 for x in ints(r.get(key)))]
@@ -143,8 +154,14 @@ def build(cutoff: str, bump: int, write_versions: bool = True) -> dict:
         print(f"  {name}: {len(tables[name])} -> {len(data)} rows, version {base} -> {version} ({', '.join(f.name for f in files)})")
     if write_versions:
         mst.VERSION_INFO.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    vortex: dict[str, list[int]] = {}
+    for r in mis_kept:
+        if int(r[K["land_id"]]) == 99:
+            vortex.setdefault(str(r[K["dungeon_id"]]), []).append(int(r[K["mission_id"]]))
     phase = {"cutoff": cutoff, "units": sorted(unit_ids), "missions": sorted(mission_ids),
-             "dungeons": sorted(dungeons), "areas": sorted(areas), "lands": sorted(lands)}
+             "dungeons": sorted(dungeons), "areas": sorted(areas), "lands": sorted(lands),
+             "dungeon_missions": dict(sorted(vortex.items(), key=lambda kv: int(kv[0]))),  # Vortex dungeon -> missions
+             "area_parents": dict(sorted(parents.items(), key=lambda kv: int(kv[0])))}  # Vortex area -> folder area
     (mst.DEPLOY / "phase.json").write_text(json.dumps(phase) + "\n", encoding="utf-8")
     print(f"  phase {cutoff}: {len(unit_ids)} units ({len(added)} evolution materials added), {len(mission_ids)} missions, "
           f"{len(dungeons)} dungeons, {len(areas)} areas, lands {sorted(lands)} -> deploy/phase.json")

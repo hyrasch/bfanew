@@ -1,0 +1,32 @@
+{
+  "_doc": "Vortex (land 99) schedule: which special areas / dungeons are open when. Windows are in the game's clock (UTC + utc_offset_hours, PST like the original client shows). weekdays: 0 = Sunday ... 6 = Saturday (empty = every day); hours: [start, end) pairs within the day (empty = all day). The server turns the open entries into PermitPlace records (land 99, area, dungeon, missions) with the seconds left and the period text (gimuserver/gme/Vortex.hpp). Phase 1 (up to Oct 2014): a guess at the launch-era rotation, edit freely.",
+  "utc_offset_hours": -8,
+  "entries": [
+    { "name": "Souls Training Ground", "area": 100001, "dungeons": [100050], "weekdays": [1], "period_text": "Mondays" },
+    { "name": "Faerie Paradise", "area": 100001, "dungeons": [100100], "weekdays": [2], "period_text": "Tuesdays" },
+    { "name": "Cave of Greed", "area": 100001, "dungeons": [100200], "weekdays": [3], "period_text": "Wednesdays" },
+    { "name": "Garden of God", "area": 100001, "dungeons": [100300], "weekdays": [4], "period_text": "Thursdays" },
+    { "name": "Remains of Eternity", "area": 100001, "dungeons": [100400], "weekdays": [5], "period_text": "Fridays" },
+    { "name": "Golden Slumberland", "area": 100001, "dungeons": [100500], "weekdays": [6, 0], "period_text": "Weekends" },
+
+    { "name": "Metal Parade", "area": 100600, "dungeons": [100600], "weekdays": [], "hours": [[12, 13], [20, 21]], "period_text": "12:00-13:00, 20:00-21:00" },
+    { "name": "Jewel Parade", "area": 100600, "dungeons": [100650], "weekdays": [], "hours": [[15, 16], [22, 23]], "period_text": "15:00-16:00, 22:00-23:00" },
+
+    { "name": "Bearer of the Flaming Goddess", "area": 100900, "dungeons": [100900], "weekdays": [1, 0], "period_text": "Mondays and Sundays" },
+    { "name": "Flower In the Frost", "area": 101000, "dungeons": [101000], "weekdays": [2, 0], "period_text": "Tuesdays and Sundays" },
+    { "name": "Lone Traveller of the Wind", "area": 100700, "dungeons": [100700], "weekdays": [3, 0], "period_text": "Wednesdays and Sundays" },
+    { "name": "When Lightning Strikes", "area": 101200, "dungeons": [101200], "weekdays": [4, 0], "period_text": "Thursdays and Sundays" },
+    { "name": "The Iron-Fisted Lady", "area": 101100, "dungeons": [101100], "weekdays": [5, 0], "period_text": "Fridays and Sundays" },
+    { "name": "Dweller in the Darkness", "area": 100800, "dungeons": [100800], "weekdays": [6, 0], "period_text": "Saturdays and Sundays" },
+
+    { "name": "Flaming Rocket of Justice", "area": 801000, "dungeons": [801000], "weekdays": [1], "period_text": "Mondays" },
+    { "name": "Gun Goddess of the Tides", "area": 802000, "dungeons": [802000], "weekdays": [2], "period_text": "Tuesdays" },
+    { "name": "Slashing Fist of the Wild", "area": 803000, "dungeons": [803000], "weekdays": [3], "period_text": "Wednesdays" },
+    { "name": "The Lightning Bomber", "area": 804000, "dungeons": [804000], "weekdays": [4], "period_text": "Thursdays" },
+    { "name": "Queen of the High Skies", "area": 805000, "dungeons": [805000], "weekdays": [5], "period_text": "Fridays" },
+    { "name": "The Half-blood Princess", "area": 806000, "dungeons": [806000], "weekdays": [6], "period_text": "Saturdays" },
+
+    { "name": "Grand Gaia Chronicles", "area": 150000, "dungeons": [150000], "weekdays": [], "period_text": "" },
+    { "name": "Great Tree's Melody (Deemo)", "area": 900000, "dungeons": [900000], "weekdays": [6, 0], "period_text": "Weekends" }
+  ]
+}

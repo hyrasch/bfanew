@@ -81,6 +81,10 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	m_evos = LoadJson<EvoTable>(".", "evos.json");
 	m_items = LoadJson<ItemTable>(".", "items.json"); // bfanew: tools/build_units.py --items
 
+	// bfanew: the Vortex schedule (optional: no file, no Vortex)
+	m_vortex = std::filesystem::is_regular_file(std::string(mstRoot) + "/vortex_schedule.json") ? LoadJson<VortexSchedule>(mstRoot, "vortex_schedule.json") : VortexSchedule{};
+	LOG_INFO << "bfanew: Vortex schedule: " << m_vortex.entries.size() << " entries";
+
 	// bfanew: the content phase (tools/build_phase.py); optional, nothing is enforced without it
 	if (std::filesystem::is_regular_file("phase.json"))
 	{

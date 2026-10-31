@@ -101,6 +101,7 @@ namespace GmeHandlers
 	HANDLE(UnitEvo);
 	HANDLE(UnitSell);
 	HANDLE(TownUpdate);
+	HANDLE(UpdatePermitPlaceInfo);
 	HANDLE(UpdateInfoLight);
 	HANDLE(UserInfo);
 }

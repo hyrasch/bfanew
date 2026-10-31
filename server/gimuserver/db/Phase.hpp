@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <string>
+#include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -11,6 +13,24 @@
 * cannot play ahead of the phase (CLAUDE.md "Phasing design", lever 4). Without the file nothing
 * is enforced (and the server says so at startup).
 */
+/*! deploy/system/vortex_schedule.json: one open window set per special area / dungeon group. */
+struct VortexEntry
+{
+	std::string name;
+	int32_t area = 0;
+	std::vector<int32_t> dungeons;
+	std::vector<int32_t> weekdays;            //!< 0 = Sunday .. 6 = Saturday, empty = every day
+	std::vector<std::vector<int32_t>> hours;  //!< [start, end) hour pairs, empty = all day
+	std::string period_text;
+};
+
+struct VortexSchedule
+{
+	std::string _doc;
+	int32_t utc_offset_hours = 0;
+	std::vector<VortexEntry> entries;
+};
+
 struct PhaseTable
 {
 	std::string cutoff;
@@ -19,6 +39,8 @@ struct PhaseTable
 	std::vector<int32_t> dungeons;
 	std::vector<int32_t> areas;
 	std::vector<int32_t> lands;
+	std::map<std::string, std::vector<int32_t>> dungeon_missions; //!< Vortex dungeon id -> its mission ids
+	std::map<std::string, int32_t> area_parents;                  //!< Vortex area id -> the folder area it is listed under
 };
 
 class Phase
@@ -30,8 +52,35 @@ public:
 		m_units = { t.units.begin(), t.units.end() };
 		m_missions = { t.missions.begin(), t.missions.end() };
 		m_enforced = !m_units.empty() || !m_missions.empty();
+		m_dungeonMissions.clear(); m_vortexDungeonOf.clear(); m_areaParents.clear();
+		for (const auto& [a, parent] : t.area_parents) m_areaParents[std::stoi(a)] = parent;
+		for (const auto& [d, ms] : t.dungeon_missions)
+		{
+			const auto id = std::stoi(d);
+			m_dungeonMissions[id] = ms;
+			for (const auto m : ms) m_vortexDungeonOf[m] = id;
+		}
 	}
-	void Clear() { m_cutoff.clear(); m_units.clear(); m_missions.clear(); m_enforced = false; }
+	void Clear() { m_cutoff.clear(); m_units.clear(); m_missions.clear(); m_dungeonMissions.clear(); m_vortexDungeonOf.clear(); m_areaParents.clear(); m_enforced = false; }
+	/*! The folder area a Vortex area is listed under, 0 for none. */
+	int32_t areaParent(int32_t areaId) const
+	{
+		const auto it = m_areaParents.find(areaId);
+		return it == m_areaParents.end() ? 0 : it->second;
+	}
+	/*! The missions of a Vortex dungeon (empty when unknown). */
+	const std::vector<int32_t>& dungeonMissions(int32_t dungeonId) const
+	{
+		static const std::vector<int32_t> none;
+		const auto it = m_dungeonMissions.find(dungeonId);
+		return it == m_dungeonMissions.end() ? none : it->second;
+	}
+	/*! The Vortex dungeon a mission belongs to, 0 for a normal quest. */
+	int32_t vortexDungeonOf(int32_t missionId) const
+	{
+		const auto it = m_vortexDungeonOf.find(missionId);
+		return it == m_vortexDungeonOf.end() ? 0 : it->second;
+	}
 
 	bool enforced() const { return m_enforced; }
 	const std::string& cutoff() const { return m_cutoff; }
@@ -45,5 +94,8 @@ private:
 	std::string m_cutoff;
 	std::unordered_set<int32_t> m_units;
 	std::unordered_set<int32_t> m_missions;
+	std::unordered_map<int32_t, std::vector<int32_t>> m_dungeonMissions;
+	std::unordered_map<int32_t, int32_t> m_vortexDungeonOf;
+	std::unordered_map<int32_t, int32_t> m_areaParents;
 	bool m_enforced = false;
 };

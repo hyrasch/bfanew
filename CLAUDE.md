@@ -108,7 +108,7 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, slot
-extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection). Stubs: DungeonEventUpdate (story events watched,
+extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule). Stubs: DungeonEventUpdate (story events watched,
 not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: arena, gifts, friends, shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
@@ -876,11 +876,36 @@ as a player: the AES-ECB envelope, the handler keys read from `GmeControllerHand
 reply decrypted): `MissionStart` 1577 (Celgrad) -> error `Not available yet`, mission 12 ->
 a normal start. `python tools/gme.py MissionStart '{"9Q1Lq5FS":[{...}]}'` (see its docstring).
 
+**Vortex schedule (2026-10-31).** The Vortex (land 99, the quest map's Vortex button,
+`AreaSPSelectScene`) is driven by **permits**: `AreaMstList::getActiveList` lists the land-99
+areas that have a `PermitPlace` record (`yXNM8kL3`), `isLockDungeon` needs the dungeon's record
+(`enterable_flg`), `strPeriod` shows `period_text` after `OPEN_PERIOD`, the banner's
+"Remaining: 1d" comes from `time_limit` (seconds), and the mission list inside wants mission
+permits. Areas with `sHMai2ZG` (F_AREA_MST "parent area") are listed under a **folder area**
+(100002 "Travellers' Saga", 100004 "Seasons Past"; 100001 "Enhancement" is a plain area holding
+the weekday dungeons), which must be permitted too and must exist in the filtered F_AREA_MST
+(`build_phase.py` keeps a folder whenever a child is kept). **`deploy/system/vortex_schedule.json`**
+(force-added, re-read by `reload`): `utc_offset_hours` (-8, the PST clock the client shows as
+"Server Time") and entries `{area, dungeons, weekdays (0 = Sunday), hours [[start, end)...],
+period_text}`. `gimuserver/gme/Vortex.hpp` turns the entries open now into permits (gate 99,
+land 99, folder + area, dungeon with the seconds left, the dungeon's missions from
+`deploy/phase.json` `dungeon_missions`) appended to UserInfo's `permit_place`; `1MJT6L3W`
+**UpdatePermitPlaceInfo** (key `3zip5Htw`, URL `/actionSymbol/AsTF24Gn.php`, login info only)
+answers the whole list again when a timed permit ran out; MissionStart refuses a Vortex mission
+whose dungeon is closed ("This dungeon is closed right now"). Phase 1's rotation is a guess at
+the launch era: weekday Enhancement dungeons (Souls Training Ground Mon ... Golden Slumberland
+weekends), Metal / Jewel Parade hours, the six element "ruins" and the six Heroes' dungeons by
+weekday, Grand Gaia Chronicles always, Deemo on weekends. Verified (Saturday): `gme.py`
+UpdatePermitPlaceInfo -> 46 permits (5 dungeons open), Monday-only 100050 refused, 100500
+started; the client's Vortex lists Enhancement, Travellers' Saga and Deemo with "Remaining: 1d",
+Enhancement -> Golden Slumberland -> Gold Valley Lv.1-3 unlocked. Not verified: a permit expiring
+while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (Parades).
+
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). Still to do: phase folders for the login-time tables, a Vortex schedule for phase 1 (the Vortex list is empty today), the real summon pools (phase-filtered).
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). Still to do: phase folders for the login-time tables, the real summon pools (phase-filtered), a real 2014 Vortex calendar (today's rotation is a guess).
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 

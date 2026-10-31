@@ -1,6 +1,7 @@
 #include "App.hpp"
 #include "Handlers.hpp"
 #include "TownState.hpp"
+#include "Vortex.hpp"
 #include <cstdlib>
 #include <unordered_set>
 
@@ -42,6 +43,11 @@ HANDLEF(UserInfo)
 	resp.party_deck_info = co_await Db::LoadDecks(p.user_id);
 	resp.clear_mission_info = co_await Db::LoadClears(p.user_id);
 	resp.permit_place = co_await Db::LoadPermits(p.user_id);
+	{
+		// the Vortex entries open now (gimuserver/gme/Vortex.hpp)
+		auto vortex = Vortex::Permits();
+		resp.permit_place.insert(resp.permit_place.end(), vortex.begin(), vortex.end());
+	}
 	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
 	resp.equip_info = co_await Db::LoadEquip(p.user_id);
 

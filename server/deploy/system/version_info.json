@@ -206,21 +206,21 @@
     {
       "moWQ30GH": "F_LAND_MST",
       "e3QNsuZ8": "Trial Mission Table",
-      "d2RFtP8T": "149",
+      "d2RFtP8T": "151",
       "H6k1LIxC": "1",
       "5kbnkTp0": "7"
     },
     {
       "moWQ30GH": "F_AREA_MST",
       "e3QNsuZ8": "Trial Mission Table",
-      "d2RFtP8T": "671",
+      "d2RFtP8T": "673",
       "H6k1LIxC": "1",
-      "5kbnkTp0": "78"
+      "5kbnkTp0": "80"
     },
     {
       "moWQ30GH": "F_DUNGEON_MST",
       "e3QNsuZ8": "Trial Mission Table",
-      "d2RFtP8T": "1004",
+      "d2RFtP8T": "1006",
       "H6k1LIxC": "1",
       "5kbnkTp0": "173"
     },
@@ -626,7 +626,7 @@
     {
       "moWQ30GH": "F_MISSION_EP3_MST",
       "e3QNsuZ8": "F_MISSION_EP3_MST",
-      "d2RFtP8T": "59",
+      "d2RFtP8T": "61",
       "H6k1LIxC": "1",
       "5kbnkTp0": "0"
     },
@@ -752,21 +752,21 @@
     {
       "moWQ30GH": "F_UNIT_MST",
       "e3QNsuZ8": "Unit Table",
-      "d2RFtP8T": "1086",
+      "d2RFtP8T": "1088",
       "H6k1LIxC": "2",
       "5kbnkTp0": "724"
     },
     {
       "moWQ30GH": "F_UNIT_COMMENT_MST",
       "e3QNsuZ8": "Unit Comment Table",
-      "d2RFtP8T": "707",
+      "d2RFtP8T": "709",
       "H6k1LIxC": "1",
       "5kbnkTp0": "724"
     },
     {
       "moWQ30GH": "F_UNIT_EVO_MST",
       "e3QNsuZ8": "Unit Evo",
-      "d2RFtP8T": "599",
+      "d2RFtP8T": "601",
       "H6k1LIxC": "1",
       "5kbnkTp0": "431"
     },
@@ -801,7 +801,7 @@
     {
       "moWQ30GH": "F_MISSION_MST",
       "e3QNsuZ8": "Mission Table",
-      "d2RFtP8T": "1120",
+      "d2RFtP8T": "1122",
       "H6k1LIxC": "2",
       "5kbnkTp0": "696"
     },
@@ -878,7 +878,7 @@
     {
       "moWQ30GH": "F_MISSION_SCRIPT_MST",
       "e3QNsuZ8": "Mission Script Table",
-      "d2RFtP8T": "290",
+      "d2RFtP8T": "292",
       "H6k1LIxC": "1",
       "5kbnkTp0": "18"
     },

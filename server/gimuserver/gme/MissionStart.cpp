@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Vortex.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -44,6 +45,11 @@ HANDLEF(MissionStart)
 		// bfanew: the client's filtered F_MISSION_MST does not have it; only a modified client asks
 		LOG_WARN << "MissionStart: user " << p.user_id << " asked for mission " << missionId << ", outside phase " << theServer()->cache().phase().cutoff();
 		co_return HandleResult::error("Not available yet", "mission " + std::to_string(missionId));
+	}
+	if (!Vortex::IsOpen(missionId))
+	{
+		LOG_WARN << "MissionStart: user " << p.user_id << " asked for Vortex mission " << missionId << " outside its schedule";
+		co_return HandleResult::error("This dungeon is closed right now", "mission " + std::to_string(missionId));
 	}
 	LOG_DEBUG << "MissionStart: user " << p.user_id << " mission " << missionId << " deck " << req.mission.deck_num
 		<< " helper " << req.mission.reinforce_user_id;

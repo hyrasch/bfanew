@@ -63,6 +63,9 @@ public:
 	/*! bfanew: the content phase (deploy/phase.json): which unit / mission ids the handlers accept. */
 	inline const Phase& phase() const { return m_phase; }
 
+	/*! bfanew: the Vortex schedule (deploy/system/vortex_schedule.json). */
+	inline const VortexSchedule& vortex() const { return m_vortex; }
+
 	/*! bfanew: the item table (deploy/items.json). */
 	inline const ItemTable& items() const { return m_items; }
 
@@ -131,6 +134,11 @@ private:
 	* bfanew: content phase.
 	*/
 	Phase m_phase;
+
+	/*!
+	* bfanew: Vortex schedule.
+	*/
+	VortexSchedule m_vortex;
 
 	/*!
 	* Cached data of response.

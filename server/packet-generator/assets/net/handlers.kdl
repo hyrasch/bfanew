@@ -751,6 +751,34 @@ json TownUpdateResp {
     }
 }
 
+json UpdatePermitPlaceInfoReq {
+    doc "UpdatePermitPlaceInfo command (request id 1MJT6L3W, key 3zip5Htw, URL /actionSymbol/AsTF24Gn.php): the client asks for a fresh permit list once a timed permit expired (PermitPlaceInfoList::exsitsTimeLimitOrverQuest); login info only"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+}
+
+json UpdatePermitPlaceInfoResp {
+    doc "UpdatePermitPlaceInfo reply: the whole permit list (PermitPlaceResponse replaces it)"
+
+    field permit_place type="[PermitPlace]" {
+        key "yXNM8kL3"
+        doc "TODO"
+    }
+}
+
 json OpeUserUnit {
     doc "One summoned unit as the classic (non-resummon) GachaActionScene wants it: OpeUserUnitResponse sets UserState::setSelectUserUnitID / GachaUnitsList, setGachaChangeRateInfo and setGachaEffectID from these."
 
