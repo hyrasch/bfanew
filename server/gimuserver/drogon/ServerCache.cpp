@@ -25,11 +25,28 @@ static std::string BuildJson(const T& d)
 /*!
 * Loads a JSON from the file system.
 */
+/*!
+* bfanew: the phase folder. A table under <mst_root>/phases/<NN>/ wins over the one in <mst_root>
+* (CLAUDE.md "Phasing design", lever 1); NN is deploy/phase.json "id", zero-padded to 2 digits.
+*/
+static std::string g_phaseDir;
+
+static std::string ResolveTable(std::string_view mst_root, std::string_view file)
+{
+	if (!g_phaseDir.empty())
+	{
+		const auto phased = std::string(mst_root) + "/phases/" + g_phaseDir + "/" + std::string(file);
+		if (std::filesystem::is_regular_file(phased))
+			return phased;
+	}
+	return std::string(mst_root) + "/" + std::string(file);
+}
+
 template <typename T>
 static T LoadJson(std::string_view mst_root, std::string_view file)
 {
 	T obj{};
-	std::string path = std::string(mst_root) + "/" + std::string(file);
+	std::string path = ResolveTable(mst_root, file);
 	std::string buffer{};
 	const auto& ec = glz::read_file_json(obj, path, buffer);
 	if (ec)
@@ -52,6 +69,23 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	m_serverConfig.initialFreeGems = serverObj.get("initial_free_gems", 0).asUInt();
 	m_serverConfig.initialFriendPoints = serverObj.get("initial_friend_points", 0).asUInt();
 	m_serverConfig.energyRegenSeconds = serverObj.get("energy_regen_seconds", 180).asUInt();
+
+	// bfanew: the content phase (tools/build_phase.py) comes first: its id picks the phase folder
+	// for every table below; optional, nothing is enforced without it
+	g_phaseDir.clear();
+	if (std::filesystem::is_regular_file("phase.json"))
+	{
+		m_phase.Load(LoadJson<PhaseTable>(".", "phase.json"));
+		if (m_phase.id() > 0)
+			g_phaseDir = std::format("{:02}", m_phase.id());
+		LOG_INFO << "bfanew: phase " << m_phase.id() << " (" << m_phase.cutoff() << "): " << m_phase.unitCount() << " units, " << m_phase.missionCount()
+			<< " missions enforced, tables from " << mstRoot << (g_phaseDir.empty() ? "" : "/phases/" + g_phaseDir) << " first";
+	}
+	else
+	{
+		m_phase.Clear();
+		LOG_WARN << "bfanew: no deploy/phase.json (run tools/build_overrides.py): every unit and mission is accepted, no phase folder";
+	}
 
 
 	{
@@ -81,21 +115,9 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	m_evos = LoadJson<EvoTable>(".", "evos.json");
 	m_items = LoadJson<ItemTable>(".", "items.json"); // bfanew: tools/build_units.py --items
 
-	// bfanew: the Vortex schedule (optional: no file, no Vortex)
-	m_vortex = std::filesystem::is_regular_file(std::string(mstRoot) + "/vortex_schedule.json") ? LoadJson<VortexSchedule>(mstRoot, "vortex_schedule.json") : VortexSchedule{};
+	// bfanew: the Vortex schedule (optional: no file, no Vortex; phase folders usually hold it)
+	m_vortex = std::filesystem::is_regular_file(ResolveTable(mstRoot, "vortex_schedule.json")) ? LoadJson<VortexSchedule>(mstRoot, "vortex_schedule.json") : VortexSchedule{};
 	LOG_INFO << "bfanew: Vortex schedule: " << m_vortex.entries.size() << " entries";
-
-	// bfanew: the content phase (tools/build_phase.py); optional, nothing is enforced without it
-	if (std::filesystem::is_regular_file("phase.json"))
-	{
-		m_phase.Load(LoadJson<PhaseTable>(".", "phase.json"));
-		LOG_INFO << "bfanew: phase " << m_phase.cutoff() << ": " << m_phase.unitCount() << " units, " << m_phase.missionCount() << " missions enforced";
-	}
-	else
-	{
-		m_phase.Clear();
-		LOG_WARN << "bfanew: no deploy/phase.json (run tools/build_overrides.py): every unit and mission is accepted";
-	}
 	LOG_INFO << "bfanew: " << m_units.size() << " units in the unit table, " << m_evos.size() << " evolutions, " << m_items.size() << " items";
 	m_controlCenterRsp = LoadJson<SlotGameInfoR>(mstRoot, "brave_slots.json");
 

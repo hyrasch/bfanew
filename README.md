@@ -19,7 +19,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
   Item pickups fill a persistent warehouse, items can be equipped for quests, sold and synthesized
   in the village. Nobody pays: energy refills and slot extensions cost no gems, summons cost one
   gem, and every first mission clear gives gems. Town facilities level up with karma and release
-  recipes, collecting items from the village's sparkling locations. The client receives phase-1 tables (724 units, 696 missions, the lands up to Vriksha) and a weekly Vortex rotation (`server/deploy/system/vortex_schedule.json`). Arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
+  recipes, collecting items from the village's sparkling locations. The client receives phase-1 tables (724 units, 696 missions, the lands up to Vriksha) and a weekly Vortex rotation (`server/deploy/system/phases/01/vortex_schedule.json`). Arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
 - `CLAUDE.md` is the working log: layout, build and run commands, what the client does on the
   wire, what was patched and why, and the next steps. Read it first.
 
@@ -28,7 +28,8 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 | Path | What |
 |---|---|
 | `server/` | The server fork (C++, Drogon, vcpkg). `server/packet-generator/` is the vendored packet definition generator (Rust). |
-| `server/deploy/system/*.json` | Server-side master tables sent at login; this is where phase content is edited. |
+| `server/deploy/system/*.json` | Server-side master tables sent at login (the base set). |
+| `server/deploy/system/phases/NN/` | Per-phase overrides of those tables; a file here wins over the base one while `data/overrides.json` selects phase NN. Phase 1: the launch summon banners and the Vortex rotation. |
 | `tools/patch_apk.py` | Points the 2.19.6.0 APK at a private server (host strings, `https` to `http`), then aligns and signs it with the Android SDK tools. |
 | `tools/dev.py` | The dev loop: build, serve, reload data, drive the game on BlueStacks, read the request log. |
 | `tools/build_battles.py` | Builds `server/deploy/battle/*.json` (per-mission enemy data for MissionStart) from the community datamine's 2014 captures. |

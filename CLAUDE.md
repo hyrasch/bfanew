@@ -40,7 +40,9 @@ decompfrontier/              <- upstream clones, now READ-ONLY reference (the fo
     CMakeUserPresets.json    <- ours (VS 2026 / Ninja presets), untracked
     deploy/                  <- working dir to run the server from
       config.json            <- Drogon + GimuServer config (listens 127.0.0.1:9960)
-      system/*.json          <- 45 server-side master tables sent at login
+      system/*.json          <- 45 server-side master tables sent at login (the base set)
+      system/phases/01/      <- phase-1 overrides of those tables (gacha_info, vortex_schedule); a file
+                                here wins over the base one while deploy/phase.json says id 1
       game_content/content/  <- assets (116 folders), from 21900.zip -> assets.zip
       game_content/mst/      <- 147 encrypted MST .dat tables (client downloads these)
       overrides/             <- built by tools/build_overrides.py (gitignored): files served before
@@ -118,7 +120,7 @@ version list is `deploy/system/version_info.json` (169 tables). Per-mission batt
 
 ## Phasing design (summary)
 
-1. **Login-time tables** (`deploy/system/*.json`: summons, banners, daily dungeons, campaigns): one folder per phase, plus a `phase` config switch.
+1. **Login-time tables** (`deploy/system/*.json`: summons, banners, daily dungeons, campaigns): one folder per phase, plus a `phase` config switch. **Done 2026-10-31**: `deploy/system/phases/<NN>/<table>.json` wins over `deploy/system/<table>.json`, NN = `data/overrides.json` `phase.id` (written to `deploy/phase.json`, read by `ServerCache::Setup` before any table; `reload` re-reads). Phase 1 holds `gacha_info.json` (the two launch banners; the base file is upstream's six) and `vortex_schedule.json`.
 2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. **Done 2026-10-31**: `tools/mst.py` (decode / encode), `tools/build_phase.py` (the filter, see "MST tables: the .dat format"), served from `deploy/overrides/mst/`.
 3. **Feature flags** (`deploy/system/features.json`: `raid`, `colosseum_enable`, `guild`, `frontierhunter`, `randall`, `challenge_arena`, …; also `F_FUNCTION_RELEASE_MST` and the `feature_gate` field). **Unverified** whether the client hides menus cleanly. Test one by one.
 4. **Server-side enforcement**: handlers reject out-of-phase IDs. **Done 2026-10-31** for missions, evolutions and summons (`deploy/phase.json` -> `ServerCache::phase()`, see "Phase enforcement" under "MST tables").
@@ -904,8 +906,8 @@ while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (P
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
-2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). Still to do: phase folders for the login-time tables, the real summon pools (phase-filtered), a real 2014 Vortex calendar (today's rotation is a guess).
+2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). Still to do: the real summon pools (phase-filtered), a real 2014 Vortex calendar (today's rotation is a guess), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 

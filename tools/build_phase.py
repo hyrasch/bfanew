@@ -90,7 +90,7 @@ def phase_sets(cutoff: str) -> tuple[set[int], set[int]]:
     return unit_ids, mission_ids
 
 
-def build(cutoff: str, bump: int, write_versions: bool = True) -> dict:
+def build(cutoff: str, bump: int, write_versions: bool = True, phase_id: int = 0) -> dict:
     unit_ids, mission_ids = phase_sets(cutoff)
     tables = {name: mst.decode_table(name, mst.archive_version(name)) for name in (
         "F_UNIT_MST", "F_UNIT_EVO_MST", "F_UNIT_COMMENT_MST",
@@ -158,19 +158,19 @@ def build(cutoff: str, bump: int, write_versions: bool = True) -> dict:
     for r in mis_kept:
         if int(r[K["land_id"]]) == 99:
             vortex.setdefault(str(r[K["dungeon_id"]]), []).append(int(r[K["mission_id"]]))
-    phase = {"cutoff": cutoff, "units": sorted(unit_ids), "missions": sorted(mission_ids),
+    phase = {"id": phase_id, "cutoff": cutoff, "units": sorted(unit_ids), "missions": sorted(mission_ids),
              "dungeons": sorted(dungeons), "areas": sorted(areas), "lands": sorted(lands),
              "dungeon_missions": dict(sorted(vortex.items(), key=lambda kv: int(kv[0]))),  # Vortex dungeon -> missions
              "area_parents": dict(sorted(parents.items(), key=lambda kv: int(kv[0])))}  # Vortex area -> folder area
     (mst.DEPLOY / "phase.json").write_text(json.dumps(phase) + "\n", encoding="utf-8")
-    print(f"  phase {cutoff}: {len(unit_ids)} units ({len(added)} evolution materials added), {len(mission_ids)} missions, "
+    print(f"  phase {phase_id} ({cutoff}): {len(unit_ids)} units ({len(added)} evolution materials added), {len(mission_ids)} missions, "
           f"{len(dungeons)} dungeons, {len(areas)} areas, lands {sorted(lands)} -> deploy/phase.json")
     return phase
 
 
 def main():
     cfg = json.loads((DATA / "overrides.json").read_text(encoding="utf-8"))["phase"]
-    build(cfg["cutoff"], cfg["bump"])
+    build(cfg["cutoff"], cfg["bump"], phase_id=cfg.get("id", 0))
 
 
 if __name__ == "__main__":

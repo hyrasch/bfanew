@@ -33,6 +33,7 @@ struct VortexSchedule
 
 struct PhaseTable
 {
+	int32_t id = 0;       //!< phase number: tables in deploy/system/phases/<id, 2 digits>/ win
 	std::string cutoff;
 	std::vector<int32_t> units;
 	std::vector<int32_t> missions;
@@ -48,6 +49,7 @@ class Phase
 public:
 	void Load(const PhaseTable& t)
 	{
+		m_id = t.id;
 		m_cutoff = t.cutoff;
 		m_units = { t.units.begin(), t.units.end() };
 		m_missions = { t.missions.begin(), t.missions.end() };
@@ -61,7 +63,7 @@ public:
 			for (const auto m : ms) m_vortexDungeonOf[m] = id;
 		}
 	}
-	void Clear() { m_cutoff.clear(); m_units.clear(); m_missions.clear(); m_dungeonMissions.clear(); m_vortexDungeonOf.clear(); m_areaParents.clear(); m_enforced = false; }
+	void Clear() { m_id = 0; m_cutoff.clear(); m_units.clear(); m_missions.clear(); m_dungeonMissions.clear(); m_vortexDungeonOf.clear(); m_areaParents.clear(); m_enforced = false; }
 	/*! The folder area a Vortex area is listed under, 0 for none. */
 	int32_t areaParent(int32_t areaId) const
 	{
@@ -83,6 +85,7 @@ public:
 	}
 
 	bool enforced() const { return m_enforced; }
+	int32_t id() const { return m_id; }
 	const std::string& cutoff() const { return m_cutoff; }
 	/*! Whether the unit / mission is in the phase (everything is when nothing is enforced). */
 	bool hasUnit(int32_t id) const { return !m_enforced || m_units.contains(id); }
@@ -91,6 +94,7 @@ public:
 	size_t missionCount() const { return m_missions.size(); }
 
 private:
+	int32_t m_id = 0;
 	std::string m_cutoff;
 	std::unordered_set<int32_t> m_units;
 	std::unordered_set<int32_t> m_missions;

@@ -92,7 +92,7 @@ def main():
     build_resource(res["base"], res["version"], {f"/sgtext/sgtext_en_{sg['base']}.zip": new_path})
     if "phase" in cfg:
         import build_phase
-        build_phase.build(cfg["phase"]["cutoff"], cfg["phase"]["bump"])
+        build_phase.build(cfg["phase"]["cutoff"], cfg["phase"]["bump"], phase_id=cfg["phase"].get("id", 0))
 
 
 if __name__ == "__main__":
