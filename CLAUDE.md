@@ -106,8 +106,8 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, slot
-extensions, all free), TownFacilityUpdate (facility / location levels). Stubs: DungeonEventUpdate (story events watched,
-not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: location collection taps, arena, gifts, friends, shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection). Stubs: DungeonEventUpdate (story events watched,
+not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: arena, gifts, friends, shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -661,13 +661,42 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   to the current one. Facility 2 (Synthesis) has 31 levels (100 karma to lv 2, 250,000 to 31),
   facility 1 (spheres, mission 21) 79; facilities 3-6 have a single lv-0 row (no upgrades).
   Locations (Forest, Mountain...) have up to 8 levels (500 karma for lv 2) and change their
-  collection drops (`8fjZN6Mx`, taps, zel rate), which the collection taps don't use yet.
+  collection drops (`8fjZN6Mx`, taps, zel rate): TownState rolls a location's collection from
+  the row of its stored level (see TownUpdate).
   Verified: Synthesis lv 1 -> 2 for 100 karma -> request `EuY6L7AX` 100, facility 2 lv 2,
   stored `(1, 2, 2, 0)`, reply 33 recipes, the Synthesis List gains Lunar Treat / Mooncake /
   Crescent Dew / Antidote.
-- Town records on the wire (from `MyTownTopScene`): `eip3MS5L` drop_item_info is
-  `itemId:count[:zel[:karma]],...` indexed by `count - tap_cnt`, read only when `mDaE3t6A` tap_cnt
-  >= 1 (collect animation, `TownUpdateRequest` queued); `qA7M9EjP` startdate is never read by the
+- `CuQ5oB8U` **TownUpdate** (key `w1eo2ZDJ`, URL `/actionSymbol/uVrph04Y.php`,
+  `gimuserver/gme/TownUpdate.cpp`, **verified 2026-10-31**): the village's item collection, the
+  sparkling locations (`eff_page_<effect_type>` particles on every location whose `s8TCo2MS`
+  record has `mDaE3t6A` tap_cnt >= 1). `MyTownTopScene::collectItemEff` is local: a tap takes
+  entry `[n - tap_cnt]` of the record's `eip3MS5L` drop_item_info, which is
+  **`itemId:zel:karma,...`** (one entry per tap, n entries, item `0` = none; the earlier
+  `itemId:count` reading was wrong), adds the item (1) to the warehouse (`WAREHOUSE_OVER_ERROR`
+  when full), the zel and karma to the wallet, `decTapCnt(1)`, logs the tap in
+  `MyTownCollectLogList` and queues `TownUpdateRequest` for the next connection: group
+  `EuY6L7AX`, one node, `0mRaAo39` = `"locationId:tapCnt,..."` (taps since the last report) and
+  `LzKDI2i7` = the sound shop purchases (ignored). The server pre-rolls each location's
+  collection (`gimuserver/gme/TownState.hpp`: tap count in `[Q43bK0zN, dDYX75JR]`, the item from
+  the weighted `8fjZN6Mx` pool `itemId:weight,...` of the `TownLocationLvMst` row of the stored
+  level, `NC1Lq7b4` % chance of `[U0Y8phRm, TV7SB9rh]` zel, `PKa13dH7` % of
+  `[u8tsAe9F, GRFYaC71]` karma), stores it in **`player_town_collect`** (migration
+  `31102026_PlayerTownCollect`: tap_cnt, drops, refill_at; `Db::LoadCollect / SaveCollect`) and
+  sends it in UserInfo. On TownUpdate it grants the next entries of its stored copy (never more
+  than the taps it had), arms the refill timer when a location is empty (`kRefillSeconds` =
+  1 hour; the original interval is unknown, the client never reads `qA7M9EjP` startdate; a
+  location refills only once every tap was reported, so unreported taps are never doubled) and
+  answers `fEi17cnx`, `9wjrh74P` and the whole `s8TCo2MS` list (`GameResponseParser` dispatches
+  it to `UserTownLocationDetailResponse`, which replaces the list). Verified: fresh login rolled
+  4 / 9 / 6 / 8 taps on locations 1-4, all four sparkle; two taps on location 2 (Forest,
+  `10300:0:12,10300:106:10,...`) -> request `0mRaAo39` `"2:2"`, stored taps 9 -> 7, item 10300
+  9 -> 11, +106 zel, +22 karma; one more -> `"2:1"`, 7 -> 6, 10300 12, +4 karma, the home
+  header shows the same wallet. Tap positions: `TownLocationMst` `SnNtTh51`/`M6C1aXfR` are the
+  top-left corner in 640x960 design units, y from the top (location 2 centre = window px
+  1076,625 with the current BlueStacks layout). Drop items 10400-10402 / 10500-10502 /
+  10700-10702 are the colour Claws / Fangs / Hides, 10600-10605 the God Eyes, 11000-11004 the
+  stones; the Forest (2) gives Green Grass 10300 at level 1.
+- Town records on the wire (from `MyTownTopScene`): `qA7M9EjP` startdate is never read by the
   client. Town locations are "open" when `HSRhkf70` need_mission_id is `0` or cleared.
 - Where things are in the client: the Units tab has no item menu; the home MENU has only the
   guides; item screens (`ItemTopScene`, scene reached from `GameScene::getGameScene`) are in the
@@ -779,7 +808,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); next: item collection taps on the village locations (`TownUpdateRequest`), the energy-recovery texts.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); next: the energy-recovery texts, the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 
 ## Conventions

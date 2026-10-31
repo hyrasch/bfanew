@@ -694,6 +694,63 @@ json TownFacilityUpdateResp {
     }
 }
 
+json TownCollectLog {
+    doc "The one node of TownUpdate's EuY6L7AX group (TownUpdateRequest::createBody)"
+
+    field collect type="str" {
+        key "0mRaAo39"
+        doc "MyTownCollectLogList as 'locationId:tapCnt,...': how many times each village location was tapped since the last report"
+    }
+
+    field buy_sound type="str" {
+        key "LzKDI2i7"
+        doc "UserState::getBuySoundList as 'soundId,...' (sound shop purchases, ignored)"
+    }
+}
+
+json TownUpdateReq {
+    doc "TownUpdate command (request id CuQ5oB8U, key w1eo2ZDJ, URL /actionSymbol/uVrph04Y.php): the village's item collection. MyTownTopScene::collectItemEff is local: a tap on a location with UserTownLocationDetail tap_cnt >= 1 takes entry [n - tap_cnt] of its drop_item_info ('itemId:zel:karma,...', n entries), adds the item (1) to the warehouse, the zel and karma to the wallet, decTapCnt(1), logs the tap in MyTownCollectLogList and queues this request (ConnectRequestList) for the next connection."
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field log type="[TownCollectLog]" {
+        key "EuY6L7AX"
+        doc "one node"
+    }
+}
+
+json TownUpdateResp {
+    doc "TownUpdate reply: the wallet, the warehouse and every location's remaining taps / drops (GameResponseParser dispatches s8TCo2MS to UserTownLocationDetailResponse, which replaces the whole list)"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field warehouse_info type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "TODO"
+    }
+
+    field town_location_detail type="[UserTownLocationDetail]" {
+        key "s8TCo2MS"
+        doc "TODO"
+    }
+}
+
 json OpeUserUnit {
     doc "One summoned unit as the classic (non-resummon) GachaActionScene wants it: OpeUserUnitResponse sets UserState::setSelectUserUnitID / GachaUnitsList, setGachaChangeRateInfo and setGachaEffectID from these."
 

@@ -160,6 +160,21 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: village item collection (TownUpdate): per location the taps left, the pre-rolled drops
+	// ("itemId:zel:karma,..." consumed from the first) and when an emptied location refills
+	migrate("31102026_PlayerTownCollect", {
+		p->execSqlSync(
+			"CREATE TABLE player_town_collect("
+			"user_id TEXT NOT NULL,"
+			"location_id INTEGER NOT NULL,"
+			"tap_cnt INTEGER NOT NULL DEFAULT 0,"
+			"drops TEXT NOT NULL DEFAULT '',"
+			"refill_at INTEGER NOT NULL DEFAULT 0,"
+			"PRIMARY KEY(user_id, location_id)"
+			");"
+		);
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

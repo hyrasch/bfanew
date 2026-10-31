@@ -94,4 +94,11 @@ namespace Db
 	struct TownLevel { int32_t lv = 1; int32_t karma = 0; };
 	drogon::Task<std::unordered_map<int32_t, TownLevel>> LoadTown(std::string userId, int32_t kind);
 	drogon::Task<void> SaveTown(std::string userId, int32_t kind, int32_t id, int32_t lv, int32_t karma);
+
+	/*! Village item collection (player_town_collect): per location the taps left, the pre-rolled
+	 *  drops ("itemId:zel:karma,...", entry [n - tap_cnt] is the next one) and the unix time an
+	 *  emptied location refills (0 = never rolled). */
+	struct TownCollect { int32_t tap_cnt = 0; std::string drops; int64_t refill_at = 0; };
+	drogon::Task<std::unordered_map<int32_t, TownCollect>> LoadCollect(std::string userId);
+	drogon::Task<void> SaveCollect(std::string userId, int32_t locationId, const TownCollect& c);
 }

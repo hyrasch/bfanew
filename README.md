@@ -19,7 +19,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
   Item pickups fill a persistent warehouse, items can be equipped for quests, sold and synthesized
   in the village. Nobody pays: energy refills and slot extensions cost no gems, summons cost one
   gem, and every first mission clear gives gems. Town facilities level up with karma and release
-  recipes. Location collection taps, arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
+  recipes, collecting items from the village's sparkling locations. Arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
 - `CLAUDE.md` is the working log: layout, build and run commands, what the client does on the
   wire, what was patched and why, and the next steps. Read it first.
 

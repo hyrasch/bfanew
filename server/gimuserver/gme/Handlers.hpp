@@ -100,6 +100,7 @@ namespace GmeHandlers
 	HANDLE(UnitMix);
 	HANDLE(UnitEvo);
 	HANDLE(UnitSell);
+	HANDLE(TownUpdate);
 	HANDLE(UpdateInfoLight);
 	HANDLE(UserInfo);
 }

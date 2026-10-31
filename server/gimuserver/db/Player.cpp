@@ -435,4 +435,20 @@ namespace Db
 			userId, static_cast<int64_t>(kind), static_cast<int64_t>(id), static_cast<int64_t>(lv), static_cast<int64_t>(karma));
 	}
 
+	Task<std::unordered_map<int32_t, TownCollect>> LoadCollect(std::string userId)
+	{
+		std::unordered_map<int32_t, TownCollect> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT location_id, tap_cnt, drops, refill_at FROM player_town_collect WHERE user_id = $1", userId);
+		for (const auto& r : res)
+			out[static_cast<int32_t>(r["location_id"].as<int64_t>())] = TownCollect{ static_cast<int32_t>(r["tap_cnt"].as<int64_t>()), r["drops"].as<std::string>(), r["refill_at"].as<int64_t>() };
+		co_return out;
+	}
+
+	Task<void> SaveCollect(std::string userId, int32_t locationId, const TownCollect& c)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_town_collect(user_id, location_id, tap_cnt, drops, refill_at) VALUES ($1, $2, $3, $4, $5) ON CONFLICT(user_id, location_id) DO UPDATE SET tap_cnt = $3, drops = $4, refill_at = $5",
+			userId, static_cast<int64_t>(locationId), static_cast<int64_t>(c.tap_cnt), c.drops, c.refill_at);
+	}
+
 }

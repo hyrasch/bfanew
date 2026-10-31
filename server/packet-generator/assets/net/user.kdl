@@ -1530,7 +1530,7 @@ json UserTownLocationDetail {
 
     field drop_item_info type="str" {
         key "eip3MS5L"
-        doc "TODO"
+        doc "'itemId:zel:karma,...', one entry per tap, consumed from the first (entry [n - tap_cnt]); item 0 = none"
     }
 }
 

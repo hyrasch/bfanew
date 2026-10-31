@@ -45,25 +45,17 @@ HANDLEF(UserInfo)
 	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
 	resp.equip_info = co_await Db::LoadEquip(p.user_id);
 
-	// one town location detail per location: MyTownTopScene::downloadFiles dereferences the record of
-	// every location whose need_mission_id is cleared (mission 11 -> location 3 crashed the Town tab)
-	resp.town_location_detail.clear();
-	for (const auto& loc : theServer()->cache().initializeResp().town_location)
-	{
-		UserTownLocationDetail d = {};
-		d.user_id = p.user_id;
-		d.location_id = loc.id;
-		d.tap_cnt = 0;
-		resp.town_location_detail.emplace_back(d);
-	}
-
-	// town facilities / locations (stored levels, level 1 by default) and the recipes the facility
-	// levels release = the village's Synthesis List (gimuserver/gme/TownState.hpp)
+	// town facilities / locations (stored levels, level 1 by default), the recipes the facility
+	// levels release = the village's Synthesis List, and one collection record per location
+	// (MyTownTopScene::downloadFiles dereferences the record of every location whose
+	// need_mission_id is cleared; mission 11 -> location 3 crashed the Town tab) with the taps
+	// left and their drops, refilled here when due (gimuserver/gme/TownState.hpp)
 	{
 		auto town = co_await TownState::Build(p, resp.clear_mission_info);
 		resp.town_facility_info = std::move(town.facilities);
 		resp.town_location_info = std::move(town.locations);
 		resp.permit_receipes = std::move(town.recipes);
+		resp.town_location_detail = std::move(town.details);
 	}
 
 	// dev aid: BFANEW_BLANK=warehouse,equip,town,clears,permits,units,decks blanks lists to bisect client
