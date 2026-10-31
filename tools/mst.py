@@ -69,6 +69,19 @@ def version_of(table: str) -> dict | None:
     return next((r for r in version_rows() if r.get("moWQ30GH") == table), None)
 
 
+def archive_version(table: str, mst_dir: Path = MST_DIR) -> int:
+    """The version of the table as the content archive serves it (from its file name), whatever
+    version_info.json says now (overrides bump it)."""
+    info = load_keys().get(table)
+    if not info:
+        sys.exit(f"{table}: not in {KEYS_FILE.name} (run `mst.py keys`)")
+    versions = {int(m.group(1)) for f in mst_dir.glob(f"Ver*_{info['file_key']}*.dat")
+                if (m := re.match(r"Ver(\d+)_", f.name))}
+    if not versions:
+        sys.exit(f"{table}: no Ver*_{info['file_key']}*.dat in {mst_dir}")
+    return max(versions)
+
+
 def table_files(table: str, version: int | None = None, mst_dir: Path = MST_DIR) -> list[Path]:
     info = load_keys().get(table)
     if not info:

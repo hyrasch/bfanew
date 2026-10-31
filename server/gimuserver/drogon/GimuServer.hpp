@@ -4,6 +4,8 @@
 
 #include <gimuserver/drogon/ServerCache.hpp>
 #include <gimuserver/utils/DumpLog.hpp>
+#include <atomic>
+#include <iomanip>
 
 /*!
 * Implements the plugin of the system server. This is used to contain and caches everything.
@@ -64,6 +66,10 @@ public:
             fileName << reqId;
             fileName << "_";
             fileName << std::put_time(&tm, "%Y%m%d_%H%M%S");
+            // bfanew: requests within the same second (the client's MST download burst at login)
+            // used to share one file and garble each other; a counter keeps every dump apart
+            static std::atomic<unsigned> seq{ 0 };
+            fileName << "_" << std::setw(4) << std::setfill('0') << (seq++ % 10000);
             fileName << m_http_log_suffix;
             log.open(fileName.str());
         }

@@ -11,7 +11,7 @@ A private server for **Brave Frontier Global** that is:
 The base is the open-source emulator **decompfrontier** (C++/Drogon, AGPL-3.0). Revive also started from it, but its code isn't public.
 
 ### Decisions so far
-- **Phase-1 cutoff:** everything Global had by the **end of Oct 2014**. That's 1,371 unit IDs and 1,292 mission IDs from `data/*_timeline.json` with `first_seen <= "2014-10"`; it includes Vriksha.
+- **Phase-1 cutoff:** everything Global had by the **end of Oct 2014**: `data/*_timeline.json` entries with `first_seen <= "2014-10"`, i.e. **724 units and 696 missions** (lands Mistral to Vriksha plus 235 Vortex missions; `tools/build_phase.py`). The "1,371 / 1,292" counted earlier added the name-keyed Aug-2014 entries to the id-keyed ones for the same units.
 - **Client:** Android APK v2.19.6.0. The WinRT PC client link in the decompfrontier docs is dead.
 - **Build:** Windows, Visual Studio 2026 Build Tools, Ninja preset.
 
@@ -119,7 +119,7 @@ version list is `deploy/system/version_info.json` (169 tables). Per-mission batt
 ## Phasing design (summary)
 
 1. **Login-time tables** (`deploy/system/*.json`: summons, banners, daily dungeons, campaigns): one folder per phase, plus a `phase` config switch.
-2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. Reading and **re-encoding are solved** (`tools/mst.py`, see "MST tables: the .dat format"); served copies go to `deploy/overrides/mst/`. Still to do: a filter that keeps references consistent (unit -> skills/LS/ES/evo mats/AI).
+2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. **Done 2026-10-31**: `tools/mst.py` (decode / encode), `tools/build_phase.py` (the filter, see "MST tables: the .dat format"), served from `deploy/overrides/mst/`.
 3. **Feature flags** (`deploy/system/features.json`: `raid`, `colosseum_enable`, `guild`, `frontierhunter`, `randall`, `challenge_arena`, …; also `F_FUNCTION_RELEASE_MST` and the `feature_gate` field). **Unverified** whether the client hides menus cleanly. Test one by one.
 4. **Server-side enforcement**: handlers reject out-of-phase IDs.
 
@@ -836,11 +836,40 @@ server/deploy/overrides/mst`. `BfWebController` serves `deploy/overrides/<conten
 reload`. Verified: the client fetched `Ver3277_hdt2N6mr_{1,2}.dat` and `sgtext_en_340.zip` at the
 next login and the energy prompt shows the new text.
 
+**Phase filter (2026-10-31, `tools/build_phase.py`, run by `build_overrides.py` from
+`data/overrides.json` `"phase": {"cutoff": "2014-10", "bump": N}`).** A phase is a cutoff month
+on `data/*_timeline.json` (first month each unit / mission was seen in Global; keyed by id where
+the datamine snapshot was, by name for the Aug-2014 snapshots, a named entry being matched to the
+id-keyed entry of the same name, plus land / area for missions). Kept: units first seen <= cutoff
+(724 for 2014-10; one collab name, "Deemo and the Girl (5*)", has no id), the evolutions whose
+source *and* target are kept (431 of 1,342: a later 6*/7* form appears with its phase; the unit
+materials of kept evolutions would be pulled in, none needed for 2014-10), unit comments by unit,
+missions first seen <= cutoff (696 of 3,433: lands 1-6 and 235 Vortex missions, no kept mission
+requires a dropped one), and the dungeons / areas / lands that still hold a mission (173 / 78 / 7
+with Vortex), mission scripts and EP3 rows by mission (EP3 ends up empty, a 0-row table is fine).
+Skills, items, resources and the rest are served unchanged: the client only reaches them through
+units and missions. Every filtered table is re-encoded into `deploy/overrides/mst/` at the
+archive's version + `bump` (`mst.archive_version` reads the base from the file names, so bumps
+are repeatable), `version_info.json` gets the versions and the new row counts
+(`checkCorruptionsOfMsts` compares them), and the kept id sets go to `deploy/phase.json` for
+server-side enforcement (not done yet). Raise `bump` whenever the output changes: the client
+keeps a table until its version moves. Verified: after a bump the client fetched all 11 files
+(`Ver1086_2r9cNSdt_{1,2}`, `Ver1120_4gA3WCQX_{1,2}`, `Ver1004_B57MJYoF`, `Ver671_vj6fEsg7`,
+`Ver149_1M65tIPz`, `Ver599_Ef6oG0mz`, `Ver707_2npmC9Nw`, `Ver290_F2Dz3QHU`, `Ver59_W3sQD9Z5`) at
+the next login and reached home, the Mistral map and the Vortex screen; the quest map's "Grand
+Quest" button is gone (its missions are out of phase). Not visible yet: the land select (the
+Quest button opens the last land's area map directly), a unit catalogue (none in this client's
+Unit tab), and the Vortex list is empty (it needs a server-side event schedule, same as before).
+Lesson from the verification: the client's MST download burst at login (11 files in one second)
+used to be invisible in `deploy/log/`: `tryOpenHttpDumpLog` named dumps by the second, so the
+burst shared one garbled file. The names now carry a per-process counter (`_NNNN`) and
+`dev.py logs` understands both forms.
+
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`, see "MST tables: the .dat format"); still to do: the phase filter driven by `data/*_timeline.json` (filtered `F_UNIT_MST` / `F_MISSION_MST` into `deploy/overrides/mst`, versions bumped).
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). Still to do: server-side enforcement from `deploy/phase.json` (summon pool, mission start, unit ids), phase folders for the login-time tables, a Vortex schedule for phase 1 (the Vortex list is empty today).
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 

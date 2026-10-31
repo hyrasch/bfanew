@@ -19,7 +19,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
   Item pickups fill a persistent warehouse, items can be equipped for quests, sold and synthesized
   in the village. Nobody pays: energy refills and slot extensions cost no gems, summons cost one
   gem, and every first mission clear gives gems. Town facilities level up with karma and release
-  recipes, collecting items from the village's sparkling locations. Arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
+  recipes, collecting items from the village's sparkling locations. The client receives phase-1 tables (724 units, 696 missions, the lands up to Vriksha). Arena and friends are not implemented yet (see `GAP_ANALYSIS.md`).
 - `CLAUDE.md` is the working log: layout, build and run commands, what the client does on the
   wire, what was patched and why, and the next steps. Read it first.
 
@@ -35,7 +35,8 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 | `tools/build_units.py` | Builds `server/deploy/units.json` (the server-side unit table: stats, exp pattern, max level, sell price), `evos.json` (evolution recipes) and `items.json` (item types, sell prices, stack limits) from the decoded MSTs. |
 | `tools/fill_content_from_apk.py` | Extracts the APK assets that served animations reference but the content archive lacks into `server/deploy/apk_assets/` (the village crash fix). |
 | `tools/mst.py` | Decodes / encodes the client's downloaded MST `.dat` tables (base64 + AES-128-ECB, keys in `tools/mst_keys.json`). |
-| `tools/build_overrides.py` | Builds `server/deploy/overrides/` (served before the content archive): the patched UI text dictionary (`data/sgtext_en_patch.csv`) and the re-encoded resource table that announces it (`data/overrides.json`). |
+| `tools/build_overrides.py` | Builds `server/deploy/overrides/` (served before the content archive): the patched UI text dictionary (`data/sgtext_en_patch.csv`), the re-encoded resource table that announces it, and the phase-filtered tables (`data/overrides.json`). |
+| `tools/build_phase.py` | The phase filter: units, evolutions, missions, dungeons, areas and lands first seen up to the phase's cutoff month (`data/*_timeline.json`), re-encoded with bumped versions; writes `server/deploy/phase.json` (the kept ids). |
 | `server/deploy/battle/` | Those files, 204 missions so far. |
 | `data/*_timeline.json` | First month each unit / mission appeared in Global, derived from the community datamine history; drives the phase cutoff. |
 | `GAP_ANALYSIS.md` | What the upstream server does and does not do, and how phasing fits. |

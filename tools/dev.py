@@ -187,7 +187,7 @@ def log_files() -> list[Path]:
 
 
 def log_id(p: Path) -> str:
-    m = re.match(r"http_log_(\w+?)_\d{8}_\d{6}\.log", p.name)
+    m = re.match(r"http_log_(\w+?)_\d{8}_\d{6}(?:_\d{4})?\.log", p.name)  # _NNNN: per-process counter (bursts)
     return m.group(1) if m else "?"
 
 
@@ -419,7 +419,8 @@ def cmd_logs(a):
         if lid == "webpage":
             m = re.search(r"request dump: (\S+)", body); extra = m.group(1) if m else ""
         err = "  <-- ERROR" if "RESPONSE IN ERROR" in body or "Deserialization" in body else ""
-        t = p.name.split("_")[-1][:6]
+        tm = re.search(r"_\d{8}_(\d{6})(?:_\d{4})?\.log$", p.name)
+        t = tm.group(1) if tm else "??????"
         print(f"{t[:2]}:{t[2:4]}:{t[4:]}  {name:28s} {extra}{err}")
 
 

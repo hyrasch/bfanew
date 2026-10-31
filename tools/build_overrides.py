@@ -90,6 +90,9 @@ def main():
     print(f"  {new_path} built from sgtext_en_{sg['base']} + data/sgtext_en_patch.csv")
     res = cfg["F_RESOURCE_MST"]
     build_resource(res["base"], res["version"], {f"/sgtext/sgtext_en_{sg['base']}.zip": new_path})
+    if "phase" in cfg:
+        import build_phase
+        build_phase.build(cfg["phase"]["cutoff"], cfg["phase"]["bump"])
 
 
 if __name__ == "__main__":

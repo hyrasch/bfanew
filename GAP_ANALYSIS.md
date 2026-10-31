@@ -111,7 +111,7 @@ Not needed for phase 1: raids, Frontier Hunter, Colosseum, guilds, Summoner's Ar
 
 ## Decisions and setup (2026-10-30)
 
-- **Phase-1 cutoff: everything Global had by the end of Oct 2014.** That's 1,371 unit IDs and 1,292 mission IDs (first seen ≤ 2014-10), including Vriksha.
+- **Phase-1 cutoff: everything Global had by the end of Oct 2014.** That's 724 units and 696 missions (first seen ≤ 2014-10, `tools/build_phase.py`), including Vriksha and the 2014 Vortex dungeons.
 - **APK:** `bravefrontier/brave-frontier-2-19-6-0.apk` (SHA-256 `346d2947…139bf9`). It contains `libgame.so` for arm64-v8a and armeabi-v7a.
   - Only a handful of server hosts are built into `libgame.so`: `api-sl.bfww.gumi.sg`, `api-prod-player.bfww.gumi.sg`, `ios.bfww.gumi.sg` and `https://api-sl.gl.gumi.sg/`. The game-server and asset addresses come from our own DLS response, so **the Android patch only needs to swap those few strings.** A replacement must fit in the same number of bytes (use a short hostname or IP), and the APK has to be re-signed.
 - **Build:** Visual Studio 2026. Their presets name VS 2022, so `decompfrontier/server/CMakeUserPresets.json` adds `debug-win64-vs2026` and a `debug-win64-ninja` fallback.
