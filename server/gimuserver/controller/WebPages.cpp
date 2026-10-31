@@ -42,7 +42,9 @@ namespace
 Task<> WebPages::Rates(HttpRequestPtr rq, std::function<void(const HttpResponsePtr&)> callback)
 {
 	const auto& cache = theServer()->cache();
-	const auto friendId = rq->getParameter("friend_id");
+	// the Links page appends ?friend_id=, the notice WebView ?friendId=
+	auto friendId = rq->getParameter("friend_id");
+	if (friendId.empty()) friendId = rq->getParameter("friendId");
 
 	// whose box: the Links page appends the player's friend id (= account id)
 	std::unordered_set<int32_t> ownedGroups, ownedIds;
@@ -113,7 +115,7 @@ void WebPages::Notice(const HttpRequestPtr& rq, const std::function<void(const H
 	html += "</head><body><h1>bfanew</h1>";
 	html += "<p>A phased Brave Frontier server. Phase " + std::to_string(cache.phase().id()) + ": everything Global had up to " + Escape(cache.phase().cutoff()) + ".</p>";
 	html += "<p>" + std::to_string(cache.phase().unitCount()) + " units, " + std::to_string(cache.phase().missionCount()) + " missions, " + std::to_string(cache.vortex().entries.size()) + " Vortex schedule entries.</p>";
-	html += "<p>Summon odds: Menu &gt; Links &gt; Summon rates (marks the units you own), or <a href=\"/bf/web/rates/index.php\">the plain list</a>.</p>";
+	html += "<p>Summon odds: Menu &gt; Links &gt; Summon rates (marks the units you own), or <a href=\"/bf/web/rates/index.php?friend_id=" + rq->getParameter("friendId") + "\">the full list</a>.</p>";
 	html += "<p><small>Energy refills, unit and item slots are free here; summons cost 1 Gem.</small></p>";
 	html += "</body></html>";
 	auto resp = HttpResponse::newHttpResponse();

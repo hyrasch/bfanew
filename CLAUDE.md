@@ -893,9 +893,14 @@ layout of `detail_msg` and tickets). Two channels, both server-side:
   sends `a5k36D28` **BannerClick** (key `a63Ghbi2`, group `Pk5F1vhx` {`oL71Fz3a` banner id}, a
   click counter), answered `{}` by `gme/BannerClick.cpp`; unanswered it popped "Unsupported
   request" when the game came back. Verified: the page renders (dark theme, no external
-  assets) with 18 owned marks for the test account; the INFO button's notice page
-  (`/bf/web/notice/indexCtrl.php`, url.json) was a 404 (gumi's news host) and is now a small
-  phase summary with a link to the rates page.
+  assets) with 18 owned marks for the test account. The notice page (url.json `notice_url`
+  `/bf/web/notice/indexCtrl.php`, MENU > **News**, not Info = Tips & Information) is served as a
+  small phase summary with a link to the rates page, but **the client cannot show it yet**: News
+  opens an in-app WebView (`BFWebView: Showing webview: http://<host>:9960//bf/web/notice/
+  indexCtrl.php?friendId=<id>&os=2`, note `friendId`) and Android's cleartext policy blocks the
+  plain-http load before it reaches the server (blank page with a broken-image icon; the
+  manifest has no `usesCleartextTraffic`, see "Android client"). Fix = patch the manifest in
+  `tools/patch_apk.py`; the Links banner works because it goes through the system browser.
 
 **Feature gating (2026-10-31).** Three client mechanisms, all fed by the server:
 - `features.json` (`/bf/gme/featureCheck.php`, parsed by `FeatureManager::onFeatureCheckResS`;
