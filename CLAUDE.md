@@ -121,7 +121,7 @@ version list is `deploy/system/version_info.json` (169 tables). Per-mission batt
 1. **Login-time tables** (`deploy/system/*.json`: summons, banners, daily dungeons, campaigns): one folder per phase, plus a `phase` config switch.
 2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. **Done 2026-10-31**: `tools/mst.py` (decode / encode), `tools/build_phase.py` (the filter, see "MST tables: the .dat format"), served from `deploy/overrides/mst/`.
 3. **Feature flags** (`deploy/system/features.json`: `raid`, `colosseum_enable`, `guild`, `frontierhunter`, `randall`, `challenge_arena`, …; also `F_FUNCTION_RELEASE_MST` and the `feature_gate` field). **Unverified** whether the client hides menus cleanly. Test one by one.
-4. **Server-side enforcement**: handlers reject out-of-phase IDs.
+4. **Server-side enforcement**: handlers reject out-of-phase IDs. **Done 2026-10-31** for missions, evolutions and summons (`deploy/phase.json` -> `ServerCache::phase()`, see "Phase enforcement" under "MST tables").
 
 Historical balance: 2014 stats come from the datamine snapshots (`cheahjs/bravefrontier_data`, Aug 2014 → Nov 2021, parsed fields only). `old-mst.zip` has raw tables only from 2016–2017.
 
@@ -865,11 +865,22 @@ used to be invisible in `deploy/log/`: `tryOpenHttpDumpLog` named dumps by the s
 burst shared one garbled file. The names now carry a per-process counter (`_NNNN`) and
 `dev.py logs` understands both forms.
 
+**Phase enforcement (2026-10-31).** `gimuserver/db/Phase.hpp`: `ServerCache::Setup` loads
+`deploy/phase.json` (optional: without it nothing is enforced and the startup log says so) into
+id sets; `phase().hasMission(id)` / `hasUnit(id)`. MissionStart refuses a mission outside the
+phase ("Not available yet"), UnitEvo an evolution whose target is outside it ("This unit cannot
+evolve yet"), GachaAction never hands out a unit outside it (the pool is re-rolled, an empty pool
+is an error). The client never asks for those with the filtered tables; the checks are for
+modified clients. `reload` re-reads the file. Tested with **`tools/gme.py`** (sends a GME request
+as a player: the AES-ECB envelope, the handler keys read from `GmeControllerHandlers.cpp`, the
+reply decrypted): `MissionStart` 1577 (Celgrad) -> error `Not available yet`, mission 12 ->
+a normal start. `python tools/gme.py MissionStart '{"9Q1Lq5FS":[{...}]}'` (see its docstring).
+
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). Still to do: server-side enforcement from `deploy/phase.json` (summon pool, mission start, unit ids), phase folders for the login-time tables, a Vortex schedule for phase 1 (the Vortex list is empty today).
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). Still to do: phase folders for the login-time tables, a Vortex schedule for phase 1 (the Vortex list is empty today), the real summon pools (phase-filtered).
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 

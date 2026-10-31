@@ -80,6 +80,18 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	m_units = LoadJson<UnitTable>(".", "units.json"); // bfanew: tools/build_units.py
 	m_evos = LoadJson<EvoTable>(".", "evos.json");
 	m_items = LoadJson<ItemTable>(".", "items.json"); // bfanew: tools/build_units.py --items
+
+	// bfanew: the content phase (tools/build_phase.py); optional, nothing is enforced without it
+	if (std::filesystem::is_regular_file("phase.json"))
+	{
+		m_phase.Load(LoadJson<PhaseTable>(".", "phase.json"));
+		LOG_INFO << "bfanew: phase " << m_phase.cutoff() << ": " << m_phase.unitCount() << " units, " << m_phase.missionCount() << " missions enforced";
+	}
+	else
+	{
+		m_phase.Clear();
+		LOG_WARN << "bfanew: no deploy/phase.json (run tools/build_overrides.py): every unit and mission is accepted";
+	}
 	LOG_INFO << "bfanew: " << m_units.size() << " units in the unit table, " << m_evos.size() << " evolutions, " << m_items.size() << " items";
 	m_controlCenterRsp = LoadJson<SlotGameInfoR>(mstRoot, "brave_slots.json");
 

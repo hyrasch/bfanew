@@ -80,16 +80,26 @@ namespace
 		return g;
 	}
 
-	const PoolUnit& pick(int32_t gachaId)
+	const PoolUnit* pick(int32_t gachaId)
 	{
 		std::uniform_int_distribution<int> six(0, 5);
-		if (gachaId == kRareGacha)
+		// bfanew: never hand out a unit outside the phase (deploy/phase.json); the pool is
+		// in phase 1 today, the check matters once the real pools come in
+		const auto& phase = theServer()->cache().phase();
+		for (int tries = 0; tries < 50; ++tries)
 		{
-			// launch Rare Summon: 3* most of the time, 4* sometimes
-			std::uniform_int_distribution<int> pct(0, 99);
-			return pct(rng()) < 25 ? kStarters4[six(rng())] : kStarters3[six(rng())];
+			const PoolUnit* u;
+			if (gachaId == kRareGacha)
+			{
+				// launch Rare Summon: 3* most of the time, 4* sometimes
+				std::uniform_int_distribution<int> pct(0, 99);
+				u = pct(rng()) < 25 ? &kStarters4[six(rng())] : &kStarters3[six(rng())];
+			}
+			else
+				u = &kStarters2[six(rng())];
+			if (phase.hasUnit(u->unit_id)) return u;
 		}
-		return kStarters2[six(rng())];
+		return nullptr;
 	}
 }
 
@@ -139,7 +149,10 @@ HANDLEF(GachaAction)
 	GachaActionResp resp = {};
 	for (int32_t i = 0; i < count; i++)
 	{
-		const auto& u = pick(gachaId);
+		const auto* picked = pick(gachaId);
+		if (!picked)
+			co_return HandleResult::error("No unit of this summon is available yet");
+		const auto& u = *picked;
 		UserUnitInfo d = {};
 		d.unit_id = u.unit_id;
 		// unit type (1 Lord, 2 Anima, 3 Breaker, 4 Guardian, 5 Oracle), random like the real summon

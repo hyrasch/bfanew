@@ -39,6 +39,12 @@ HANDLEF(MissionStart)
 	auto& p = *player;
 
 	const auto missionId = req.mission.mission_id;
+	if (!theServer()->cache().phase().hasMission(missionId))
+	{
+		// bfanew: the client's filtered F_MISSION_MST does not have it; only a modified client asks
+		LOG_WARN << "MissionStart: user " << p.user_id << " asked for mission " << missionId << ", outside phase " << theServer()->cache().phase().cutoff();
+		co_return HandleResult::error("Not available yet", "mission " + std::to_string(missionId));
+	}
 	LOG_DEBUG << "MissionStart: user " << p.user_id << " mission " << missionId << " deck " << req.mission.deck_num
 		<< " helper " << req.mission.reinforce_user_id;
 

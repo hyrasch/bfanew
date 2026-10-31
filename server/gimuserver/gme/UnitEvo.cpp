@@ -64,6 +64,12 @@ HANDLEF(UnitEvo)
 		co_return HandleResult::error("The base is not at its max level");
 	if (req.target.unit_id != 0 && req.target.unit_id != evo->evo_unit_id)
 		LOG_WARN << "UnitEvo: client wants " << req.target.unit_id << ", table says " << evo->evo_unit_id;
+	if (!cache.phase().hasUnit(evo->evo_unit_id))
+	{
+		// bfanew: the evolved form is not in the phase (its F_UNIT_EVO_MST row is not served either)
+		LOG_WARN << "UnitEvo: user " << p.user_id << " wants " << base->unit_id << " -> " << evo->evo_unit_id << ", outside phase " << cache.phase().cutoff();
+		co_return HandleResult::error("This unit cannot evolve yet", std::to_string(evo->evo_unit_id));
+	}
 	const auto* evoDef = cache.unit(evo->evo_unit_id);
 	if (!evoDef)
 		co_return HandleResult::error("Unknown evolved unit", std::to_string(evo->evo_unit_id));

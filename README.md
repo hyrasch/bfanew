@@ -36,6 +36,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 | `tools/fill_content_from_apk.py` | Extracts the APK assets that served animations reference but the content archive lacks into `server/deploy/apk_assets/` (the village crash fix). |
 | `tools/mst.py` | Decodes / encodes the client's downloaded MST `.dat` tables (base64 + AES-128-ECB, keys in `tools/mst_keys.json`). |
 | `tools/build_overrides.py` | Builds `server/deploy/overrides/` (served before the content archive): the patched UI text dictionary (`data/sgtext_en_patch.csv`), the re-encoded resource table that announces it, and the phase-filtered tables (`data/overrides.json`). |
+| `tools/gme.py` | Sends a game request to the server as a player from the command line (encrypts the body with the handler's key, decrypts the reply); for testing handlers without the client. |
 | `tools/build_phase.py` | The phase filter: units, evolutions, missions, dungeons, areas and lands first seen up to the phase's cutoff month (`data/*_timeline.json`), re-encoded with bumped versions; writes `server/deploy/phase.json` (the kept ids). |
 | `server/deploy/battle/` | Those files, 204 missions so far. |
 | `data/*_timeline.json` | First month each unit / mission appeared in Global, derived from the community datamine history; drives the phase cutoff. |

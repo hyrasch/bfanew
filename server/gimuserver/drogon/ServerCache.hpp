@@ -2,6 +2,7 @@
 
 #include "ServerConfig.hpp"
 #include <gimuserver/db/UnitTable.hpp>
+#include <gimuserver/db/Phase.hpp>
 
 /*!
 * Cache of the server
@@ -58,6 +59,9 @@ public:
 
 	/*! bfanew: the evolution table (deploy/evos.json). */
 	inline const EvoTable& evos() const { return m_evos; }
+
+	/*! bfanew: the content phase (deploy/phase.json): which unit / mission ids the handlers accept. */
+	inline const Phase& phase() const { return m_phase; }
 
 	/*! bfanew: the item table (deploy/items.json). */
 	inline const ItemTable& items() const { return m_items; }
@@ -122,6 +126,11 @@ private:
 	* bfanew: item table.
 	*/
 	ItemTable m_items;
+
+	/*!
+	* bfanew: content phase.
+	*/
+	Phase m_phase;
 
 	/*!
 	* Cached data of response.
