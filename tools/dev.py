@@ -72,6 +72,7 @@ COORDS = {
     "terms_checkbox": (0.142, 0.696),
     "terms_agree": (0.499, 0.854),
     "phone_ok": (0.499, 0.658),
+    "bgdlc_no": (0.691, 0.628),       # "Background DLC Warning Prompt" -> No (first launch after the MST download)
     "banner_quest": (0.978, 0.792),   # the QUEST page peeking at the right edge of the home carousel
     "area_first": (0.790, 0.891),     # "Adventurer's Prairie" plate on the Mistral map (lower right)
     "mission_first": (0.500, 0.339),  # first row of the mission list
@@ -165,12 +166,28 @@ def shot(name: str = "shot") -> Path:
     return out
 
 
-def dismiss_google():
-    """The Google Play Games sign-in (gms MinuteMaid) pops on launch; Back dismisses it."""
-    if "com.google.android.gms" in focus():
+def tap_frame(fx: float, fy: float):
+    """Tap at a fraction of the game's WINDOW frame (Android dialogs are laid out on it, not on the content area)."""
+    x0, y0, w, h = frame()
+    tap(int(x0 + fx * w), int(y0 + fy * h))
+
+
+def dismiss_dialogs() -> str:
+    """Dismiss whatever Android put over the game, by the focused window: the Google Play Games
+    sign-in / "Create a Play Games profile" prompts (gms: Back, then its Cancel button if Back
+    did nothing) and the "Allow Brave Frontier to make and manage phone calls?" permission
+    dialog of a fresh install (permissioncontroller: ALLOW). Returns what was dismissed, or ""."""
+    f = focus()
+    if "com.google.android.gms" in f:
         adb("shell", "input", "keyevent", "4")
-        return True
-    return False
+        time.sleep(1.5)
+        if "com.google.android.gms" in focus():
+            tap_frame(0.22, 0.92)  # Cancel of the Play Games profile prompt
+        return "google"
+    if "permissioncontroller" in f:
+        tap_frame(0.50, 0.68)  # ALLOW (the first of the two buttons)
+        return "permission"
+    return ""
 
 
 def handler_names() -> dict[str, str]:
@@ -308,32 +325,54 @@ def drive_to_home(fresh: bool, verbose=True) -> bool:
     say = print if verbose else (lambda *a, **k: None)
 
     if fresh:
-        # Terms and conditions, then the phone-permission notice, then the MST download.
-        say("fresh install: terms + permission + MST download")
-        time.sleep(12)
-        tapk("terms_checkbox"); time.sleep(1); tapk("terms_agree"); time.sleep(4)
-        tapk("phone_ok")
-        if not wait_for_log({"DLS"}, since, 240, dismiss_google):
-            say("no DLS request after the fresh-install flow"); return False
-    elif not wait_for_log({"DLS"}, since, 90, dismiss_google):
-        say("no DLS request within 90 s: is the server up and the APK pointed at it?"); return False
-    say("DLS reached, waiting for the title screen")
-
-    # Title screen needs a tap; tapping early is harmless, so tap every 2 s until the guest login shows up.
-    t0 = time.time()
-    while time.time() - t0 < 120:
-        dismiss_google()
-        tapk("title")
-        if wait_for_log({"guestLogin"}, since, 2):
-            break
+        # The title loads (DLS request) and then, one after the other at their own pace: Terms and
+        # conditions (checkbox + I Agree), the phone-permission notice (OK), Android's permission
+        # dialog (ALLOW), the title's "TOUCH SCREEN" tap, which sends the guest login. So this
+        # polls: every tick dismisses an Android dialog if one has the focus, else sends the next
+        # tap of the cycle; each tap is harmless on the other screens (the OK and title spots are
+        # plain text on the terms, the terms spots are frame on the notice and title).
+        say("fresh install: terms + permission notice + Android permission + title, until the guest login")
+        cycle = ["terms_checkbox", "terms_agree", "phone_ok", "title"]
+        t0, i = time.time(), 0
+        while time.time() - t0 < 240:
+            if wait_for_log({"guestLogin"}, since, 0.1):
+                break
+            if not dismiss_dialogs():
+                tapk(cycle[i % len(cycle)]); i += 1
+            time.sleep(2)
+        else:
+            say("no guest login within 240 s of the fresh-install flow"); return False
     else:
-        say("title tap never produced the guest login"); return False
+        if not wait_for_log({"DLS"}, since, 90, dismiss_dialogs):
+            say("no DLS request within 90 s: is the server up and the APK pointed at it?"); return False
+        say("DLS reached, waiting for the title screen")
+        # Title screen needs a tap; tapping early is harmless, so tap every 2 s until the guest login shows up.
+        t0 = time.time()
+        while time.time() - t0 < 120:
+            if not dismiss_dialogs():
+                tapk("title")
+            if wait_for_log({"guestLogin"}, since, 2):
+                break
+        else:
+            say("title tap never produced the guest login"); return False
     say("logging in")
 
-    if not wait_for_log({"NiYWKdzs"}, since, 90, dismiss_google):  # HomeInfo
+    # A fresh install downloads the 147 MST tables here (a few minutes) and then asks
+    # "Background DLC Warning Prompt: download files in the background?" (No); the Play Games
+    # profile prompt can come up here too. Every 6 s: dismiss an Android dialog or tap No.
+    last = [0.0]
+
+    def tick():
+        if time.time() - last[0] < 6:
+            return
+        last[0] = time.time()
+        if not dismiss_dialogs() and fresh:
+            tapk("bgdlc_no")
+
+    if not wait_for_log({"NiYWKdzs"}, since, 420 if fresh else 90, tick):  # HomeInfo
         say("HomeInfo never came (crash during Initialize/UserInfo?)"); return False
     time.sleep(3)
-    dismiss_google()
+    dismiss_dialogs()
     # Startup popups (daily tasks, login campaign) are removed from the data; nothing to dismiss.
     if not game_alive():
         say("game process died"); return False

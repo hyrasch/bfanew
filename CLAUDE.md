@@ -153,8 +153,18 @@ python tools/dev.py restart / stop / start   # detached server (when not using `
 - `serve` runs the exe in the foreground; after a `build`, Ctrl-C it and run `serve` again
   (`restart` is for the detached mode and would not restart a `serve` tab).
 - The client driver waits on the server's request log (DLS -> guest login -> HomeInfo)
-  instead of fixed sleeps, taps the title until the login shows up, and presses Back on the
-  Google Play Games prompt (BlueStacks is now signed in to Google, so it rarely appears).
+  instead of fixed sleeps, taps the title until the login shows up, and dismisses whatever
+  Android puts over the game by the focused window (`dismiss_dialogs`: a gms window = the Play
+  Games sign-in or "Create a Play Games profile" prompt -> Back, then its Cancel; the
+  permissioncontroller = "Allow Brave Frontier to make and manage phone calls?" -> ALLOW, tapped
+  on the window frame, not the content area). **`--fresh`** (`pm clear`, then the first run)
+  is a polled cycle too: the title loads first (DLS request), then Terms (checkbox, I Agree),
+  the phone-permission notice (OK), Android's permission dialog, the title tap; each tick
+  dismisses a dialog or sends the next tap of the cycle, every tap being harmless on the other
+  screens, until the guest login shows up (240 s cap); then the 147-table MST download, during
+  which the "Background DLC Warning Prompt" gets a No every 6 s, until HomeInfo (420 s cap).
+  Verified 2026-10-31: fresh install -> home in 85 s, hands-off (the old version slept 12 s and
+  tapped blind, and missed every one of those screens).
 - Taps are fractions of the game's content area, computed from the window frame reported by
   `dumpsys window windows` (`frame=[x0,y0][x1,y1]`): the whole frame when it is phone-like
   (<= 1.8 tall), else the centred 2:3 rectangle (the default BlueStacks window letterboxes).
@@ -650,8 +660,7 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   files in place.
   Recovery for an installed client with the bad cache: Settings > Downloadable Content > Full
   Download (re-fetches everything, ~40 min at the client's one-file-per-second pace), or clear the
-  app data (`python tools/dev.py client --fresh`; the terms / phone-permission taps of the fresh
-  flow are timing-sensitive, redo them by hand if it stalls).
+  app data (`python tools/dev.py client --fresh`, hands-off since 2026-10-31, see "Dev loop").
 - `rCB7ZI8x` **UpdateEventInfo** (key `L1o4eGbi`, URL `/actionSymbol/UEt5bqp4.php`,
   `gimuserver/gme/UpdateEventInfo.cpp`): `HomeScene2::updateEvent` sends it (async, login info +
   signal key) once the player has sat on the home screen for more than 300 s
@@ -859,10 +868,8 @@ so `StoreController.startBillingService()` finds the billing service (the kill w
   status}) is not implemented: nothing to buy.
 - **Stamp**: opens an empty Stamp list, no request. **Friend Capacity +**: greyed at level 50
   (`add_friend_cnt` 0 in the level table), not exercised.
-- The fresh-install driver (`dev.py client --fresh`) still relies on fixed sleeps and missed
-  the phone-permission notice, the Android permission dialog and the Google Play Games profile
-  prompt ("Create a Play Games profile" -> Cancel); those were tapped by hand with bounded polls
-  (see "Dev loop").
+- `dev.py client --fresh` (`pm clear` + the first-run flow) now polls instead of sleeping
+  (see "Dev loop"); a fresh install reaches home in ~85 s with no tap by hand.
 
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
