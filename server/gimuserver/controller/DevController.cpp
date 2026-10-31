@@ -2,6 +2,7 @@
 #include "DevController.hpp"
 
 #include <gimuserver/gme/NewPlayer.hpp>
+#include <gimuserver/gme/Vortex.hpp>
 
 using namespace drogon;
 
@@ -22,6 +23,32 @@ void DevController::HandleReload(const HttpRequestPtr& rq, std::function<void(co
 		resp->setStatusCode(k500InternalServerError);
 		resp->setBody(std::string("reload failed: ") + ex.what());
 	}
+	callback(resp);
+}
+
+void DevController::HandleVortex(const HttpRequestPtr& rq, std::function<void(const HttpResponsePtr&)>&& callback)
+{
+	auto resp = HttpResponse::newHttpResponse();
+	resp->setContentTypeCode(ContentType::CT_TEXT_PLAIN);
+	int64_t now = Vortex::Now();
+	const auto at = rq->getParameter("at");
+	if (!at.empty())
+	{
+		int h = 0, mi = 0;
+		const int64_t day = Vortex::DayOf(at);
+		if (day == INT64_MIN)
+		{
+			resp->setStatusCode(k400BadRequest);
+			resp->setBody("usage: /bfanew/vortex?at=YYYY-MM-DD[THH:MM] (game clock)");
+			callback(resp);
+			return;
+		}
+		if (const auto t = at.find('T'); t != std::string::npos)
+			std::sscanf(at.c_str() + t + 1, "%d:%d", &h, &mi);
+		now = day * 86400 + h * 3600 + mi * 60 - static_cast<int64_t>(theServer()->cache().vortex().utc_offset_hours) * 3600;
+	}
+	resp->setStatusCode(k200OK);
+	resp->setBody(Vortex::Describe(now) + "permits: " + std::to_string(Vortex::Permits(now).size()) + "\n");
 	callback(resp);
 }
 

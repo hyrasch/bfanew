@@ -17,10 +17,17 @@ public:
 	*/
 	drogon::Task<> HandleGive(drogon::HttpRequestPtr rq, std::function<void(const drogon::HttpResponsePtr&)> callback);
 
+	/*!
+	* GET /bfanew/vortex[?at=YYYY-MM-DD[THH:MM]]: what the Vortex schedule opens now, or at a
+	* game-clock time (gimuserver/gme/Vortex.hpp Describe).
+	*/
+	void HandleVortex(const drogon::HttpRequestPtr& rq, std::function<void(const drogon::HttpResponsePtr&)>&& callback);
+
 	void HandleReload(const drogon::HttpRequestPtr& rq, std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
 	METHOD_LIST_BEGIN
 		ADD_METHOD_TO(DevController::HandleReload, "/bfanew/reload", drogon::Get);
 		ADD_METHOD_TO(DevController::HandleGive, "/bfanew/give", drogon::Get);
+		ADD_METHOD_TO(DevController::HandleVortex, "/bfanew/vortex", drogon::Get);
 	METHOD_LIST_END
 };

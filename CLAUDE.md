@@ -1029,20 +1029,61 @@ land 99, folder + area, dungeon with the seconds left, the dungeon's missions fr
 `deploy/phase.json` `dungeon_missions`) appended to UserInfo's `permit_place`; `1MJT6L3W`
 **UpdatePermitPlaceInfo** (key `3zip5Htw`, URL `/actionSymbol/AsTF24Gn.php`, login info only)
 answers the whole list again when a timed permit ran out; MissionStart refuses a Vortex mission
-whose dungeon is closed ("This dungeon is closed right now"). Phase 1's rotation is a guess at
-the launch era: weekday Enhancement dungeons (Souls Training Ground Mon ... Golden Slumberland
-weekends), Metal / Jewel Parade hours, the six element "ruins" and the six Heroes' dungeons by
-weekday, Grand Gaia Chronicles always, Deemo on weekends. Verified (Saturday): `gme.py`
+whose dungeon is closed ("This dungeon is closed right now"). Verified (Saturday): `gme.py`
 UpdatePermitPlaceInfo -> 46 permits (5 dungeons open), Monday-only 100050 refused, 100500
 started; the client's Vortex lists Enhancement, Travellers' Saga and Deemo with "Remaining: 1d",
 Enhancement -> Golden Slumberland -> Gold Valley Lv.1-3 unlocked. Not verified: a permit expiring
 while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (Parades).
 
+**The 2014 Vortex calendar (2026-10-31)** replaced the guessed rotation. Evidence: the capture
+file names of `cheahjs/bravefrontier_data` `missions_parsed/` carry the capture time
+(`<name>_<YYYY-DD-MM-HH-MM>.json`, 191 Vortex captures Oct 1-23, 2014) in **UTC+8** (the only
+offset under which Phantom Pots lands on Tuesday PST, Box of Desires on Wednesday and Ruins of
+Thunder on Thursday, the weekdays the 2014 gamelytic farming guide names), the Europe wiki's
+2014 daily pages (Monday karma = "Sacred Land of the Souls" 13/20/25 energy, i.e. dungeon
+**100000** "Gathering of Souls"; 100050 "Soul Sanctuary" 8/10/13 is the 2017 Super Karma
+Dungeon, the schedule had the wrong one) and the Global wiki's event archive (Metal keys
+Mon/Tue/Thu/Fri, Jewel keys Wednesday; the Sibyl Sisters re-run of Jan 2016 ran each dungeon two
+days with a one-day stagger, exactly the pattern of the Oct 6-12, 2014 captures). What the
+captures date: Deemo Oct 1-6, Keymaster's Eclipse Oct 4-5, Sibyl Sisters Oct 6-12, Miku Oct
+9-10, Grand Gaia Chronicles and Trial of the Gods from Oct 17-18, Unholy Tower from Oct 22, XE
+Prologue Oct 23, Super Metal Parade on weekends, elemental Metal Parades on any day, Vortex
+Trials 001/002 (Oct 4). The schedule format grew three fields (`gimuserver/db/Phase.hpp`,
+`gme/Vortex.hpp`): **`cycle_weeks` + `weeks`** (an event rotation; weeks start on Monday and are
+numbered from 1970-01-05, so week N is the same calendar week for every entry and a Sunday
+belongs to the week of the Monday before it), **`dates`** (`[from, to]` YYYY-MM-DD in the game
+clock, one-offs) and **`missions`** (a subset of the dungeons' phase missions: Super Metal Parade
+on weekends without the plain one, Wandering Spirit Lv.1-4 without the 2018 Lv.5, Trials 001-002
+without 003). **`GET /bfanew/vortex[?at=YYYY-MM-DDTHH:MM]`** (`DevController::HandleVortex`,
+`Vortex::Describe`) prints what is open at any game-clock time, so the whole cycle is checkable
+without waiting for the days. Phase 1 (`phases/01/vortex_schedule.json`, 44 entries): Monday
+Gathering of Souls + Ruins of Light and Dark (one capture, Oct 6 00:09 PST), Tuesday Faerie
+Paradise, Wednesday Cave of Greed + Jewel Parade, Thursday Garden of God, Friday Remains of
+Eternity, weekends Golden Slumberland + Super Metal Parade, Metal Parade Mon/Tue/Thu/Fri (the
+original used one-hour keys; two fixed hours a day, 12-13 and 20-21, stand in until keys exist),
+Grand Gaia Chronicles / Vortex Trials / Trial of the Gods always, and a **six-week event
+rotation** of the Oct 2014 events (week 0 Sibyl Sisters staggered Mon-Sun, 1 Deemo + Keymaster's
+Eclipse, 2 Miku + Battle Maidens staggered, 3 Unholy Tower + Dark Side + XE Prologue, 4 Leaders
+of El Gaia staggered, 5 Thunder Turnout) with one Travellers' Saga dungeon (100700-101200) per
+week; the order of the rotation is ours. Left closed: the 2015+ content the Oct 2014 table
+already carried (Year-End / Paradise dungeons, Heroes' Challenge 801006..., Moonlight Parade,
+Hellborn Nightmare, Frontier Hunter, Burny & Friends). Verified: `/bfanew/vortex` for a Monday
+noon (karma, Ruins of Light and Dark, Metal Parade ending in 30 min, the week-2 events), a
+Wednesday 20:30 (mimics, Jewel Parade, Serin ending in 3h30 and Bayley in 1d 3h30), a Sunday
+23:59 (everything ending in 1 min); `gme.py` MissionStart of Trial 003 and of a closed Super
+Metal Parade -> "This dungeon is closed right now"; UpdatePermitPlaceInfo -> 9 areas, 10
+dungeons, 34 missions, "Weekends" / "This week" period texts, time limit 131874 s; the client
+(Saturday) lists Enhancement, Travellers' Saga, The Keymaster's Eclipse and Deemo with
+"Remaining: 1d", Enhancement -> The Golden Vault, and a folder entry whose dungeon is closed
+(the Travellers' Saga folder lists every child area of F_AREA_MST) bounces back to the Vortex
+top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later weekday labels
+("Thursday Dungeon" on The Golden Vault).
+
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). Still to do: a real 2014 Vortex calendar and real summon odds (both are guesses), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"; Parade keys are still fixed hours). Still to do: real summon odds (a guess), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); next: the Shop tab (kills the BlueStacks client).
 5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); the Shop tab (kills the BlueStacks client) and the Arena are still unchecked.
 

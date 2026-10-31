@@ -19,8 +19,12 @@ struct VortexEntry
 	std::string name;
 	int32_t area = 0;
 	std::vector<int32_t> dungeons;
+	std::vector<int32_t> missions;            //!< only these missions of the dungeons (empty = every phase mission)
 	std::vector<int32_t> weekdays;            //!< 0 = Sunday .. 6 = Saturday, empty = every day
 	std::vector<std::vector<int32_t>> hours;  //!< [start, end) hour pairs, empty = all day
+	int32_t cycle_weeks = 0;                  //!< event rotation: length of the cycle in weeks (0 = none)
+	std::vector<int32_t> weeks;               //!< the weeks of the cycle (0-based, weeks start on Monday) the entry is open in
+	std::vector<std::string> dates;           //!< [from, to] "YYYY-MM-DD" inclusive in the game clock (one date = that day)
 	std::string period_text;
 };
 
