@@ -90,6 +90,7 @@ namespace GmeHandlers
 	HANDLE(DungeonEventUpdate);
 	HANDLE(UpdateEventInfo);
 	HANDLE(BannerClick);
+	HANDLE(UserGemShardInfo);
 	HANDLE(ItemMix);
 	HANDLE(ShopUse);
 	HANDLE(TownFacilityUpdate);

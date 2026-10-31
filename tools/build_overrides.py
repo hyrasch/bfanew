@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import base64
 import json
+import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -90,6 +91,16 @@ def main():
     print(f"  {new_path} built from sgtext_en_{sg['base']} + data/sgtext_en_patch.csv")
     res = cfg["F_RESOURCE_MST"]
     build_resource(res["base"], res["version"], {f"/sgtext/sgtext_en_{sg['base']}.zip": new_path})
+    # tracked content files the archive lacks (data/content/<path> -> overrides/content/<path>:
+    # layout_shop_topV2.csv, the 2.19.6 shop top layout the 2022 archive never had)
+    for src in sorted((DATA / "content").rglob("*")):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(DATA / "content")
+        dst = OVERRIDES / "content" / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+        print(f"  content/{rel.as_posix()}")
     # tracked images the phase banners reference (data/*.png -> overrides/content/banner/)
     for img in DATA.glob("banner_*.png"):
         dst = OVERRIDES / "content" / "banner" / img.name

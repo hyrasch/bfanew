@@ -819,6 +819,51 @@ summons cost **1 gem**, and every first mission clear gives at least one gem.
   your Energy? / Energy refills are free here." (`<br>` breaks lines; `<param=gem_use_count>`
   rendered empty with the 0 price, so the texts carry no placeholder).
 
+**Shop tab (2026-10-31).** It no longer kills the client: BlueStacks is signed in to Google now,
+so `StoreController.startBillingService()` finds the billing service (the kill was the
+"Billing service unavailable" path). What the tab needed, in order:
+- **`/_dlcbundle/layout_shop_topV2.csv`**, the 2.19.6 shop top layout, which the 2022 archive
+  never had (it holds the older `layout_shop_top.csv`): the tab showed "DLC ERROR ... Retry
+  Download?" for good. The APK's `assets/resourceMap` lists, per scene id, the files a scene
+  downloads (`700:layout_shop_topV2.csv,shop_top_btn_base.png,...` for `ShopTopScene`); nothing
+  bundles the layout itself, so it is ours: **`data/content/_dlcbundle/layout_shop_topV2.csv`**,
+  copied by `build_overrides.py` (which now mirrors the whole `data/content/` tree into
+  `overrides/content/`). Rows are `x,y,w,h,type,name,` in 640x960 design units, y from the top;
+  `ShopTopScene::setLayoutControl` wants `btn_base` (602x124 toolbar), `buy_coin_btn` (110x110),
+  `unit_box_ext_btn`, `item_box_ext_btn`, `hel_fight_btn` (friend slots, enabled only when the
+  level table's `add_friend_cnt` is > 0), `buy_stamp_btn` (its image switches to the summoner
+  item shop under the Ep3 flag), all 117x71, and `initialize` dereferences `scroll_bar`,
+  `scroll_area`, `clip_area` and `bundle_list` (the 2020 bundle categories, none here). The
+  toolbar sits at y 250, under the sub header (the calibration: this scene draws design y at
+  window `248 + 0.6 y` on BlueStacks). **The client caches a downloaded file for good**
+  (`CommonUtils::existsLocalFile` wins over a new download, and the scene re-requests the file
+  at every open but keeps its copy): a changed layout only shows after `pm clear` /
+  `dev.py client --fresh` or a Full Download, which is why the first copy (toolbar overlapping
+  the sub header) stuck through three edits and two relaunches. No root on BlueStacks
+  (`adb root` restarts adbd as shell), so the cache cannot be edited from outside.
+- **Unit / item capacity** (`ShopUse` types 2 / 3) verified from the client: Unit Capacity +5
+  -> request `60IsqxDt` 2, `5gXxT7LZ` 5, 0 gems -> `max_unit_count` 100 -> 105 in the DB; Item
+  Capacity +5 -> type 3 -> `warehouse_count` 100 -> 105; the gem balance stays. Cosmetic: the
+  confirm dialog says "Use 1 Gem(s)" and "Gems needed 1" although the define price is 0 (the
+  notice text above it says "0 Gem(s)"); the server never deducts. After a purchase the scene
+  goes home (its Back is the result screen's).
+- **Buy Gems** (`ShopBuyCoinScene`): opens the store (`StoreController: opening store`, no
+  kill with Google signed in) and sends `29slks49` **UserGemShardInfo** (key `930sDd3i`, login
+  info + signal key; `gme/UserGemShardInfo.cpp`), a 2017 feature the scene asks for even with
+  `buy_coin_free_shard` 0; unanswered it popped "Unsupported request" and the client restarted
+  on OK. The reply `s9d3lksS` is a list of {`1ZF3zLrC` id, `J3uDa91b` count}, empty here: the
+  scene shows "0/0 Gem Shards", a Claim button and an empty product list (its products are
+  `PurchaseMstList`, not served). The purchase flow itself (`kJs6CQq1` BuyCoinStart key
+  `J9P7Bmxa`, `9o3q7SjN` BuyCoin key `DCM60QNb`, reply `B6KhoZ1P` BuyCoinInfo {`3nZrT1bC`
+  purchase id, `R93Xmtnk` receipt, `swfHMaeb` signature, `Ek5fF7s6` state, `3ub9EdW2` model
+  status}) is not implemented: nothing to buy.
+- **Stamp**: opens an empty Stamp list, no request. **Friend Capacity +**: greyed at level 50
+  (`add_friend_cnt` 0 in the level table), not exercised.
+- The fresh-install driver (`dev.py client --fresh`) still relies on fixed sleeps and missed
+  the phone-permission notice, the Android permission dialog and the Google Play Games profile
+  prompt ("Create a Play Games profile" -> Cancel); those were tapped by hand with bounded polls
+  (see "Dev loop").
+
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
 tables already received at login. Two stub values mattered: `UserTeamInfo.deck_cost` is
@@ -1095,8 +1140,8 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"; Parade keys are still fixed hours). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); next: the Shop tab (kills the BlueStacks client).
-5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); the Shop tab (kills the BlueStacks client) and the Arena are still unchecked.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
+5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); the Arena is still unchecked.
 
 ## Conventions
 
