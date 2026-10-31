@@ -29,7 +29,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 |---|---|
 | `server/` | The server fork (C++, Drogon, vcpkg). `server/packet-generator/` is the vendored packet definition generator (Rust). |
 | `server/deploy/system/*.json` | Server-side master tables sent at login (the base set). |
-| `server/deploy/system/phases/NN/` | Per-phase overrides of those tables; a file here wins over the base one while `data/overrides.json` selects phase NN. Phase 1: the launch summon banners and the Vortex rotation. |
+| `server/deploy/system/phases/NN/` | Per-phase overrides of those tables; a file here wins over the base one while `data/overrides.json` selects phase NN. Phase 1: the launch summon banners, their pools and the Vortex rotation. |
 | `tools/patch_apk.py` | Points the 2.19.6.0 APK at a private server (host strings, `https` to `http`), then aligns and signs it with the Android SDK tools. |
 | `tools/dev.py` | The dev loop: build, serve, reload data, drive the game on BlueStacks, read the request log. |
 | `tools/build_battles.py` | Builds `server/deploy/battle/*.json` (per-mission enemy data for MissionStart) from the community datamine's 2014 captures. |
@@ -38,6 +38,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 | `tools/mst.py` | Decodes / encodes the client's downloaded MST `.dat` tables (base64 + AES-128-ECB, keys in `tools/mst_keys.json`). |
 | `tools/build_overrides.py` | Builds `server/deploy/overrides/` (served before the content archive): the patched UI text dictionary (`data/sgtext_en_patch.csv`), the re-encoded resource table that announces it, and the phase-filtered tables (`data/overrides.json`). |
 | `tools/gme.py` | Sends a game request to the server as a player from the command line (encrypts the body with the handler's key, decrypts the reply); for testing handlers without the client. |
+| `tools/build_pools.py` | The summon pools of the phase (`gacha_pools.json`): base-form units per rarity for the Rare and Honor Summons, rates from `data/overrides.json`. |
 | `tools/build_phase.py` | The phase filter: units, evolutions, missions, dungeons, areas and lands first seen up to the phase's cutoff month (`data/*_timeline.json`), re-encoded with bumped versions; writes `server/deploy/phase.json` (the kept ids). |
 | `server/deploy/battle/` | Those files, 204 missions so far. |
 | `data/*_timeline.json` | First month each unit / mission appeared in Global, derived from the community datamine history; drives the phase cutoff. |

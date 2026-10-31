@@ -3,5 +3,10 @@
   "sgtext_en": { "base": 338, "version": 340 },
   "F_RESOURCE_MST": { "base": 3275, "version": 3277 },
   "_phase": "tools/build_phase.py: id = the phase number (deploy/system/phases/<id>/ tables win over deploy/system/); cutoff = last month (YYYY-MM) of data/*_timeline.json first_seen that is in; bump = added to the archive's version of every filtered table (raise it whenever the filter output changes, so clients re-download).",
-  "phase": { "id": 1, "cutoff": "2014-10", "bump": 4 }
+  "phase": { "id": 1, "cutoff": "2014-10", "bump": 4 },
+  "_pools": "tools/build_pools.py: per summon (gacha id), which F_UNIT_MST getting type feeds it (2 = rare summon families, 3 = common units) and the draw weight of each base rarity; a rarity without a weight is left out. The rates are a guess at the 2014 odds.",
+  "pools": {
+    "1000": { "name": "Honor Summon", "getting_type": 3, "rates": { "1": 55, "2": 45 } },
+    "2000": { "name": "Rare Summon", "getting_type": 2, "rates": { "3": 70, "4": 30 } }
+  }
 }

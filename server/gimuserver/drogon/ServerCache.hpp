@@ -66,6 +66,13 @@ public:
 	/*! bfanew: the Vortex schedule (deploy/system/vortex_schedule.json). */
 	inline const VortexSchedule& vortex() const { return m_vortex; }
 
+	/*! bfanew: the summon pool of a gacha id (deploy/system/phases/NN/gacha_pools.json), nullptr if none. */
+	inline const GachaPool* pool(int32_t gachaId) const
+	{
+		const auto it = m_pools.pools.find(std::to_string(gachaId));
+		return it == m_pools.pools.end() ? nullptr : &it->second;
+	}
+
 	/*! bfanew: the item table (deploy/items.json). */
 	inline const ItemTable& items() const { return m_items; }
 
@@ -139,6 +146,11 @@ private:
 	* bfanew: Vortex schedule.
 	*/
 	VortexSchedule m_vortex;
+
+	/*!
+	* bfanew: summon pools.
+	*/
+	GachaPools m_pools;
 
 	/*!
 	* Cached data of response.

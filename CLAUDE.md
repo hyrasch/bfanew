@@ -867,6 +867,23 @@ used to be invisible in `deploy/log/`: `tryOpenHttpDumpLog` named dumps by the s
 burst shared one garbled file. The names now carry a per-process counter (`_NNNN`) and
 `dev.py logs` understands both forms.
 
+**Summon pools (2026-10-31).** `tools/build_pools.py` (run by `build_overrides.py`) writes
+`deploy/system/phases/<NN>/gacha_pools.json`: per summon (gacha id) the draw weight of each
+rarity and the unit ids of that rarity, from `deploy/phase.json` and the served `F_UNIT_MST`.
+`unitGettingType` (`6yHMXYv1`) tells the families apart: **2 = Rare Summon families** (Firedrake,
+Knight Agni... and their evolutions), **3 = common / quest units** (the starters' first forms,
+Burny, Witch Liza; the Honor Summon), 1 = evolution-only forms (Burning Vargas and up). A pool
+takes the **base forms** only (units no evolution of the phase produces) and plain units
+(`unitKind` `xP9oi5Z2` 0: no frogs, crystals, nymphs, jewel ghosts). `data/overrides.json`
+`pools` holds the rates: Rare Summon 3* 70 / 4* 30 (phase 1 has 41 and 62 of them; its one 5*
+base, "Xenon & Estia", is a 2015 collaboration the timeline matched by name, left out by having no
+rate), Honor Summon 1* 55 / 2* 45 (18 and 52; the three 4* are later collaborations). **The odds
+are a guess at 2014.** `GachaAction` draws the rarity by weight, then a unit uniformly, builds the
+unit from `deploy/units.json` (level-1 stats, element, leader skill, brave burst) and keeps the
+six-starter table only as the fallback when no pool file is served. Verified: 8 Rare Summons by
+`gme.py` -> 4 three-star and 4 four-star units of 7 different families, 1 Gem each; the client's
+Rare Summon shows the summoned unit.
+
 **Phase enforcement (2026-10-31).** `gimuserver/db/Phase.hpp`: `ServerCache::Setup` loads
 `deploy/phase.json` (optional: without it nothing is enforced and the startup log says so) into
 id sets; `phase().hasMission(id)` / `hasUnit(id)`. MissionStart refuses a mission outside the
@@ -907,7 +924,7 @@ while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (P
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). Still to do: the real summon pools (phase-filtered), a real 2014 Vortex calendar (today's rotation is a guess), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). Still to do: a real 2014 Vortex calendar and real summon odds (both are guesses), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 

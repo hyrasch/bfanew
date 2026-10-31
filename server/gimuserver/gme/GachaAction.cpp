@@ -80,11 +80,10 @@ namespace
 		return g;
 	}
 
-	const PoolUnit* pick(int32_t gachaId)
+	// the fallback pool when no gacha_pools.json is served: the six starters
+	const PoolUnit* pickStarter(int32_t gachaId)
 	{
 		std::uniform_int_distribution<int> six(0, 5);
-		// bfanew: never hand out a unit outside the phase (deploy/phase.json); the pool is
-		// in phase 1 today, the check matters once the real pools come in
 		const auto& phase = theServer()->cache().phase();
 		for (int tries = 0; tries < 50; ++tries)
 		{
@@ -100,6 +99,40 @@ namespace
 			if (phase.hasUnit(u->unit_id)) return u;
 		}
 		return nullptr;
+	}
+
+	// bfanew: the phase's pool (deploy/system/phases/NN/gacha_pools.json, tools/build_pools.py):
+	// a rarity by weight, then a unit of that rarity uniformly; the stats come from units.json.
+	// Returns false when the gacha has no pool (-> the starters).
+	bool pickFromPool(int32_t gachaId, PoolUnit& out)
+	{
+		const auto& cache = theServer()->cache();
+		const auto* pool = cache.pool(gachaId);
+		if (!pool) return false;
+		for (int tries = 0; tries < 50; ++tries)
+		{
+			int32_t total = 0;
+			for (const auto& [r, w] : pool->rates) total += std::max(0, w);
+			if (total <= 0) return false;
+			auto roll = std::uniform_int_distribution<int32_t>(1, total)(rng());
+			std::string rarity;
+			for (const auto& [r, w] : pool->rates)
+			{
+				roll -= std::max(0, w);
+				if (roll <= 0) { rarity = r; break; }
+			}
+			const auto it = pool->units.find(rarity);
+			if (it == pool->units.end() || it->second.empty()) continue;
+			const auto id = it->second[std::uniform_int_distribution<size_t>(0, it->second.size() - 1)(rng())];
+			const auto* def = cache.unit(id);
+			if (!def || !cache.phase().hasUnit(id)) continue;
+			static constexpr const char* kElements[] = { "fire", "fire", "water", "earth", "thunder", "light", "dark" };
+			out = PoolUnit{ id, def->rarity, (def->element >= 1 && def->element <= 6) ? kElements[def->element] : "fire",
+				def->hp.empty() ? 0 : def->hp[0], def->atk.empty() ? 0 : def->atk[0],
+				def->def_.empty() ? 0 : def->def_[0], def->rec.empty() ? 0 : def->rec[0], def->ls_id, def->bb_id };
+			return true;
+		}
+		return false;
 	}
 }
 
@@ -149,7 +182,8 @@ HANDLEF(GachaAction)
 	GachaActionResp resp = {};
 	for (int32_t i = 0; i < count; i++)
 	{
-		const auto* picked = pick(gachaId);
+		PoolUnit fromPool{};
+		const PoolUnit* picked = pickFromPool(gachaId, fromPool) ? &fromPool : pickStarter(gachaId);
 		if (!picked)
 			co_return HandleResult::error("No unit of this summon is available yet");
 		const auto& u = *picked;

@@ -118,6 +118,10 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	// bfanew: the Vortex schedule (optional: no file, no Vortex; phase folders usually hold it)
 	m_vortex = std::filesystem::is_regular_file(ResolveTable(mstRoot, "vortex_schedule.json")) ? LoadJson<VortexSchedule>(mstRoot, "vortex_schedule.json") : VortexSchedule{};
 	LOG_INFO << "bfanew: Vortex schedule: " << m_vortex.entries.size() << " entries";
+
+	// bfanew: the summon pools (optional: without the file GachaAction falls back to the six starters)
+	m_pools = std::filesystem::is_regular_file(ResolveTable(mstRoot, "gacha_pools.json")) ? LoadJson<GachaPools>(mstRoot, "gacha_pools.json") : GachaPools{};
+	LOG_INFO << "bfanew: summon pools: " << m_pools.pools.size();
 	LOG_INFO << "bfanew: " << m_units.size() << " units in the unit table, " << m_evos.size() << " evolutions, " << m_items.size() << " items";
 	m_controlCenterRsp = LoadJson<SlotGameInfoR>(mstRoot, "brave_slots.json");
 

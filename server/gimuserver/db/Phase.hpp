@@ -31,6 +31,20 @@ struct VortexSchedule
 	std::vector<VortexEntry> entries;
 };
 
+/*! deploy/system/phases/<NN>/gacha_pools.json (tools/build_pools.py): one pool per summon. */
+struct GachaPool
+{
+	std::string name;
+	std::map<std::string, int32_t> rates;                //!< rarity -> draw weight
+	std::map<std::string, std::vector<int32_t>> units;   //!< rarity -> unit ids
+};
+
+struct GachaPools
+{
+	std::string _doc;
+	std::map<std::string, GachaPool> pools;              //!< gacha id -> pool
+};
+
 struct PhaseTable
 {
 	int32_t id = 0;       //!< phase number: tables in deploy/system/phases/<id, 2 digits>/ win

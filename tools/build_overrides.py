@@ -93,6 +93,9 @@ def main():
     if "phase" in cfg:
         import build_phase
         build_phase.build(cfg["phase"]["cutoff"], cfg["phase"]["bump"], phase_id=cfg["phase"].get("id", 0))
+        if "pools" in cfg:
+            import build_pools
+            build_pools.build(cfg["pools"], cfg["phase"].get("id", 0))
 
 
 if __name__ == "__main__":
