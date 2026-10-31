@@ -90,6 +90,12 @@ def main():
     print(f"  {new_path} built from sgtext_en_{sg['base']} + data/sgtext_en_patch.csv")
     res = cfg["F_RESOURCE_MST"]
     build_resource(res["base"], res["version"], {f"/sgtext/sgtext_en_{sg['base']}.zip": new_path})
+    # tracked images the phase banners reference (data/*.png -> overrides/content/banner/)
+    for img in DATA.glob("banner_*.png"):
+        dst = OVERRIDES / "content" / "banner" / img.name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_bytes(img.read_bytes())
+        print(f"  content/banner/{img.name}")
     if "phase" in cfg:
         import build_phase
         build_phase.build(cfg["phase"]["cutoff"], cfg["phase"]["bump"], phase_id=cfg["phase"].get("id", 0))

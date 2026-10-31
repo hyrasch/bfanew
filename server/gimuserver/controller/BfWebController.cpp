@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "BfWebController.hpp"
+#include "WebPages.hpp"
 #include "WebTerms.hpp"
 
 #include <filesystem>
@@ -95,6 +96,22 @@ void BfWebController::HandleWebPage(const HttpRequestPtr& rq, std::function<void
     DumpLog log;
     theServer()->tryOpenHttpDumpLog("webpage", log);
     log << rq;
+
+	// bfanew: generated pages for the in-app web view (WebPages.hpp); the client sends "//bf/web/..."
+	{
+		std::string rel = rq->getPath();
+		while (rel.size() > 1 && rel[0] == '/' && rel[1] == '/') rel.erase(0, 1);
+		if (rel == "/bf/web/rates/index.php")
+		{
+			drogon::async_run([rq, callback]() -> drogon::Task<> { co_await WebPages::Rates(rq, callback); });
+			return;
+		}
+		if (rel == "/bf/web/notice/indexCtrl.php")
+		{
+			WebPages::Notice(rq, callback);
+			return;
+		}
+	}
 
 	if (rq->getPath() == "/bf/web/terms.htm")
 	{

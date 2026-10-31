@@ -53,6 +53,8 @@ namespace Db
 
 	/*! Writes the wallet / level / energy back. */
 	drogon::Task<void> SavePlayer(const Player& p);
+	/*! The player whose friend id (= account_id, what the client appends to web pages) is this. */
+	drogon::Task<std::optional<Player>> LoadPlayerByAccountId(std::string accountId);
 
 	/*! Brings the energy up to date (1 point per ServerConfig::energyRegenSeconds, capped at the max). */
 	void RegenEnergy(Player& p);

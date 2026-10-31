@@ -67,6 +67,7 @@ public:
 	inline const VortexSchedule& vortex() const { return m_vortex; }
 
 	/*! bfanew: the summon pool of a gacha id (deploy/system/phases/NN/gacha_pools.json), nullptr if none. */
+	inline const std::map<std::string, GachaPool>& poolsAll() const { return m_pools.pools; }
 	inline const GachaPool* pool(int32_t gachaId) const
 	{
 		const auto it = m_pools.pools.find(std::to_string(gachaId));

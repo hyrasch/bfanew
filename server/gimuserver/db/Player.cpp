@@ -163,6 +163,16 @@ namespace Db
 		co_return p;
 	}
 
+	Task<std::optional<Player>> LoadPlayerByAccountId(std::string accountId)
+	{
+		const auto res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE account_id = $1", accountId);
+		if (res.empty())
+			co_return std::nullopt;
+		auto p = RowToPlayer(res[0]);
+		RegenEnergy(p);
+		co_return p;
+	}
+
 	Task<void> SavePlayer(const Player& p)
 	{
 		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4 WHERE user_id = $5",

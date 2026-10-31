@@ -37,6 +37,7 @@ struct GachaPool
 	std::string name;
 	std::map<std::string, int32_t> rates;                //!< rarity -> draw weight
 	std::map<std::string, std::vector<int32_t>> units;   //!< rarity -> unit ids
+	std::map<std::string, std::string> names;            //!< unit id -> English name (sgtext_units)
 };
 
 struct GachaPools

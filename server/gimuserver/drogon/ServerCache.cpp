@@ -122,6 +122,7 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	// bfanew: the summon pools (optional: without the file GachaAction falls back to the six starters)
 	m_pools = std::filesystem::is_regular_file(ResolveTable(mstRoot, "gacha_pools.json")) ? LoadJson<GachaPools>(mstRoot, "gacha_pools.json") : GachaPools{};
 	LOG_INFO << "bfanew: summon pools: " << m_pools.pools.size();
+
 	LOG_INFO << "bfanew: " << m_units.size() << " units in the unit table, " << m_evos.size() << " evolutions, " << m_items.size() << " items";
 	m_controlCenterRsp = LoadJson<SlotGameInfoR>(mstRoot, "brave_slots.json");
 
@@ -186,5 +187,33 @@ void ServerCache::Setup(const Json::Value& serverObj)
 		m_initrsp.daily_task_prizes = LoadJson<DailyTaskPrizeMstCache>(mstRoot, "TEMP_daily_tasks_prizes.json").data;
 		m_initrsp.daily_tasks = LoadJson<DailyTaskMstCache>(mstRoot, "TEMP_daily_tasks.json").data;
 		// ---
+	}
+
+	// bfanew: after every table is loaded
+	// bfanew: the odds in the summon texts (GachaInfo detail_msg is the box under the banner,
+	// caption_msg the confirm dialog; <br> and <color=r:g:b> are the client's tags)
+	for (auto& g : m_userrsp.gacha_info)
+	{
+		const auto it = m_pools.pools.find(std::to_string(g.id));
+		if (it == m_pools.pools.end()) continue;
+		int32_t total = 0;
+		for (const auto& [r, w] : it->second.rates) total += std::max(0, w);
+		std::string rates;
+		for (const auto& [r, w] : it->second.rates)
+		{
+			const auto u = it->second.units.find(r);
+			const auto n = u == it->second.units.end() ? 0 : u->second.size();
+			if (!rates.empty()) rates += ", ";
+			rates += std::format("{}<color=255:255:0>*</color> {}% ({} units)", r, total ? 100 * w / total : 0, n);
+		}
+		g.detail_msg += "<br>Rates: " + rates;
+		g.caption_msg += "<br>" + rates;
+	}
+
+	// bfanew: "{host}" in a banner url (banner_info.json) is this server as the client reaches it
+	for (auto& b : m_initrsp.banner_info)
+	{
+		const auto pos = b.url.find("{host}");
+		if (pos != std::string::npos) b.url.replace(pos, 6, GetDrogonBindHostname());
 	}
 }

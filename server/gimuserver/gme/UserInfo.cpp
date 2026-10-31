@@ -32,6 +32,7 @@ HANDLEF(UserInfo)
 
 	resp.login_info.user_id = p.user_id;
 	resp.login_info.account_id = p.account_id;
+	resp.login_info.friend_id = p.account_id; // what the Links page appends to web pages (?friend_id=)
 	resp.login_info.handle_name = p.handle_name;
 	resp.login_info.tutorial_end_flag = p.tutorial_end;
 	resp.login_info.tutorial_status = 0;

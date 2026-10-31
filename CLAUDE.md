@@ -867,6 +867,36 @@ used to be invisible in `deploy/log/`: `tryOpenHttpDumpLog` named dumps by the s
 burst shared one garbled file. The names now carry a per-process counter (`_NNNN`) and
 `dev.py logs` understands both forms.
 
+**Summon rates display (2026-10-31).** The 2.19.6 client has no rates dialog (Revive's "Rates"
+button is their client patch; the summon "Details" screen, `SummonsDetailScene`, is a native
+layout of `detail_msg` and tickets). Two channels, both server-side:
+- **The summon texts**: `ServerCache::Setup` appends the pool's odds to each pooled banner's
+  `detail_msg` (the box under the banner) and `caption_msg` (the confirm dialog) after loading
+  `gacha_info.json` and the pools: "Rates: 3* 70% (41 units), 4* 30% (62 units)" with the
+  client's `<br>` / `<color=r:g:b>` tags. Verified in the Honor Summon dialog.
+- **A web page with owned marks**: `/bf/web/rates/index.php?friend_id=<id>` (`controller/
+  WebPages.cpp`, dispatched by `BfWebController::HandleWebPage` after collapsing the leading
+  `//`: the client builds URLs as `http://<host>/` + path, so they arrive as `//bf/web/...` with
+  `?os=2`, hence the second regex route in `BfWebController.hpp`). Per summon: each rarity with
+  its rate and unit count, then every unit with its own odds (rate / units of the tier), names
+  from `gacha_pools.json` `names` (build_pools.py reads `sgtext_units`), and a check mark when
+  the player's box holds the unit or one of its evolutions (same `group` in units.json). The
+  player: the Links page (MENU > Links, `BannerLinkTopScene`, `banner_info.json`) appends
+  `?friend_id=<UserInfo friend_id>` when a banner's `param` is `?friend_id=`; the server now
+  sends `friend_id` = `account_id` and finds the player with `Db::LoadPlayerByAccountId`.
+  `phases/01/banner_info.json` adds banner 8001 "Summon rates" (url `http://{host}/bf/web/
+  rates/index.php`, `{host}` replaced at load with the advertised host; image
+  `banner_summon_rates.png`, 600x120, tracked in `data/` and copied to `overrides/content/
+  banner/` by build_overrides.py; the client caches a banner image by name for good, so a
+  changed image needs a new name). **A Links banner opens the system browser**, not an in-app
+  web view (Chrome on BlueStacks, with its first-run page the first time), and the tap also
+  sends `a5k36D28` **BannerClick** (key `a63Ghbi2`, group `Pk5F1vhx` {`oL71Fz3a` banner id}, a
+  click counter), answered `{}` by `gme/BannerClick.cpp`; unanswered it popped "Unsupported
+  request" when the game came back. Verified: the page renders (dark theme, no external
+  assets) with 18 owned marks for the test account; the INFO button's notice page
+  (`/bf/web/notice/indexCtrl.php`, url.json) was a 404 (gumi's news host) and is now a small
+  phase summary with a link to the rates page.
+
 **Feature gating (2026-10-31).** Three client mechanisms, all fed by the server:
 - `features.json` (`/bf/gme/featureCheck.php`, parsed by `FeatureManager::onFeatureCheckResS`;
   only the keys of `net/feature_check.kdl` are served, and the client spells three of them
@@ -951,7 +981,7 @@ while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (P
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). Still to do: a real 2014 Vortex calendar and real summon odds (both are guesses), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); the Shop tab (kills the BlueStacks client) and the Arena are still unchecked.
 
 ## Conventions
