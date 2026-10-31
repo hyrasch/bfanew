@@ -109,6 +109,20 @@ void BfWebController::HandleWebPage(const HttpRequestPtr& rq, std::function<void
 	auto path = getDocumentRoot() + rq->getPath();
     LOG_DEBUG << "Requesting path: " << path;
 
+	// bfanew: deploy/overrides/<content|mst>/... (built by tools/build_overrides.py: patched text
+	// tables, re-encoded MSTs) wins over the content archive, which is a read-only clone
+	{
+		std::string rel = rq->getPath();
+		while (rel.size() > 1 && rel[0] == '/' && rel[1] == '/') rel.erase(0, 1);
+		const auto over = fs::path("overrides") / fs::path(rel).relative_path();
+		if ((rel.rfind("/content/", 0) == 0 || rel.rfind("/mst/", 0) == 0) && fs::is_regular_file(over))
+		{
+			LOG_DEBUG << "Served from overrides: " << rel;
+			callback(HttpResponse::newFileResponse(over.string()));
+			return;
+		}
+	}
+
     // Serve existing file if it exists
 	if (!fs::exists(path) || fs::is_directory(path))
 	{

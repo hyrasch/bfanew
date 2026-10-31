@@ -1,0 +1,5 @@
+{
+  "_doc": "Served-file overrides built by tools/build_overrides.py into server/deploy/overrides/ (gitignored). sgtext_en: the version suffix of the patched UI text table (data/sgtext_en_patch.csv on top of the archive's sgtext_en_<base>); F_RESOURCE_MST: the version of the re-encoded resource table that lists it (also written to deploy/system/version_info.json).",
+  "sgtext_en": { "base": 338, "version": 340 },
+  "F_RESOURCE_MST": { "base": 3275, "version": 3277 }
+}

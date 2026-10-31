@@ -43,6 +43,8 @@ decompfrontier/              <- upstream clones, now READ-ONLY reference (the fo
       system/*.json          <- 45 server-side master tables sent at login
       game_content/content/  <- assets (116 folders), from 21900.zip -> assets.zip
       game_content/mst/      <- 147 encrypted MST .dat tables (client downloads these)
+      overrides/             <- built by tools/build_overrides.py (gitignored): files served before
+                                game_content (patched sgtext_en, re-encoded F_RESOURCE_MST)
     out/build/debug-win64-ninja/ <- build output
   packet-generator/          <- standalone clone (Rust, nightly)
   offline-proxy/             <- Windows-only DLL proxy for the PC client (not usable for Android)
@@ -117,7 +119,7 @@ version list is `deploy/system/version_info.json` (169 tables). Per-mission batt
 ## Phasing design (summary)
 
 1. **Login-time tables** (`deploy/system/*.json`: summons, banners, daily dungeons, campaigns): one folder per phase, plus a `phase` config switch.
-2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. Reading is solved by `mst-decoded.zip`. Still to do: **re-encrypting** to the `.dat` format, and a filter that keeps references consistent (unit -> skills/LS/ES/evo mats/AI).
+2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. Reading and **re-encoding are solved** (`tools/mst.py`, see "MST tables: the .dat format"); served copies go to `deploy/overrides/mst/`. Still to do: a filter that keeps references consistent (unit -> skills/LS/ES/evo mats/AI).
 3. **Feature flags** (`deploy/system/features.json`: `raid`, `colosseum_enable`, `guild`, `frontierhunter`, `randall`, `challenge_arena`, …; also `F_FUNCTION_RELEASE_MST` and the `feature_gate` field). **Unverified** whether the client hides menus cleanly. Test one by one.
 4. **Server-side enforcement**: handlers reject out-of-phase IDs.
 
@@ -746,9 +748,17 @@ summons cost **1 gem**, and every first mission clear gives at least one gem.
 - Flake seen 2026-10-31: after declining the "Background DLC Warning Prompt" (it comes back when
   the day changes), the first home entry died in `HomeScene2::initialize` on a null
   `LayoutCacheList::getObject` (a home layout element not found); the next launch was fine.
-- Known cosmetic issue: the texts ENERGY_RECOVER_GEM_RECOVER_ENERGY / _MAX_THRESHOLD show as raw
-  keys, the served text table predates them (the client's strings are the APK's `assets/text.csv`
-  plus downloaded ones; not located yet).
+- ~~Known cosmetic issue: the texts ENERGY_RECOVER_GEM_RECOVER_ENERGY / _MAX_THRESHOLD show as raw
+  keys~~ **fixed 2026-10-31**: the client's UI strings are the APK's `assets/text.csv` (780 keys)
+  overlaid by the downloaded dictionary `content/sgtext/sgtext_en_<v>.zip` (3,007 keys, the
+  2020 table; 2.19.6 added the three `ENERGY_RECOVER_GEM_*` keys after it). The dictionary is
+  listed by the resource table (`F_RESOURCE_MST` row `/sgtext/sgtext_en_338.zip`), and
+  `TextDictionary_SG::DictionaryFileUpdateCheck` downloads a file it does not have by exact
+  name, so a text change = a new suffix + a re-encoded resource table: `data/sgtext_en_patch.csv`
+  (`KEY^text`) + `data/overrides.json` (versions) -> `tools/build_overrides.py` ->
+  `deploy/overrides/` (see "MST tables: the .dat format"). The prompt now reads "Fully restore
+  your Energy? / Energy refills are free here." (`<br>` breaks lines; `<param=gem_use_count>`
+  rendered empty with the 0 price, so the texts carry no placeholder).
 
 **Unit tab (2026-10-30):** View Units, Manage Squad, Fusion, Evolve, Sell and the Town tab
 all open **without a single server request**: they work from the unit box, decks and master
@@ -803,12 +813,35 @@ first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile
 `netsh advfirewall firewall add rule name="gimuserver 9960" dir=in action=allow protocol=TCP localport=9960`.
 The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
+## MST tables: the .dat format (2026-10-31)
+
+The `/mst/Ver<version>_<file key>[_<part>].dat` files the client downloads are **base64 of
+AES-128-ECB / PKCS#7 over a plain JSON array of rows**, the AES key being the table's 8-character
+*encode key* right-padded with zero bytes to 16 (the GME body scheme; the decrypt lives in Java,
+`BraveFrontierJNI.decodeCStringForBase64(data, key)`). The two keys per table come from a string
+table in `libgame.so` (`DataMstManager::getMstFileNameFromKey`); `tools/mst_keys.json` holds the
+117 recovered pairs (`tools/mst.py keys --lib libgame.so` tries every 8-character string of the
+library on the served files and keeps the one that decodes to the row count of
+`version_info.json`). `version_info.json` rows: `moWQ30GH` name, `d2RFtP8T` version (bump = the
+client re-downloads), `H6k1LIxC` parts, `5kbnkTp0` rows (`checkCorruptionsOfMsts` compares). The
+original files are PHP `json_encode` output (compact, escaped slashes, `\uXXXX` for non-ASCII);
+`mst.py encode` reproduces them byte-for-byte in size. `python tools/mst.py decode F_RESOURCE_MST
+-o rows.json`, `python tools/mst.py encode F_RESOURCE_MST rows.json --version N --out
+server/deploy/overrides/mst`. `BfWebController` serves `deploy/overrides/<content|mst>/...` before
+`game_content` (a read-only symlink into the decompfrontier clone). First use:
+`tools/build_overrides.py` rebuilds the UI text dictionary (`sgtext_en_340`, the archive's 338 +
+`data/sgtext_en_patch.csv`) and the resource table (`F_RESOURCE_MST` 3277, one path changed;
+`data/overrides.json` holds both versions and the tool writes the new version into
+`version_info.json`). Run it after a clone (`deploy/overrides` is not tracked), then `dev.py
+reload`. Verified: the client fetched `Ver3277_hdt2N6mr_{1,2}.dat` and `sgtext_en_340.zip` at the
+next login and the energy prompt shows the new text.
+
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
-3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); next: the energy-recovery texts, the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`, see "MST tables: the .dat format"); still to do: the phase filter driven by `data/*_timeline.json` (filtered `F_UNIT_MST` / `F_MISSION_MST` into `deploy/overrides/mst`, versions bumped).
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
 5. Test feature flags system by system.
 
 ## Conventions
