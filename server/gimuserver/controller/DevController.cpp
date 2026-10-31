@@ -35,12 +35,13 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	int count = std::atoi(rq->getParameter("count").c_str());
 	if (count <= 0) count = 1;
 	const int lv = std::atoi(rq->getParameter("lv").c_str());
+	const int level = std::atoi(rq->getParameter("level").c_str());
 	const auto* def = theServer()->cache().unit(unitId);
 	const auto* itemDef = theServer()->cache().item(itemId);
-	if (user.empty() || (!def && !itemDef))
+	if (user.empty() || (!def && !itemDef && level <= 0))
 	{
 		resp->setStatusCode(k400BadRequest);
-		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1 (unknown unit / item?)");
+		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level>");
 		callback(resp);
 		co_return;
 	}
@@ -52,6 +53,16 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	{
 		resp->setStatusCode(k404NotFound);
 		resp->setBody("no such player");
+		callback(resp);
+		co_return;
+	}
+	if (level > 0)
+	{
+		NewPlayer::ApplyLevel(player->team, level, true);
+		co_await Db::SavePlayer(*player);
+		LOG_INFO << "bfanew: put " << player->user_id << " at level " << level;
+		resp->setStatusCode(k200OK);
+		resp->setBody("player " + player->user_id + " at level " + std::to_string(player->team.level) + ", energy " + std::to_string(player->team.action_point) + "/" + std::to_string(player->team.max_action_point));
 		callback(resp);
 		co_return;
 	}

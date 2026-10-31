@@ -227,6 +227,39 @@ json MissionEndResp {
         key "yXNM8kL3"
         doc "TODO"
     }
+
+    field unit_info type="[UserUnitInfo]" {
+        key "4ceMWH6k"
+        doc "the whole unit box, always (UserUnitInfoResponse::readParam replaces the client's list, so an empty list would wipe it); a first-clear unit reward shows up here"
+    }
+}
+
+json MissionContinueReq {
+    doc "MissionContinue command (request id p8B2i9rJ, key G3FwvQfy5hcxHMen, URL /actionSymbol/vcn2pb38.php): MissionGameOverScene::initContinue, the Yes of the Continue? dialog after a defeat; the client then revives the squad (MissionScene::requestContinue). Group 5PR2VmH1 {k9cxD7Ba serial id, K2gIYm0h the battle's suspend data} is not read."
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mission type="[MissionEndParam]::size(1)" {
+        key "Kz7qfSs5"
+        doc "the run's serial id and the mission state"
+    }
+}
+
+json MissionContinueResp {
+    doc "MissionContinue reply: the wallet (a continue costs ContinuDiaCnt gems, 0 here)"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
 }
 
 json DeckEditReq {

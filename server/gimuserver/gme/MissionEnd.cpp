@@ -94,31 +94,65 @@ HANDLEF(MissionEnd)
 	p.team.exp += r.inc_exp;
 
 	// first clear: the mission's own rewards (F_MISSION_MST missionRewards, deploy/battle first_clear,
-	// "type:id:count": 8 gems, 2 zel, 3 karma) plus one gem for every mission, because gems are
-	// free here (see CLAUDE.md "Free economy"). The client reads 92ms7J5M as "type:id:count,..."
-	// (MissionResultBaseScene::getRewardBraveCoin / getRewardBonusZel / getRewardBonusKaruma).
+	// "type:id:count") plus one gem for every mission, because gems are free here (see CLAUDE.md
+	// "Free economy"). The types as the client reads them: 8 gems (MissionResultBaseScene::
+	// getRewardBraveCoin), 3 zel (getRewardBonusZel), 11 karma (getRewardBonusKaruma), 17 SP
+	// (getRewardBonusSp, a 2016 currency, ignored); those go back in 92ms7J5M as "type:id:count,..."
+	// (three fields per entry, the amount is the third). 6 is a unit (into the box, announced in
+	// 3MAT6quo so the "Units Acquired" result page, MissionResultUnitScene, shows it), 7 a sphere
+	// and 4 an item (into the warehouse, the result screens do not show them).
 	if (cleared && !(co_await Db::IsCleared(p.user_id, missionId)))
 	{
 		int32_t gems = 1, zel = 0, karma = 0;
+		std::string items;
 		for (const auto& e : data.first_clear)
 		{
 			int type = 0, id = 0, count = 0;
 			if (std::sscanf(e.c_str(), "%d:%d:%d", &type, &id, &count) < 3) continue;
-			if (type == 8) gems += count;
-			else if (type == 2) zel += count;
-			else if (type == 3) karma += count;
-			else LOG_WARN << "MissionEnd: first-clear reward type " << type << " (id " << id << ") not granted for mission " << missionId;
+			count = std::max(count, 1);
+			switch (type)
+			{
+			case 8: gems += count; break;
+			case 3: zel += count; break;
+			case 11: karma += count; break;
+			case 6:
+			{
+				const auto& cache = theServer()->cache();
+				const auto* def = cache.unit(id);
+				if (!def || !cache.phase().hasUnit(id))
+				{
+					LOG_WARN << "MissionEnd: first-clear unit " << id << " of mission " << missionId << (def ? " is out of phase" : " is not in units.json") << ", not granted";
+					break;
+				}
+				for (int i = 0; i < count; i++)
+				{
+					UserUnitInfo u = NewPlayer::UnitFromTable(id, *def);
+					co_await Db::AddUnit(p.user_id, u);
+					if (!r.reward_units.empty()) r.reward_units += ",";
+					// unitId:userUnitId:secret:1 (MissionResultUnitScene's constructor keeps entries of 4+
+					// fields whose 4th is "1"; field 1 is the UnitMst / thumbnail id, field 3 != 0 shows the
+					// "?" frame first and reveals the unit; an unknown unit id there is a null deref)
+					r.reward_units += std::to_string(id) + ":" + std::to_string(u.user_unit_id) + ":1:1";
+				}
+				break;
+			}
+			case 4: case 7:
+				if (!items.empty()) items += ",";
+				items += std::to_string(id) + ":" + std::to_string(count);
+				break;
+			default:
+				LOG_WARN << "MissionEnd: first-clear reward type " << type << " (id " << id << ") not granted for mission " << missionId;
+			}
 		}
-		// the client wants three fields per entry (MissionResultBaseScene::getRewardBraveCoin skips
-		// anything shorter): type:id:count, the amount is the third
 		r.clear_bonus = "8:0:" + std::to_string(gems);
-		if (zel > 0) r.clear_bonus += ",2:0:" + std::to_string(zel);
-		if (karma > 0) r.clear_bonus += ",3:0:" + std::to_string(karma);
+		if (zel > 0) r.clear_bonus += ",3:0:" + std::to_string(zel);
+		if (karma > 0) r.clear_bonus += ",11:0:" + std::to_string(karma);
 		p.team.brave_coin += gems; // the gem balance the client shows and spends (03UGMHxF)
 		p.team.free_gems += gems;  // the free / paid split, kept in step
 		p.team.zel += zel;
 		p.team.karma += karma;
-		LOG_DEBUG << "MissionEnd: first clear of " << missionId << " -> " << r.clear_bonus;
+		if (!items.empty()) co_await Db::AddItems(p.user_id, items);
+		LOG_DEBUG << "MissionEnd: first clear of " << missionId << " -> " << r.clear_bonus << (r.reward_units.empty() ? "" : " units " + r.reward_units) << (items.empty() ? "" : " items " + items);
 	}
 
 	// level from the level table (user_level.json): the highest level whose exp is reached
@@ -157,6 +191,9 @@ HANDLEF(MissionEnd)
 	}
 	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
 	resp.equip_info = co_await Db::LoadEquip(p.user_id);
+	// the whole box, always: an empty 4ceMWH6k would wipe the client's list (UserUnitInfoResponse::
+	// readParam clears it first), and a first-clear unit has to show up in it
+	resp.unit_info = co_await Db::LoadUnits(p.user_id);
 
 	if (cleared)
 	{

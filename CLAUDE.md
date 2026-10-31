@@ -740,13 +740,36 @@ summons cost **1 gem**, and every first mission clear gives at least one gem.
   0 gems -> 17/17, balance unchanged. Box extensions are unverified: their scenes sit in the
   Shop tab, which kills the client on BlueStacks (SOOMLA billing, see "Multi Summon"); that
   same `StoreController.startBillingService()` also killed the client at two launches tonight.
-- **First-clear rewards** (`MissionEnd`): `tools/build_battles.py` now exports F_MISSION_MST
-  `missionRewards` as `first_clear` (`"type:id:count"`, 8 gems, 2 zel, 3 karma, 1 unit, 4 item)
-  into `deploy/battle/<id>.json`; on a first clear the server grants them plus **1 gem for every
-  mission** and sends `92ms7J5M` as `type:id:count,...` (`MissionResultBaseScene::
-  getRewardBraveCoin` wants three fields and reads the third; `"8:1"` is silently dropped).
-  Unit / item first-clear rewards are logged, not granted yet. Verified: mission 20 first clear
-  -> `8:0:1`, balance 5 -> 6, "Summon once for 1 Gem(s) / You can summon 5 time(s)".
+- **First-clear rewards** (`MissionEnd`, **complete 2026-10-31**): `tools/build_battles.py`
+  exports F_MISSION_MST `missionRewards` as `first_clear` (`"type:id:count"`) into
+  `deploy/battle/<id>.json`; on a first clear the server grants them plus **1 gem for every
+  mission**. The types, read off `MissionResultBaseScene`: **8 gems** (`getRewardBraveCoin`),
+  **3 zel** (`getRewardBonusZel`), **11 karma** (`getRewardBonusKaruma`), 17 SP
+  (`getRewardBonusSp`, 2016, ignored), **6 a unit**, **7 a sphere**, **4 an item** (the earlier
+  "2 zel / 3 karma" reading was wrong: 2 never occurs). Gems / zel / karma go back in `92ms7J5M`
+  as `type:id:count,...` (three fields per entry, the amount is the third; `"8:1"` is silently
+  dropped) for the result banner. A unit is built from `units.json` (level 1, phase-checked),
+  added to the box and announced in `3MAT6quo` as `<unitId>:<userUnitId>:1:1`
+  (`MissionResultUnitScene`'s constructor keeps entries of 4+ `:` fields whose **4th** is `1`,
+  looks the unit up in `UnitMstList` by the **first** and, when the 3rd is not 0, shows a "?"
+  frame that reveals the unit; the first try, `1:<unitId>:...`, crashed the "Units Acquired"
+  page in `updateEvent` on the missing frame sprite, a null `runAction`); spheres and items go
+  to the warehouse (the result screens do not show them). The reply now always carries the whole box (`4ceMWH6k`): an empty list
+  there would wipe the client's. Phase 1 has unit rewards on the Vortex "Heroes" Lv.4 dungeons
+  (Burst Frog 10312), Metal Ghost 60132 on 100600, the GGC spheres (37600...) with 1,000,000 zel
+  / 200,000 karma on the Lv.3 chronicles. Dev: `/bfanew/give?user=<user id>&level=N` puts a
+  player at a level with a full bar (expensive missions). Verified by `gme.py`: 100803 ->
+  `8:0:2`, `3MAT6quo` `1:10312:30:1`, Burst Frog user unit 30 in the reply's box; 150002 ->
+  `8:0:4,3:0:1000000,11:0:200000`, karma +200,000, sphere 37600 in the warehouse.
+- `p8B2i9rJ` **MissionContinue** (key `G3FwvQfy5hcxHMen`, URL `/actionSymbol/vcn2pb38.php`,
+  `gimuserver/gme/MissionContinue.cpp`, **2026-10-31**): the Yes of the "Continue?" dialog after
+  the whole squad died (`MissionGameOverScene::initContinue`; "You can use N Gem to revive all
+  Units", N = DefineMst ContinuDiaCnt, 0 here). Body: `Kz7qfSs5` {`k9cxD7Ba` serial id,
+  `j3g5P4cq` state} and `5PR2VmH1` {`k9cxD7Ba`, `K2gIYm0h` the battle's suspend data,
+  `MissionScene::createSuspendData`, not stored}. Reply: the wallet. Unanswered, the client
+  popped "Unsupported request: p8B2i9rJ" and stayed on the dialog (found on Dweller in the
+  Darkness Lv.4 with the starter squad). After the reply `loopContinue` calls
+  `MissionScene::requestContinue` and the squad revives.
 - Flake seen 2026-10-31: after declining the "Background DLC Warning Prompt" (it comes back when
   the day changes), the first home entry died in `HomeScene2::initialize` on a null
   `LayoutCacheList::getObject` (a home layout element not found); the next launch was fine.
@@ -986,7 +1009,7 @@ while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (P
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). Still to do: a real 2014 Vortex calendar and real summon odds (both are guesses), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); next: the Shop tab (kills the BlueStacks client).
 5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); the Shop tab (kills the BlueStacks client) and the Arena are still unchecked.
 
 ## Conventions

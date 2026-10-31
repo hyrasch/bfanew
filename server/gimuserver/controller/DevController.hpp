@@ -11,7 +11,8 @@ public:
 	*/
 	/*!
 	* bfanew dev helper: gives a unit or an item to a player
-	* (GET /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1),
+	* (GET /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1,
+	* or &level=<N> to put the player at a level with a full energy bar),
 	* so that fusion / evolution materials can be tested without a drop source.
 	*/
 	drogon::Task<> HandleGive(drogon::HttpRequestPtr rq, std::function<void(const drogon::HttpResponsePtr&)> callback);

@@ -140,7 +140,7 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
         "zel": int(info.get("zel", 0)),
         "karma": int(info.get("karma", 0)),
         "unlocks": list(unlocks),
-        "first_clear": list(first_clear),
+        "first_clear": list(first_clear),  # "type:id:count": 8 gems, 3 zel, 11 karma, 6 unit, 7 sphere, 4 item (see MissionEnd.cpp)
         "pj41dy9g": [], "75t0sx9z": [], "n64NOpfy": [], "U0v5IeJo": [], "89ausgc4": [], "m9Ada1PN": [],
     }
     ai_ids = {}

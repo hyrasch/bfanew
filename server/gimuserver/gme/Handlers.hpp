@@ -98,6 +98,7 @@ namespace GmeHandlers
 	HANDLE(ItemSell);
 	HANDLE(MissionStart);
 	HANDLE(MissionEnd);
+	HANDLE(MissionContinue);
 	HANDLE(UnitMix);
 	HANDLE(UnitEvo);
 	HANDLE(UnitSell);

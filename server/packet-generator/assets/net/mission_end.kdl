@@ -95,7 +95,7 @@ json MissionReward {
 
     field clear_bonus type="str" {
         key "92ms7J5M"
-        doc "first-clear bonus, format still unknown (missions.json clear_bonus); empty = none"
+        doc "first-clear bonus, type:id:count joined with commas; the result banner reads 8 gems (getRewardBraveCoin), 3 zel (getRewardBonusZel), 11 karma (getRewardBonusKaruma), 17 SP (getRewardBonusSp); empty = none"
     }
 
     field lvup_flg type="i32::str" {
@@ -135,7 +135,7 @@ json MissionReward {
 
     field reward_units type="str" {
         key "3MAT6quo"
-        doc "units captured / rewarded, empty = none"
+        doc "units rewarded, unitId:userUnitId:secret:1 joined with commas (MissionResultUnitScene's constructor keeps entries of 4+ fields whose 4th is 1; field 1 is looked up in UnitMstList, a miss is a null deref later; field 3 != 0 shows a ? frame then reveals the unit); empty = none"
     }
 
     field zel type="i32::str" {
