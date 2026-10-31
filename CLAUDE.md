@@ -122,7 +122,7 @@ version list is `deploy/system/version_info.json` (169 tables). Per-mission batt
 
 1. **Login-time tables** (`deploy/system/*.json`: summons, banners, daily dungeons, campaigns): one folder per phase, plus a `phase` config switch. **Done 2026-10-31**: `deploy/system/phases/<NN>/<table>.json` wins over `deploy/system/<table>.json`, NN = `data/overrides.json` `phase.id` (written to `deploy/phase.json`, read by `ServerCache::Setup` before any table; `reload` re-reads). Phase 1 holds `gacha_info.json` (the two launch banners; the base file is upstream's six) and `vortex_schedule.json`.
 2. **Downloaded MSTs** (`F_UNIT_MST`, `F_MISSION_MST`, skills, evos…): serve phase-filtered copies and bump their versions in `version_info.json`, so the client re-downloads them. **Done 2026-10-31**: `tools/mst.py` (decode / encode), `tools/build_phase.py` (the filter, see "MST tables: the .dat format"), served from `deploy/overrides/mst/`.
-3. **Feature flags** (`deploy/system/features.json`: `raid`, `colosseum_enable`, `guild`, `frontierhunter`, `randall`, `challenge_arena`, …; also `F_FUNCTION_RELEASE_MST` and the `feature_gate` field). **Unverified** whether the client hides menus cleanly. Test one by one.
+3. **Feature flags** (`deploy/system/features.json`: `raid`, `colosseum_enable`, `guild`, `frontierhunter`, `randall`, `challenge_arena`, …; also the function release list and the `feature_gate` field). **Done 2026-10-31** for phase 1: `deploy/system/phases/01/features.json` (31 flags off) + `release_info.json` (function 1 closed = the village's Randall icon), see "Feature gating". Leftover: the Daily Login Spin icon (no flag; it opens with 0 spins).
 4. **Server-side enforcement**: handlers reject out-of-phase IDs. **Done 2026-10-31** for missions, evolutions and summons (`deploy/phase.json` -> `ServerCache::phase()`, see "Phase enforcement" under "MST tables").
 
 Historical balance: 2014 stats come from the datamine snapshots (`cheahjs/bravefrontier_data`, Aug 2014 → Nov 2021, parsed fields only). `old-mst.zip` has raw tables only from 2016–2017.
@@ -867,6 +867,32 @@ used to be invisible in `deploy/log/`: `tryOpenHttpDumpLog` named dumps by the s
 burst shared one garbled file. The names now carry a per-process counter (`_NNNN`) and
 `dev.py logs` understands both forms.
 
+**Feature gating (2026-10-31).** Three client mechanisms, all fed by the server:
+- `features.json` (`/bf/gme/featureCheck.php`, parsed by `FeatureManager::onFeatureCheckResS`;
+  only the keys of `net/feature_check.kdl` are served, and the client spells three of them
+  `video_ads_slots`, `old_video_ads_slots`, `full_unit_ills_exclude` and reads
+  `buy_coin_free_shard`, now in the kdl; a `_doc` key in the file makes the load fail). Phase 1
+  (`deploy/system/phases/01/features.json`) turns off randall + randall_facility +
+  randall_library_memories, raid + raid_battle_restart, guild + guild_visible, colosseum_enable,
+  frontierhunter, frontiergate_plus, challenge_arena, sandbag_enable, fish, bf_campaign_grand_quest,
+  mystery_chest, video_ads + video_ads_slots + slot, sg_resummon_gacha_enable, trial, new_164_trial,
+  bf_achievement, unit_type_bonus_skill, va_sp_skill, feature_gate (the 2016 level locks), dungeon_key
+  + dungeon_key_cnt, multisummon, social_special, sg_target_bundle_flag, dailylogin_gem. Verified:
+  the Social tab loses Guild Inbox; the home EXCHANGE popup greys Guild Shop and Merit Shop (Bazaar
+  stays); the home orb popup greys Grand Quest, Frontier and Trial (`toggleOverlayMenuShortcut`
+  also needs a Grand permit, a finished "randall" scenario and a login campaign for those).
+- **Function release** (`Dp0MjKAf` UserReleaseInfo in UserInfo, `UserReleaseInfoList::isRelease`:
+  true unless an entry with that function id says 0): `phases/01/release_info.json` closes
+  function 1, the village's Randall icon (`MyTownTopScene::initialize` -> `imperialIconSam`);
+  the `randall` flag alone does not hide it. Verified: the icon is gone. F_FUNCTION_RELEASE_MST
+  lists functions 8-19 with a `2:<mission>` condition, not touched.
+- **Feature gate** (`FeatureGatingHandler`, level locks with unlock rewards): off in phase 1
+  (`feature_gate` 0) so nothing is locked by level, like 2014.
+Leftover: the "Daily Spin" shortcut (DailyLoginScene, 2016) has no flag; `HomeScene2::
+initOverlayMenus` always builds it and a daily-login campaign id of 0 in Initialize crashes the
+home scene (null reward lookup), so it stays, opening with "Spins: 0/0". The village facility
+list is its own gate (`TownFacilityMst.need_mission_id`, see "Town facilities").
+
 **Summon pools (2026-10-31).** `tools/build_pools.py` (run by `build_overrides.py`) writes
 `deploy/system/phases/<NN>/gacha_pools.json`: per summon (gacha id) the draw weight of each
 rarity and the unit ids of that rarity, from `deploy/phase.json` and the served `F_UNIT_MST`.
@@ -926,7 +952,7 @@ while the client is open (the UpdatePermitPlaceInfo round trip), hour windows (P
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). Still to do: a real 2014 Vortex calendar and real summon odds (both are guesses), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); next: the Shop tab (kills the BlueStacks client), unit / item first-clear rewards.
-5. Test feature flags system by system.
+5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); the Shop tab (kills the BlueStacks client) and the Arena are still unchecked.
 
 ## Conventions
 

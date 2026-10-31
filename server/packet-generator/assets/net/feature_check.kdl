@@ -239,7 +239,7 @@ json FeatureCheck {
     }
 
     field full_unit_ills_esclude type="bool::int" {
-        key "full_unit_ills_esclude"
+        key "full_unit_ills_exclude"
         doc "TODO"
     }
 
@@ -303,7 +303,7 @@ json FeatureCheck {
     }
 
     field enable_new_video_ads_slot type="bool::int" {
-        key "video_ads_slot"
+        key "video_ads_slots"
         doc "Enables the slot machines with video ads"
     }
 
@@ -372,7 +372,7 @@ json FeatureCheck {
 
     // new
     field enable_old_video_ads_slot type="bool::int" {
-        key "old_video_ads_slot"
+        key "old_video_ads_slots"
         doc "TODO"
     }
 
@@ -421,6 +421,10 @@ json FeatureCheck {
         doc "Enables category in summons"
     }
 
+    field buy_coin_free_shard type="bool::int" {
+        key "buy_coin_free_shard"
+        doc "bfanew: key read by the 2.19.6 client (FeatureManager::onFeatureCheckResS); shards for gem purchases"
+    }
     field unit_type_bonus_skill type="bool::int" {
         key "unit_type_bonus_skill"
         doc "TODO"

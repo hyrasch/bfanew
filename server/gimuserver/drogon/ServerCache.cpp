@@ -172,6 +172,10 @@ void ServerCache::Setup(const Json::Value& serverObj)
 		m_userrsp.gacha_info = LoadJson<GachaInfoMstCache>(mstRoot, "gacha_info.json").data;
 		m_userrsp.excluded_dungeon_missions = LoadJson<ExcludedDungeonMissionMstCache>(mstRoot, "excluded_dungeons.json").data;
 		m_userrsp.gift = LoadJson<GiftItemMstCache>(mstRoot, "gift.json").data;
+		// bfanew: function release state (optional): entries with release 0 close a client function
+		// (1 = the village's Randall icon); UserReleaseInfoList::isRelease is true for unlisted ones
+		m_userrsp.release_info = std::filesystem::is_regular_file(ResolveTable(mstRoot, "release_info.json"))
+			? LoadJson<UserReleaseInfoCache>(mstRoot, "release_info.json").data : std::vector<UserReleaseInfo>{};
 		m_userrsp.general_event = LoadJson<GeneralEventMstCache>(mstRoot, "general_event.json").data;
 		m_userrsp.first_desc = LoadJson<FirstDescMstCache>(mstRoot, "first_desc.json").data;
 		m_userrsp.summon_ticket_v2 = LoadJson<SummonTicketV2MstCache>(mstRoot, "summon_tickets_v2.json").data;

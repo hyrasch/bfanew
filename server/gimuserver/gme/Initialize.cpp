@@ -80,6 +80,10 @@ HANDLEF(Initialize)
 
 	resp.summoner_journal.user_id = resp.login_info.user_id;
 
+	// bfanew: the Daily Login Spin (2016) has no feature flag of its own in the client (the home
+	// shortcut icon is always built, HomeScene2::initOverlayMenus) and an id of 0 here crashes the
+	// home scene (null reward lookup), so phase 1 keeps the campaign with 0 spins (see CLAUDE.md
+	// "Feature gating")
 	resp.daily_login_rewards.id = 1;
 	resp.daily_login_rewards.current_day = 1;
 	resp.daily_login_rewards.message = " day(s) more to guaranteed Gem!";

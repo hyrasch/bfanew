@@ -29,7 +29,7 @@ with `git subtree`, so upstream history is kept and upstream changes can still b
 |---|---|
 | `server/` | The server fork (C++, Drogon, vcpkg). `server/packet-generator/` is the vendored packet definition generator (Rust). |
 | `server/deploy/system/*.json` | Server-side master tables sent at login (the base set). |
-| `server/deploy/system/phases/NN/` | Per-phase overrides of those tables; a file here wins over the base one while `data/overrides.json` selects phase NN. Phase 1: the launch summon banners, their pools and the Vortex rotation. |
+| `server/deploy/system/phases/NN/` | Per-phase overrides of those tables; a file here wins over the base one while `data/overrides.json` selects phase NN. Phase 1: the launch summon banners, their pools, the Vortex rotation, the feature flags (raids, guilds, Colosseum, Randall and other later systems off) and the function-release list. |
 | `tools/patch_apk.py` | Points the 2.19.6.0 APK at a private server (host strings, `https` to `http`), then aligns and signs it with the Android SDK tools. |
 | `tools/dev.py` | The dev loop: build, serve, reload data, drive the game on BlueStacks, read the request log. |
 | `tools/build_battles.py` | Builds `server/deploy/battle/*.json` (per-mission enemy data for MissionStart) from the community datamine's 2014 captures. |

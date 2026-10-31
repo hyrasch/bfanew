@@ -1584,21 +1584,21 @@ json UserDungeonKeyInfo {
 }
 
 json UserReleaseInfo {
-    doc "TODO"
+    doc "Function release state (UserInfo Dp0MjKAf, UserReleaseInfoList). UserReleaseInfoList::isRelease(id) returns the flag of the entry with that function id and TRUE when the list has no such entry: a function is open unless an entry closes it. Function 1 is the village's Randall icon (MyTownTopScene::initialize -> imperialIconSam); F_FUNCTION_RELEASE_MST lists 8-19 with a release condition (2:<mission id>)."
 
-    field unk type="i32::int" {
+    field function_id type="i32::int" {
         key "JHYubaBP"
-        doc "TODO"
+        doc "function id"
     }
 
-    field unk2 type="i32::str" {
+    field release_flag type="i32::str" {
         key "g6PujUgD"
-        doc "TODO"
+        doc "1 = released, 0 = closed"
     }
 
-    field unk3 type="i32::str" {
+    field new_flag type="i32::str" {
         key "dJNpLc81"
-        doc "TODO"
+        doc "1 = show the NEW badge (isNewFunction / clearNewFunction)"
     }
 
 }
