@@ -769,7 +769,8 @@ summons cost **1 gem**, and every first mission clear gives at least one gem.
   `MissionScene::createSuspendData`, not stored}. Reply: the wallet. Unanswered, the client
   popped "Unsupported request: p8B2i9rJ" and stayed on the dialog (found on Dweller in the
   Darkness Lv.4 with the starter squad). After the reply `loopContinue` calls
-  `MissionScene::requestContinue` and the squad revives.
+  `MissionScene::requestContinue` and the squad revives. Verified on BlueStacks: Yes -> request
+  logged -> the three units back at full HP, the battle goes on.
 - Flake seen 2026-10-31: after declining the "Background DLC Warning Prompt" (it comes back when
   the day changes), the first home entry died in `HomeScene2::initialize` on a null
   `LayoutCacheList::getObject` (a home layout element not found); the next launch was fine.
