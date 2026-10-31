@@ -145,6 +145,21 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: town facility / location levels and the karma injected toward the next level
+	// (TownFacilityUpdate); kind 1 = facility (TownFacilityMst id), 2 = location (TownLocationMst id)
+	migrate("31102026_PlayerTown", {
+		p->execSqlSync(
+			"CREATE TABLE player_town("
+			"user_id TEXT NOT NULL,"
+			"kind INTEGER NOT NULL,"
+			"id INTEGER NOT NULL,"
+			"lv INTEGER NOT NULL DEFAULT 1,"
+			"karma INTEGER NOT NULL DEFAULT 0,"
+			"PRIMARY KEY(user_id, kind, id)"
+			");"
+		);
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

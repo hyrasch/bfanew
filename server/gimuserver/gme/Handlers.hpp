@@ -91,6 +91,7 @@ namespace GmeHandlers
 	HANDLE(UpdateEventInfo);
 	HANDLE(ItemMix);
 	HANDLE(ShopUse);
+	HANDLE(TownFacilityUpdate);
 	HANDLE(HomeInfo);
 	HANDLE(ItemEdit);
 	HANDLE(ItemSell);

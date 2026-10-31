@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_map>
 
 #include <drogon/orm/DbClient.h>
 #include <drogon/utils/coroutine.h>
@@ -88,4 +89,9 @@ namespace Db
 
 	drogon::Task<std::vector<UserEquipItemInfo>> LoadEquip(std::string userId);
 	drogon::Task<void> SaveEquip(std::string userId, const std::vector<UserEquipItemInfo>& equip);
+
+	/*! Town facility / location levels (player_town): kind 1 facility, 2 location -> {id -> {lv, karma}}. */
+	struct TownLevel { int32_t lv = 1; int32_t karma = 0; };
+	drogon::Task<std::unordered_map<int32_t, TownLevel>> LoadTown(std::string userId, int32_t kind);
+	drogon::Task<void> SaveTown(std::string userId, int32_t kind, int32_t id, int32_t lv, int32_t karma);
 }

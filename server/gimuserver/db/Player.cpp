@@ -419,4 +419,20 @@ namespace Db
 				userId, static_cast<int64_t>(e.disp_order), itemId, static_cast<int64_t>(e.item_num));
 		}
 	}
+	Task<std::unordered_map<int32_t, TownLevel>> LoadTown(std::string userId, int32_t kind)
+	{
+		std::unordered_map<int32_t, TownLevel> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT id, lv, karma FROM player_town WHERE user_id = $1 AND kind = $2", userId, static_cast<int64_t>(kind));
+		for (const auto& r : res)
+			out[static_cast<int32_t>(r["id"].as<int64_t>())] = TownLevel{ static_cast<int32_t>(r["lv"].as<int64_t>()), static_cast<int32_t>(r["karma"].as<int64_t>()) };
+		co_return out;
+	}
+
+	Task<void> SaveTown(std::string userId, int32_t kind, int32_t id, int32_t lv, int32_t karma)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_town(user_id, kind, id, lv, karma) VALUES ($1, $2, $3, $4, $5) ON CONFLICT(user_id, kind, id) DO UPDATE SET lv = $4, karma = $5",
+			userId, static_cast<int64_t>(kind), static_cast<int64_t>(id), static_cast<int64_t>(lv), static_cast<int64_t>(karma));
+	}
+
 }

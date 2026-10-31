@@ -627,6 +627,73 @@ json ShopUseResp {
     }
 }
 
+json TownInjection {
+    doc "TownFacilityUpdate group EuY6L7AX: one node, the karma injected since the last connection (UserState::getInjectionKarma)"
+
+    field karma type="i32::str" {
+        key "HTVh8a65"
+        doc "karma spent on the Upgrades screen"
+    }
+}
+
+json TownFacilityUpdateReq {
+    doc "TownFacilityUpdate command (request id 8v43tz7g, key rq7Yd1nG, URL /actionSymbol/kba85fVc.php): the village's Upgrades screen. MyTownFacilityExtScene2::injectionFacility injects karma locally into a facility or a location (UserTownFacilityInfo / UserTownLocationInfo karma accumulates toward TownFacilityLvMst / TownLocationLvMst karma of the next level, then lv++), queues this request (ConnectRequestList) with the karma spent and the WHOLE facility and location lists"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field mstRequests type="[MstUrlList]" {
+        key "KeC10fuL"
+        doc "MST versions the client has"
+    }
+
+    field injection type="[TownInjection]" {
+        key "EuY6L7AX"
+        doc "one node"
+    }
+
+    field facilities type="[UserTownFacilityInfo]" {
+        key "YRgx49WG"
+        doc "every facility as the client now has it (id, lv, karma toward the next level)"
+    }
+
+    field locations type="[UserTownLocationInfo]" {
+        key "yj46Q2xw"
+        doc "every location as the client now has it"
+    }
+}
+
+json TownFacilityUpdateResp {
+    doc "TownFacilityUpdate reply: the wallet (karma spent), the stored facility and location lists and the recipes the new levels release"
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field town_facility_info type="[UserTownFacilityInfo]" {
+        key "YRgx49WG"
+        doc "TODO"
+    }
+
+    field town_location_info type="[UserTownLocationInfo]" {
+        key "yj46Q2xw"
+        doc "TODO"
+    }
+
+    field permit_receipes type="[PermitReceipe]" {
+        key "51yQrDBR"
+        doc "TODO"
+    }
+}
+
 json OpeUserUnit {
     doc "One summoned unit as the classic (non-resummon) GachaActionScene wants it: OpeUserUnitResponse sets UserState::setSelectUserUnitID / GachaUnitsList, setGachaChangeRateInfo and setGachaEffectID from these."
 

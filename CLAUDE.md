@@ -106,9 +106,8 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, slot
-extensions, all free). Stubs: DungeonEventUpdate (story events watched,
-not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: item synthesis (ItemMix), town facilities, arena, gifts, friends,
-shop, town facility upgrades. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+extensions, all free), TownFacilityUpdate (facility / location levels). Stubs: DungeonEventUpdate (story events watched,
+not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: location collection taps, arena, gifts, friends, shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -641,8 +640,31 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
   (`Lh1I3dGo` TownFacilityMst) whose `need_mission_id` is 0 or cleared, a level-1
   `UserTownFacilityInfo` and the recipes its level releases (`d0EkJ4TB` TownFacilityLvMst
   `rGoJ6Ty9` release_receipe): facility 2 lv 1 = 29 item recipes including Cure, facility 1
-  (mission 21) lv 1 = 357 sphere recipes. Facility upgrades ("Upgrades" in the village, karma per
-  level, more recipes) are not implemented, creations done are not tracked.
+  (mission 21) lv 1 = 357 sphere recipes. Facility upgrades: see TownFacilityUpdate below;
+  creations done are not tracked.
+- `8v43tz7g` **TownFacilityUpdate** (key `rq7Yd1nG`, URL `/actionSymbol/kba85fVc.php`,
+  `gimuserver/gme/TownFacilityUpdate.cpp`, **verified 2026-10-31**): the village's Upgrades
+  screen (`MyTownFacilityExtScene2`, "Upgrade Facility"). Everything is local: each tap on the orb
+  (hold for a stream) injects 1 karma into the facility or location in the centre
+  (`injectionFacility`: `UserTownFacilityInfo::karma` accumulates toward `TownFacilityLvMst`
+  karma of the next level, then lv++ and karma resets; locations likewise with
+  `TownLocationLvMst`), the team karma drops, `UserState::addInjectionKarma` counts it, and the
+  request goes out with the next connection: group `EuY6L7AX` {`HTVh8a65` karma injected},
+  `YRgx49WG` the whole facility list and `yj46Q2xw` the whole location list as the client now has
+  them (`y9ET7Aub` / `un80kW9Y` id, `D9wXQI2V` lv, `HTVh8a65` karma toward the next level). The
+  server recomputes the cost of each change from the level tables (a jump it cannot price is
+  refused and the stored values win), takes the karma, stores the levels in **`player_town`**
+  (migration `31102026_PlayerTown`, kind 1 facility / 2 location, `Db::LoadTown / SaveTown`) and
+  answers `fEi17cnx`, both lists and `51yQrDBR`. `gimuserver/gme/TownState.hpp` builds those
+  three lists for UserInfo and this reply: facilities and locations whose `need_mission_id` is 0
+  or cleared, stored level (1 by default), and the recipes released by every facility level up
+  to the current one. Facility 2 (Synthesis) has 31 levels (100 karma to lv 2, 250,000 to 31),
+  facility 1 (spheres, mission 21) 79; facilities 3-6 have a single lv-0 row (no upgrades).
+  Locations (Forest, Mountain...) have up to 8 levels (500 karma for lv 2) and change their
+  collection drops (`8fjZN6Mx`, taps, zel rate), which the collection taps don't use yet.
+  Verified: Synthesis lv 1 -> 2 for 100 karma -> request `EuY6L7AX` 100, facility 2 lv 2,
+  stored `(1, 2, 2, 0)`, reply 33 recipes, the Synthesis List gains Lunar Treat / Mooncake /
+  Crescent Dew / Antidote.
 - Town records on the wire (from `MyTownTopScene`): `eip3MS5L` drop_item_info is
   `itemId:count[:zel[:karma]],...` indexed by `count - tap_cnt`, read only when `mDaE3t6A` tap_cnt
   >= 1 (collect animation, `TownUpdateRequest` queued); `qA7M9EjP` startdate is never read by the
@@ -692,6 +714,9 @@ summons cost **1 gem**, and every first mission clear gives at least one gem.
   getRewardBraveCoin` wants three fields and reads the third; `"8:1"` is silently dropped).
   Unit / item first-clear rewards are logged, not granted yet. Verified: mission 20 first clear
   -> `8:0:1`, balance 5 -> 6, "Summon once for 1 Gem(s) / You can summon 5 time(s)".
+- Flake seen 2026-10-31: after declining the "Background DLC Warning Prompt" (it comes back when
+  the day changes), the first home entry died in `HomeScene2::initialize` on a null
+  `LayoutCacheList::getObject` (a home layout element not found); the next launch was fine.
 - Known cosmetic issue: the texts ENERGY_RECOVER_GEM_RECOVER_ENERGY / _MAX_THRESHOLD show as raw
   keys, the served text table predates them (the client's strings are the APK's `assets/text.csv`
   plus downloaded ones; not located yet).
@@ -754,7 +779,7 @@ The old single-listener config is kept as `deploy/config.json.bak-127only`.
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). Still to do: the `phase` config + `phases/NN/` folders for login-time tables.
 3. MST tooling: decode/encode `.dat` (start from `mst-decoded.zip` and `BfCrypt.cpp`), plus the phase filter driven by `data/*_timeline.json`.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); next: town facility upgrades, item collection taps on the village locations (`TownUpdateRequest`), the energy-recovery texts.
+4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); next: item collection taps on the village locations (`TownUpdateRequest`), the energy-recovery texts.
 5. Test feature flags system by system.
 
 ## Conventions
