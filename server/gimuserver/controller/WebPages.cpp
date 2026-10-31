@@ -75,7 +75,7 @@ Task<> WebPages::Rates(HttpRequestPtr rq, std::function<void(const HttpResponseP
 	for (const auto& [gachaId, pool] : pools)
 	{
 		html += "<h2>" + Escape(pool.name.empty() ? "Summon " + gachaId : pool.name) + "</h2>";
-		html += "<p><small>Each pull lands in a rarity at its rate, then on one of its units with equal odds.</small></p><table>";
+		html += "<p><small>Each pull lands in a rarity at its rate, then on one of its units with equal odds (phase 1: every unit of the pool has the same odds, the rule of the published legacy pools).</small></p><table>";
 		for (const auto& [rarity, weight] : pool.rates)
 		{
 			const auto it = pool.units.find(rarity);

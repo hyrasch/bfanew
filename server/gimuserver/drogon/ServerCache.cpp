@@ -204,7 +204,7 @@ void ServerCache::Setup(const Json::Value& serverObj)
 			const auto u = it->second.units.find(r);
 			const auto n = u == it->second.units.end() ? 0 : u->second.size();
 			if (!rates.empty()) rates += ", ";
-			rates += std::format("{}<color=255:255:0>*</color> {}% ({} units)", r, total ? 100 * w / total : 0, n);
+			rates += std::format("{}<color=255:255:0>*</color> {}% ({} units)", r, total ? (200 * w / total + 1) / 2 : 0, n); // rounded
 		}
 		g.detail_msg += "<br>Rates: " + rates;
 		g.caption_msg += "<br>" + rates;

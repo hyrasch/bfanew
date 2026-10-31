@@ -6,10 +6,12 @@ A pool is built from the phase's units (deploy/phase.json) and the served F_UNIT
   Rare Summon (gacha 2000): unitGettingType 2 ("rare summon family"), base forms only (a unit that
                             no evolution of the phase produces), plain units (unitKind 0);
   Honor Summon (gacha 1000): unitGettingType 3 (common / quest units), base forms, unitKind 0.
-Rates are per rarity and come from data/overrides.json "pools" (a rarity without a rate is left
-out: phase 1 has no 5* base in the Rare Summon and no 4* in the Honor Summon, those are later
-collaborations the timeline matched by name). GachaAction draws a rarity by weight, then a unit
-uniformly, stats from deploy/units.json.
+Rates are per rarity (weights) and come from data/overrides.json "pools": either "rates"
+{rarity: weight} or "per_unit": true with "rarities" [..] (every unit of the pool has the same
+odds, so a rarity's weight is its unit count: the rule gumi published for its legacy pools once
+it published rates, 2018). A rarity not listed is left out: phase 1 has no 5* base in the Rare
+Summon and no 4* in the Honor Summon, those are later collaborations the timeline matched by
+name. GachaAction draws a rarity by weight, then a unit uniformly, stats from deploy/units.json.
 
     python tools/build_pools.py        # run by build_overrides.py too
 """
@@ -62,15 +64,18 @@ def build(pools_cfg: dict, phase_id: int) -> Path:
 
     out = {"_doc": "Built by tools/build_pools.py from deploy/phase.json and F_UNIT_MST: per summon (gacha id), the rate of each rarity (weights) and the unit ids of that rarity. GachaAction draws the rarity, then a unit uniformly.", "pools": {}}
     for gacha_id, cfg in pools_cfg.items():
-        rates = {str(k): int(v) for k, v in cfg["rates"].items()}
+        rates = {str(k): int(v) for k, v in cfg.get("rates", {}).items()}
+        wanted = set(rates) | {str(r) for r in cfg.get("rarities", [])}
         by_rarity: dict[str, list[int]] = collections.defaultdict(list)
         for uid in sorted(kept):
             u = units.get(uid)
             if not u or str(u[K_GETTING]) != str(cfg["getting_type"]) or str(u[K_KIND]) != "0" or uid in targets:
                 continue
             r = str(u[K_RARITY])
-            if r in rates:
+            if r in wanted:
                 by_rarity[r].append(uid)
+        if cfg.get("per_unit"):
+            rates = {r: len(v) for r, v in sorted(by_rarity.items())}  # equal odds per unit
         empty = [r for r in rates if not by_rarity.get(r)]
         if empty:
             print(f"  gacha {gacha_id}: no unit of rarity {empty}, dropping those rates")

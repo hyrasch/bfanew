@@ -993,10 +993,21 @@ Knight Agni... and their evolutions), **3 = common / quest units** (the starters
 Burny, Witch Liza; the Honor Summon), 1 = evolution-only forms (Burning Vargas and up). A pool
 takes the **base forms** only (units no evolution of the phase produces) and plain units
 (`unitKind` `xP9oi5Z2` 0: no frogs, crystals, nymphs, jewel ghosts). `data/overrides.json`
-`pools` holds the rates: Rare Summon 3* 70 / 4* 30 (phase 1 has 41 and 62 of them; its one 5*
-base, "Xenon & Estia", is a 2015 collaboration the timeline matched by name, left out by having no
-rate), Honor Summon 1* 55 / 2* 45 (18 and 52; the three 4* are later collaborations). **The odds
-are a guess at 2014.** `GachaAction` draws the rarity by weight, then a unit uniformly, builds the
+`pools` holds the odds: `per_unit` true + `rarities` (every unit of the pool has the same odds, a
+rarity's weight = its unit count: Rare Summon 3* 41 units / 4* 62 = 40% / 60%, 0.97% per unit;
+Honor Summon 1* 18 / 2* 52 = 26% / 74%, 1.43% per unit), or explicit `rates` {rarity: weight}.
+Phase 1's one 5* base, "Xenon & Estia", is a 2015 collaboration the timeline matched by name and
+the three 4* honor units are later collaborations, both left out by not listing the rarity.
+**Why flat per unit (2026-10-31):** gumi never published the 2014 odds (searched: the Global and
+Europe wikis, their 2014 Wayback copies, GameFAQs, the Japanese wiki; Reddit is closed to the
+tools); when it did publish rates, from 2018 (Apple's loot-box rule), its legacy pools were flat
+per unit ("Legacy Summon: evenly distributed rates", "Brave Summon: each unit 2%", Super Rare
+Summon Plus by batch group), and the 2015 player reports (mostly 4* pulls, a few 3*) match a
+per-unit draw over a pool with more 4* than 3* bases. The 2014 wiki copy (Wayback Oct 23, 2014)
+confirms the pool shape: Rare Summon "3* rarity and better" for 5 gems, Honor Summon 1* and 2*,
+rate-ups giving the featured units "a minimum 4-star". Verified: GatchaList texts "Rates: 3* 40%
+(41 units), 4* 60% (62 units)" / "1* 26% (18 units), 2* 74% (52 units)", the rates page shows
+0.97% on every Rare Summon unit and 1.43% on every Honor one, 12 Rare Summons drawn by `gme.py`. `GachaAction` draws the rarity by weight, then a unit uniformly, builds the
 unit from `deploy/units.json` (level-1 stats, element, leader skill, brave burst) and keeps the
 six-starter table only as the fallback when no pool file is served. Verified: 8 Rare Summons by
 `gme.py` -> 4 three-star and 4 four-star units of 7 different families, 1 Gem each; the client's
@@ -1083,7 +1094,7 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"; Parade keys are still fixed hours). Still to do: real summon odds (a guess), moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"; Parade keys are still fixed hours). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); next: the Shop tab (kills the BlueStacks client).
 5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); the Shop tab (kills the BlueStacks client) and the Arena are still unchecked.
 
