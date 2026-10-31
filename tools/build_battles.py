@@ -12,7 +12,12 @@ positions, sprite file names), so this script:
   - lays the enemies out on the 640x440 battle field (the client scales these by 0.5);
   - fills the animation fields from the unit the enemy is based on (F_UNIT_MST, mst-decoded.zip:
     effect/damage frames, move types, HP bar offset), since those enemies use the unit's sprites;
-  - rebuilds the AI rows from ai.json in the client's raw format.
+  - rebuilds the AI rows from ai.json in the client's raw format;
+  - gives every enemy its captured skills: the capture names them (with hit count, damage
+    distribution and parsed effects) and the client's own F_SKILL_MST holds them, so each is
+    matched to a skill id + level and written as MonsterMst F4bQ7r8C "id:lv@id:lv"
+    (BattleUnit::setUnitSkill(MonsterMst*) parses that and reads UnitSkillMstList), and the
+    AI's "set skill" conditions become the client's "skill:<index>" terms.
 
 The output keys are the wire keys of MissionBattleData (packet-generator/assets/net/mission_start.kdl),
 so the handler can send the lists untouched.
@@ -22,6 +27,7 @@ Usage:
       --mst ..\\assets\\mst-decoded.zip --out server\\deploy\\battle [--only 10 11 12]
 """
 import argparse
+import base64
 import glob
 import json
 import os
@@ -70,6 +76,117 @@ def load_units(mst_zip):
     return units
 
 
+def load_skills(mst_zip):
+    """skill id -> {"frames": damageFrames, "procs": skillTypeId, "levels": [(lv, params)]} from F_SKILL_MST
+    and F_SKILL_LEVEL_MST (activeSkillInfoByLevel is "lv:cost:params@params...")."""
+    skills = {}
+    with zipfile.ZipFile(mst_zip) as z:
+        for n in z.namelist():
+            if n.startswith("3-mst-translated/F_SKILL_MST"):
+                for r in json.loads(z.read(n)):
+                    skills[r["bbId"]] = {"frames": r.get("damageFrames", ""), "procs": r.get("skillTypeId", ""), "levels": []}
+        for n in z.namelist():
+            if n.startswith("3-mst-translated/F_SKILL_LEVEL_MST"):
+                for r in json.loads(z.read(n)):
+                    sk = skills.get(r["bbId"])
+                    if sk is None:
+                        continue
+                    f = (r.get("activeSkillInfoByLevel") or "").split(":", 2)
+                    if len(f) == 3:
+                        sk["levels"].append((f[0], f[2]))
+    return skills
+
+
+def load_monster_name_ids(sgtext_dir):
+    """The monster ids the client's text table names (sgtext_monsters_<v>.zip, MST_MONSTERS_<id>_NAME):
+    MonsterMst::getMonsterName shows that text when the monster id has one, the row's own name
+    otherwise, so our generated ids must stay clear of them."""
+    files = sorted(glob.glob(os.path.join(sgtext_dir, "sgtext_monsters_*.zip")),
+                   key=lambda f: int(re.search(r"_(\d+)\.zip$", f).group(1)))
+    ids = set()
+    if not files:
+        return ids
+    with zipfile.ZipFile(files[-1]) as z:
+        csv = base64.b64decode(z.read(z.namelist()[0])).decode("utf-8")
+    for line in csv.split("\n")[1:]:
+        m = re.match(r"MST_MONSTERS_(\d+)_NAME\^", line)
+        if m:
+            ids.add(m.group(1))
+    return ids
+
+
+def load_skill_names(sgtext_dir):
+    """English skill name -> [skill ids] from the newest content/sgtext/sgtext_skillName_<v>.zip."""
+    files = sorted(glob.glob(os.path.join(sgtext_dir, "sgtext_skillName_*.zip")),
+                   key=lambda f: int(re.search(r"_(\d+)\.zip$", f).group(1)))
+    names = {}
+    if not files:
+        return names
+    with zipfile.ZipFile(files[-1]) as z:
+        csv = base64.b64decode(z.read(z.namelist()[0])).decode("utf-8")
+    for line in csv.split("\n")[1:]:
+        key, _, rest = line.partition("^")
+        m = re.match(r"MST_SKILLS_(\d+)_NAME$", key)
+        if m and rest:
+            names.setdefault(rest.split("^")[0], []).append(m.group(1))
+    return names
+
+
+# proc ids whose parameters start with "bb atk%, bb flat atk, ..., bb dmg%" (bfdb skills.py)
+ATTACK_PROCS = {"1": (0, 1, 5), "14": (0, 1, 5)}
+
+
+def resolve_skill(cap, skills, names, own_bb=None, unit_bbs=()):
+    """The (skill id, level) of the client's skill table that matches a captured enemy skill:
+    same name, then the enemy unit's own brave burst, then a brave burst of a unit the client
+    has (the ids the client is sure to hold), then the best of hit count, damage distribution
+    and attack parameters."""
+    cands = [i for i in names.get(cap.get("name"), []) if i in skills]
+    if not cands:
+        return None
+    hits = cap.get("hits")
+    dist = cap.get("hit dmg% distribution")
+    effects = {}
+    for e in (cap.get("levels") or {}).get("effects", []) or []:
+        effects.update(e)
+    best = None
+    for sid in cands:
+        sk = skills[sid]
+        entries = [e for e in sk["frames"].split("@")[0].split(",") if e]
+        score = 0
+        if own_bb is not None and sid == str(own_bb):
+            score += 16
+        elif sid in unit_bbs:
+            score += 8
+        if hits is not None and len(entries) == hits:
+            score += 4
+        try:
+            if dist is not None and [int(e.split(":")[1]) for e in entries] == list(dist):
+                score += 2
+        except (ValueError, IndexError):
+            pass
+        procs = sk["procs"].split("@")
+        best_lv, best_lv_score = "1", -1
+        for lv, params in sk["levels"] or [("1", "")]:
+            lv_score = 0
+            for proc, seg in zip(procs, params.split("@")):
+                if proc in ATTACK_PROCS:
+                    f = seg.split(",")
+                    for idx, key in zip(ATTACK_PROCS[proc], ("bb atk%", "bb flat atk", "bb dmg%")):
+                        try:
+                            v = int(f[idx])
+                        except (ValueError, IndexError):
+                            continue
+                        if effects.get(key, 0) == v:
+                            lv_score += 1
+            if lv_score > best_lv_score:
+                best_lv, best_lv_score = lv, lv_score
+        score += best_lv_score
+        if best is None or score > best[0] or (score == best[0] and int(sid) < int(best[1])):
+            best = (score, sid, best_lv)
+    return best[1], best[2]
+
+
 def load_mission_places(mst_zip):
     """mission id -> (dungeon, area, land) from F_MISSION_MST"""
     places = {}
@@ -99,9 +216,12 @@ def load_mission_rewards(mst_zip):
     return rewards
 
 
-def ai_rows(ai_id, ai_json, fallback):
-    """AIMst rows (wire keys) for one ai id."""
-    src = ai_json.get(str(ai_id)) or fallback or {}
+def ai_rows(ai_id, ai_json, fallback, skill_index=None, warn=None):
+    """AIMst rows (wire keys) for one ai id: the capture's own 2014 AI when it has one (fallback),
+    else the datamine's 2021 ai.json. skill_index maps a skill name to its 0-based position in the
+    monster's skill list: the captures render the client's 1-based "skill:<n>" condition as
+    "set skill": <name> (checked against ai.json, where the same AIs say skill:1 for the first)."""
+    src = fallback or ai_json.get(str(ai_id)) or {}
     rows = []
     for i, a in enumerate(src.get("actions", [])):
         party = []
@@ -109,7 +229,17 @@ def ai_rows(ai_id, ai_json, fallback):
             party.append(f"{c.get('target type', 0)}:{c.get('target param', 0)}:{c.get('type', 0)}:{c.get('parameters', 0)}")
         act = []
         for c in a.get("conditions/set parameters", []):
-            act.append(f"{c.get('type', 'non')}:{c.get('parameters', 0)}")
+            ctype, cparam = c.get("type", "non"), c.get("parameters", 0)
+            if ctype == "set skill" and str(cparam).isdigit():
+                ctype = "skill"  # already the client's 1-based number
+            elif ctype == "set skill":
+                idx = (skill_index or {}).get(cparam)
+                if idx is None:
+                    if warn:
+                        warn(f"ai {ai_id}: skill {cparam!r} is not in the enemy's skill list, condition dropped")
+                    continue
+                ctype, cparam = "skill", idx + 1
+            act.append(f"{ctype}:{cparam}")
         term = ("@".join(party) if party else "0:0:0:0") + "#" + ("@".join(act) if act else "non:0")
         action = a.get("action") or {}
         rows.append({
@@ -131,7 +261,7 @@ def ai_rows(ai_id, ai_json, fallback):
     return rows
 
 
-def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlocks=(), first_clear=()):
+def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlocks=(), first_clear=(), skills=None, skill_names=None, skill_stats=None, unit_bbs=(), named_ids=()):
     mid = str(mission_id)
     out = {
         "energy_use": int(info.get("energy_use", 0)),
@@ -144,6 +274,7 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
         "pj41dy9g": [], "75t0sx9z": [], "n64NOpfy": [], "U0v5IeJo": [], "89ausgc4": [], "m9Ada1PN": [],
     }
     ai_ids = {}
+    ai_skill_index = {}
     for b, battle in enumerate(battles, start=1):
         gid = f"{mid}{b:02d}"
         monsters = battle.get("monsters", [])
@@ -154,6 +285,8 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
         pos = layout(len(monsters))
         for i, m in enumerate(monsters, start=1):
             monster_id = f"{gid}{i}"
+            while monster_id in named_ids:  # a 2022 monster name would replace ours (see load_monster_name_ids)
+                monster_id = "9" + monster_id
             unit_id = str(m.get("unit id", ""))
             u = units.get(unit_id)
             if u is None:
@@ -176,8 +309,18 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
             res = ":".join(str(int(resists.get(k, 0))) for k in ("poison%", "weaken%", "sick%", "injury%", "curse%", "paralysis%"))
             ai_id = str(m.get("ai id", 1))
             ai_ids.setdefault(ai_id, m.get("ai"))
-            if m.get("skills"):
-                warn(f"mission {mid} battle {b}: {m.get('_name')} has skills, not converted yet")
+            # the enemy's skills: "id:lv@id:lv" of the client's own skill table
+            skill_ids, skill_index = [], {}
+            for cap in m.get("skills") or []:
+                hit = resolve_skill(cap, skills or {}, skill_names or {}, u.get("bbId") if u else None, unit_bbs)
+                if skill_stats is not None:
+                    skill_stats["resolved" if hit else "unresolved"] += 1
+                if not hit:
+                    warn(f"skill {cap.get('name')!r} of {m.get('_name')} (mission {mid}): no skill of that name in the client table")
+                    continue
+                skill_index.setdefault(cap.get("name"), len(skill_ids))
+                skill_ids.append(f"{hit[0]}:{hit[1]}")
+            ai_skill_index.setdefault(ai_id, skill_index)
             x, y = pos[i - 1]
             out["75t0sx9z"].append({
                 "Qzhp8B40": gid, "o49dYfpH": monster_id, "hZtF1s8B": str(i), "3g8PW6x0": f"{x}:{y}",
@@ -207,7 +350,7 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
                 "oMGC3hW0": str(max_act),
                 "m4EK7Gt6": str(min_act),
                 "6fwL59FT": "100",
-                "F4bQ7r8C": "",
+                "F4bQ7r8C": "@".join(skill_ids),
                 "XE7Yi5c3": u.get("skillMoveType", "1"),
                 "CEeqs63b": res,
                 "Najhr8m6": str(m.get("zel max drop", 0)),
@@ -224,7 +367,7 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
                 "Lkh6gYkT": "",
             })
     for ai_id, fallback in ai_ids.items():
-        out["89ausgc4"].extend(ai_rows(ai_id, ai_json, fallback))
+        out["89ausgc4"].extend(ai_rows(ai_id, ai_json, fallback, ai_skill_index.get(ai_id), warn))
     return out
 
 
@@ -234,6 +377,7 @@ def main():
     ap.add_argument("--mst", required=True, help="path to mst-decoded.zip (for F_UNIT_MST)")
     ap.add_argument("--out", required=True, help="output folder (server/deploy/battle)")
     ap.add_argument("--only", nargs="*", help="mission ids to build (default: every captured mission)")
+    ap.add_argument("--sgtext", help="content/sgtext folder holding sgtext_skillName_<v>.zip (default: <out>/../game_content/content/sgtext)")
     a = ap.parse_args()
 
     dm = a.datamine
@@ -241,6 +385,12 @@ def main():
     items = json.load(open(os.path.join(dm, "items.json"), encoding="utf-8"))
     ai_json = json.load(open(os.path.join(dm, "ai.json"), encoding="utf-8"))
     units = load_units(a.mst)
+    skills = load_skills(a.mst)
+    sgtext_dir = a.sgtext or os.path.join(a.out, "..", "game_content", "content", "sgtext")
+    skill_names = load_skill_names(sgtext_dir)
+    named_ids = load_monster_name_ids(sgtext_dir)
+    skill_stats = {"resolved": 0, "unresolved": 0}
+    unit_bbs = {str(u.get("bbId")) for u in units.values()}  # brave bursts of units the client knows
     places = load_mission_places(a.mst)
     rewards = load_mission_rewards(a.mst)
     unlocked_by = {}
@@ -279,7 +429,7 @@ def main():
         for mid, info in targets:
             if only and mid not in only:
                 continue
-            out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()))
+            out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()), skills, skill_names, skill_stats, unit_bbs, named_ids)
             with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
                 json.dump(out, fo, ensure_ascii=False, indent=1)
             written += 1
@@ -302,14 +452,15 @@ def main():
         src = min(siblings, key=lambda m: abs(int(m) - int(mid)) if m.isdigit() and mid.isdigit() else 1 << 30)
         data = json.load(open(captured_ids[src], encoding="utf-8"))
         battles = next(iter(data.values())).get("battles", [])
-        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()))
+        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()), skills, skill_names, skill_stats, unit_bbs, named_ids)
         out["borrowed_from"] = src
         with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
             json.dump(out, fo, ensure_ascii=False, indent=1)
         borrowed += 1
     for w in sorted(set(warnings)):
         print("warning:", w)
-    print(f"{written} mission files written to {a.out} from {len(captures)} captures, {borrowed} more borrowed from a captured mission of the same dungeon")
+    print(f"{written} mission files written to {a.out} from {len(captures)} captures, {borrowed} more borrowed from a captured mission of the same dungeon; "
+          f"enemy skills: {skill_stats['resolved']} matched to the client's skill table, {skill_stats['unresolved']} not")
 
 
 if __name__ == "__main__":

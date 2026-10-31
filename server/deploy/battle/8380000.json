@@ -119,7 +119,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "3",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450039:1@9450040:1@9450042:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "90:90:90:90:100:100",
    "Najhr8m6": "6000",
@@ -159,7 +159,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "3",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450000:1@9450001:1@9450002:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "100:100:100:100:100:100",
    "Najhr8m6": "500",
@@ -199,7 +199,7 @@
    "oMGC3hW0": "2",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450006:1@9450006:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "100:100:100:100:100:100",
    "Najhr8m6": "2000",
@@ -239,7 +239,7 @@
    "oMGC3hW0": "1",
    "m4EK7Gt6": "1",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450003:1@9450004:1@9450005:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "40:100:100:100:100:100",
    "Najhr8m6": "2000",
@@ -279,7 +279,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450008:1@9450009:1@9450010:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "60:90:100:100:100:100",
    "Najhr8m6": "5500",
@@ -303,7 +303,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:3@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Zegar"
   },
@@ -313,27 +313,27 @@
    "q7Nit8JW": "0:0:0:0#actbetween:4@skill:2@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Zegar"
   },
   {
    "4eEVw5hL": "8100060",
    "yu18xScw": "3",
-   "q7Nit8JW": "0:0:0:0#actbetween:5@skill:4@skill_unuse:0",
+   "q7Nit8JW": "0:0:0:0#actbetween:5@skill:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Zegar"
   },
   {
    "4eEVw5hL": "8100060",
    "yu18xScw": "4",
-   "q7Nit8JW": "0:0:0:0#act:6@limited_act:1@skill:3",
+   "q7Nit8JW": "0:0:0:0#act:6@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Zegar"
   },
@@ -343,7 +343,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Zegar"
   },
@@ -353,7 +353,7 @@
    "q7Nit8JW": "0:0:0:0#act:1@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -363,7 +363,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:2@skill:2",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "50.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -373,7 +373,7 @@
    "q7Nit8JW": "0:0:0:0#act:4@limited_act:1@skill:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -383,7 +383,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:3@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -393,7 +393,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "55.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -403,7 +403,7 @@
    "q7Nit8JW": "0:0:0:0#act:1@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_MossTaunt"
   },
@@ -413,17 +413,17 @@
    "q7Nit8JW": "0:0:0:0#actbetween:4@skill:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_MossTaunt"
   },
   {
    "4eEVw5hL": "8100051",
    "yu18xScw": "3",
-   "q7Nit8JW": "0:0:0:0#actbetween:4@skill:2@skill_unuse:0",
+   "q7Nit8JW": "0:0:0:0#actbetween:4@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_MossTaunt"
   },
@@ -433,7 +433,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_MossTaunt"
   },
@@ -443,7 +443,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "55.0",
    "L8PCsu0K": "AI_TOG_MossTaunt"
   },
@@ -453,7 +453,7 @@
    "q7Nit8JW": "0:0:0:0#act:1@limited_act:1@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_SquirtHeal"
   },
@@ -463,7 +463,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:4@skill:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_SquirtHeal"
   },
@@ -473,7 +473,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:2@skill:2",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_SquirtHeal"
   },
@@ -483,7 +483,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:3@skill:3",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_SquirtHeal"
   },
@@ -493,7 +493,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "55.0",
    "L8PCsu0K": "AI_TOG_SquirtHeal"
   },
@@ -503,7 +503,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:4@skill_unuse:0@skill:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_KburnBoss01"
   },
@@ -513,7 +513,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:2@skill:2",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_KburnBoss01"
   },
@@ -523,7 +523,7 @@
    "q7Nit8JW": "0:0:0:0#hp_pr_under:40@limited_act:1@skill:3",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_KburnBoss01"
   },
@@ -533,7 +533,7 @@
    "q7Nit8JW": "0:0:0:0#hp_pr_under:10@limited_act:1@skill:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_KburnBoss01"
   },
@@ -543,7 +543,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_KburnBoss01"
   },
@@ -553,7 +553,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "55.0",
    "L8PCsu0K": "AI_TOG_KburnBoss01"
   }

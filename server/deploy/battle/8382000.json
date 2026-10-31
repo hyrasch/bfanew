@@ -111,7 +111,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450044:1",
    "XE7Yi5c3": "2",
    "CEeqs63b": "80:80:80:100:100:100",
    "Najhr8m6": "6000",
@@ -151,7 +151,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "60014:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "0:100:100:100:100:100",
    "Najhr8m6": "6000",
@@ -191,7 +191,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "3",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450011:1@9450012:1@9450013:1",
    "XE7Yi5c3": "3",
    "CEeqs63b": "100:100:100:100:100:100",
    "Najhr8m6": "1000",
@@ -231,7 +231,7 @@
    "oMGC3hW0": "4",
    "m4EK7Gt6": "3",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "9450014:1@9450015:1@1951:1@9450046:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "40:30:100:30:40:90",
    "Najhr8m6": "7780",
@@ -255,7 +255,7 @@
    "q7Nit8JW": "0:0:0:0#skill_use:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "60.0",
    "L8PCsu0K": "ランダム1回スキル使用"
   },
@@ -265,7 +265,7 @@
    "q7Nit8JW": "0:0:0:0#skill_use:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "turn_end@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "turn_end@-1",
    "ug9xV4Fz": "40.0",
    "L8PCsu0K": "ランダム1回スキル使用"
   },
@@ -275,7 +275,7 @@
    "q7Nit8JW": "0:0:0:0#skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "40.0",
    "L8PCsu0K": "ランダム1回スキル使用"
   },
@@ -285,7 +285,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "ランダム1回スキル使用"
   },
@@ -295,7 +295,7 @@
    "q7Nit8JW": "0:0:0:0#act:1@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -305,7 +305,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:2@skill:2",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "50.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -315,7 +315,7 @@
    "q7Nit8JW": "0:0:0:0#act:4@limited_act:1@skill:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -325,7 +325,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:3@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -335,7 +335,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "55.0",
    "L8PCsu0K": "AI_TOG_Deflater"
   },
@@ -345,7 +345,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:2@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -355,7 +355,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:3@skill:2@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -365,7 +365,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:7@skill:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -375,7 +375,7 @@
    "q7Nit8JW": "0:0:0:0#hp_pr_under:75@skill_unuse:0@skill:4",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -385,7 +385,7 @@
    "q7Nit8JW": "0:0:0:0#hp_pr_under:50@skill_unuse:0@skill:4",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -395,7 +395,7 @@
    "q7Nit8JW": "0:0:0:0#hp_pr_under:25@skill_unuse:0@skill:4",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -405,7 +405,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   },
@@ -415,7 +415,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "55.0",
    "L8PCsu0K": "AI_TOG_AbaBoss03"
   }

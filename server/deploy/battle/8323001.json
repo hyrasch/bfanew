@@ -281,7 +281,7 @@
    "oMGC3hW0": "2",
    "m4EK7Gt6": "1",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "1703:1",
    "XE7Yi5c3": "3",
    "CEeqs63b": "50:10:50:50:80:80",
    "Najhr8m6": "1000",
@@ -321,7 +321,7 @@
    "oMGC3hW0": "2",
    "m4EK7Gt6": "1",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "1703:1",
    "XE7Yi5c3": "3",
    "CEeqs63b": "50:10:50:50:80:80",
    "Najhr8m6": "1000",
@@ -361,7 +361,7 @@
    "oMGC3hW0": "2",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "1703:1",
    "XE7Yi5c3": "3",
    "CEeqs63b": "0:0:0:0:0:0",
    "Najhr8m6": "1280",
@@ -521,7 +521,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "10062:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "80:80:80:80:0:0",
    "Najhr8m6": "800",
@@ -681,7 +681,7 @@
    "oMGC3hW0": "1",
    "m4EK7Gt6": "1",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "6370:1@6380:1@6390:1@6400:1@6410:1@6420:1",
    "XE7Yi5c3": "3",
    "CEeqs63b": "100:100:100:100:100:100",
    "Najhr8m6": "100000",
@@ -1041,7 +1041,7 @@
    "oMGC3hW0": "4",
    "m4EK7Gt6": "3",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "",
+   "F4bQ7r8C": "8550031:1@8550032:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "80:80:80:80:90:90",
    "Najhr8m6": "2500",
@@ -1065,7 +1065,7 @@
    "q7Nit8JW": "0:0:0:0#skill:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "40.0",
    "L8PCsu0K": "弱全体攻撃用_制限なし"
   },
@@ -1075,7 +1075,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "30.0",
    "L8PCsu0K": "弱全体攻撃用_制限なし"
   },
@@ -1085,7 +1085,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "弱全体攻撃用_制限なし"
   },
@@ -1095,7 +1095,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "攻撃ランダム"
   },
@@ -1105,7 +1105,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "weakness",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "30.0",
    "L8PCsu0K": "上級ザコ"
   },
@@ -1115,7 +1115,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_max",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "30.0",
    "L8PCsu0K": "上級ザコ"
   },
@@ -1125,7 +1125,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "上級ザコ"
   },
@@ -1135,7 +1135,7 @@
    "q7Nit8JW": "0:0:0:0#skill_use:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "turn_end@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "turn_end@-1",
    "ug9xV4Fz": "40.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1145,7 +1145,7 @@
    "q7Nit8JW": "0:0:0:0#act:1@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1155,7 +1155,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:3@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1165,7 +1165,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "weakness",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "40.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1175,7 +1175,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_min",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "40.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1185,7 +1185,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "bb_100pr",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "60.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1195,7 +1195,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "汎用ボス_スキル1個_5"
   },
@@ -1205,7 +1205,7 @@
    "q7Nit8JW": "0:0:0:0#act:1@skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1215,7 +1215,7 @@
    "q7Nit8JW": "0:0:0:0#act:2@skill:2@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1225,7 +1225,7 @@
    "q7Nit8JW": "0:0:0:0#act:3@skill:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1235,7 +1235,7 @@
    "q7Nit8JW": "0:0:0:0#act:4@skill:4@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1245,7 +1245,7 @@
    "q7Nit8JW": "0:0:0:0#act:5@skill:5@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1255,7 +1255,7 @@
    "q7Nit8JW": "0:0:0:0#act:6@skill:6@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1265,7 +1265,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "non",
-   "Hhgi79M1": "turn_end@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "turn_end@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "FHフロッグ"
   },
@@ -1275,7 +1275,7 @@
    "q7Nit8JW": "0:0:0:0#skill_use:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "wait@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "wait@-1",
    "ug9xV4Fz": "30.0",
    "L8PCsu0K": "AI XenonEstia Couple"
   },
@@ -1285,7 +1285,7 @@
    "q7Nit8JW": "0:0:0:0#actbetween:4@skill:2@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI XenonEstia Couple"
   },
@@ -1295,7 +1295,7 @@
    "q7Nit8JW": "0:0:0:0#skill:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "skill@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "skill@-1",
    "ug9xV4Fz": "30.0",
    "L8PCsu0K": "AI XenonEstia Couple"
   },
@@ -1305,7 +1305,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "hp_min",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "20.0",
    "L8PCsu0K": "AI XenonEstia Couple"
   },
@@ -1315,7 +1315,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "bb_50pr_over",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "50.0",
    "L8PCsu0K": "AI XenonEstia Couple"
   },
@@ -1325,7 +1325,7 @@
    "q7Nit8JW": "0:0:0:0#non:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
-   "Hhgi79M1": "attack@-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,",
+   "Hhgi79M1": "attack@-1",
    "ug9xV4Fz": "100.0",
    "L8PCsu0K": "AI XenonEstia Couple"
   }

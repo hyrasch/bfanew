@@ -165,6 +165,11 @@ python tools/dev.py restart / stop / start   # detached server (when not using `
   0, `UserInfo` campaign info zeroed), so the home screen is reachable without extra taps.
 - Rough timings now: build 10-60 s (only for C++), reload < 1 s, client to Summon 30 s,
   summon 25 s. Before the script a round was 3-4 minutes.
+- **Every wait on the client is bounded and polls state**: a loop that waits for a request dump
+  (`deploy/log/http_log_<id>_*` count going up) or a screen has a hard cap (seconds or
+  iterations) and reports "timeout" instead of hanging; no fixed sleeps while the client may sit
+  on a dialog, and a tap sent while a dialog fades in is swallowed, so re-tap after a screenshot
+  check. (Two sessions were lost to an unbounded `until` loop.)
 
 ## Android client: findings (2026-10-30, session 2)
 
@@ -431,8 +436,36 @@ next mission is permitted. Two handlers and a data pipeline:
   (199 distinct names), 121 more **borrow** the battles of the nearest captured mission of the
   same dungeon (`borrowed_from` in the file; e.g. mission 12 plays mission 11's enemies); that
   leaves ~970 of the 1,292 phase-1 missions without enemy data (the whole of Cordelica
-  onwards is thin), which needs another source (wiki enemy lists, JP datamine). Enemy skills
-  (`skills` in the captures) are not converted yet (warned).
+  onwards is thin), which needs another source (wiki enemy lists, JP datamine).
+- **Enemy skills (2026-10-31).** The captures list each enemy's skills by English name with
+  the hit count, the damage distribution and bfdb's parsed effects, not the raw rows; but the
+  client's own `F_SKILL_MST` / `F_SKILL_LEVEL_MST` already hold every enemy skill (unit brave
+  bursts and the boss-only ones, dialogue lines included: skill type 5 with Japanese names),
+  and `BattleUnit::setUnitSkill(MonsterMst*)` reads them: MonsterMst `F4bQ7r8C` is
+  **`skillId:level@skillId:level`** (empty = the unit's own BB), each looked up in
+  `UnitSkillMstList` (`BattleUnit::setSkillParam`), so `m9Ada1PN` MonsterSkillMst stays empty.
+  `build_battles.py` resolves a captured skill to an id by name (`sgtext_skillName_<v>.zip`,
+  `MST_SKILLS_<id>_NAME`), then by hit count, damage distribution (`damageFrames` entries and
+  their percent column) and the attack parameters of each level (`activeSkillInfoByLevel`
+  `lv:cost:params@...`, proc 1 / 14: index 0 bb atk%, 1 flat atk, 5 bb dmg%, as bfdb's
+  skills.py reads them): 3,338 of the 3,349 captured skills resolve, the rest are names the
+  2022 text table no longer has ("Soul Desecretion", two of Great Thief Leon's lines). The AI
+  terms: the client's `skill:<n>` condition is **1-based** (the n-th entry of the monster's
+  list; ai.json says `skill:1` where the capture tool wrote "set skill": <first name>), so
+  "set skill": name -> `skill:<index+1>`; `skill_use` / `skill_unuse` stay as they are. The AI
+  rows now come from the capture's own 2014 AI when it has one (the 2021 ai.json agrees on
+  every id checked, it is the fallback). Two things learned the hard way: (1) the client's
+  `UnitSkillMstList` does not hold every F_SKILL_MST row (skill 1050 "Eruption" is in the served
+  table, yet `DLCManager::requestUnitFilesForMission` -> `requestMonsterSummonFiles` looked it
+  up, got null and crashed at mission start), while the brave bursts of the units in the
+  (phase-filtered) F_UNIT_MST are there, so the resolver prefers the enemy unit's own BB, then
+  any BB of a unit the client has (`bbId` of F_UNIT_MST), before the frame / parameter scores;
+  (2) **the enemy name in battle is `TextManager::getMstText("MST_MONSTERS_<monster id>_NAME")`**
+  with the row's `3evIn0zZ` as the fallback, and our generated monster ids
+  (`<mission><battle:02><slot>`) collided with the 2022 `sgtext_monsters` table: Cave of Flames'
+  Goblins were labelled "Siren", Warlock Liza "Knight Sergio" (and every mission since the
+  battle builder exists). `load_monster_name_ids` reads that table and the builder prefixes a
+  colliding id with 9 (630 monsters), so the capture's own names show.
 - `9TvyNR5H` **MissionEnd** (`gimuserver/gme/MissionEnd.cpp`, key `oINq0rfUFPx5MgmT`), sent
   by `MissionResultScene::initConnect` (then a FriendGet). Request: `Kz7qfSs5` {serial id,
   `j3g5P4cq` state, 2 = cleared}, `rXvA1E5y` battle stats (`Najhr8m6` zel and `HTVh8a65` karma
