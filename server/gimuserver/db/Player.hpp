@@ -103,4 +103,15 @@ namespace Db
 	struct TownCollect { int32_t tap_cnt = 0; std::string drops; int64_t refill_at = 0; };
 	drogon::Task<std::unordered_map<int32_t, TownCollect>> LoadCollect(std::string userId);
 	drogon::Task<void> SaveCollect(std::string userId, int32_t locationId, const TownCollect& c);
+
+	/*! bfanew: dungeon keys (DungeonKeyUse): per key id the keys held and the game-clock day of the
+	 *  last daily grant (-1 = never); and the parade windows a key opened: per dungeon until when
+	 *  (unix seconds) and the missions of the tier used ("100600" or "100601,100614"). */
+	struct KeyState { int32_t count = 0; int64_t last_day = -1; };
+	struct Parade { int64_t until = 0; std::string missions; };
+	using ParadeMap = std::unordered_map<int32_t, Parade>;
+	drogon::Task<std::unordered_map<int32_t, KeyState>> LoadKeys(std::string userId);
+	drogon::Task<void> SaveKey(std::string userId, int32_t keyId, int32_t count, int64_t lastDay);
+	drogon::Task<ParadeMap> LoadParades(std::string userId);
+	drogon::Task<void> SaveParade(std::string userId, int32_t dungeonId, int64_t until, std::string missions);
 }

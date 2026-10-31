@@ -63,12 +63,13 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	if (count <= 0) count = 1;
 	const int lv = std::atoi(rq->getParameter("lv").c_str());
 	const int level = std::atoi(rq->getParameter("level").c_str());
+	const int keyId = std::atoi(rq->getParameter("key").c_str());
 	const auto* def = theServer()->cache().unit(unitId);
 	const auto* itemDef = theServer()->cache().item(itemId);
-	if (user.empty() || (!def && !itemDef && level <= 0))
+	if (user.empty() || (!def && !itemDef && level <= 0 && keyId <= 0))
 	{
 		resp->setStatusCode(k400BadRequest);
-		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level>");
+		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level> | &key=<dungeon key id>&count=N");
 		callback(resp);
 		co_return;
 	}
@@ -80,6 +81,17 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	{
 		resp->setStatusCode(k404NotFound);
 		resp->setBody("no such player");
+		callback(resp);
+		co_return;
+	}
+	if (keyId > 0)
+	{
+		auto keys = co_await Db::LoadKeys(player->user_id);
+		auto& st = keys[keyId];
+		st.count += std::max(count, 1);
+		co_await Db::SaveKey(player->user_id, keyId, st.count, st.last_day);
+		resp->setStatusCode(k200OK);
+		resp->setBody("player " + player->user_id + " key " + std::to_string(keyId) + ": " + std::to_string(st.count));
 		callback(resp);
 		co_return;
 	}

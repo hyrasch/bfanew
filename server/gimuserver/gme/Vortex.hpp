@@ -133,8 +133,25 @@ namespace Vortex
 		return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	}
 
-	// the permits for everything open now
-	inline std::vector<PermitPlace> Permits(int64_t now = Now())
+	// the missions of a parade window, "100600" or "100601,100614"
+	inline bool ParadeHas(const std::string& missions, int32_t missionId)
+	{
+		const auto want = std::to_string(missionId);
+		size_t i = 0;
+		while (i <= missions.size())
+		{
+			const auto j = missions.find(',', i);
+			if (missions.substr(i, (j == std::string::npos ? missions.size() : j) - i) == want) return true;
+			if (j == std::string::npos) break;
+			i = j + 1;
+		}
+		return false;
+	}
+
+	// the permits for everything open now; parades = the player's key-opened windows (a key
+	// dungeon, VortexEntry::key, is listed at all times so the Vortex shows it with its key count,
+	// and is enterable with its missions only while the player's window runs)
+	inline std::vector<PermitPlace> Permits(int64_t now = Now(), const Db::ParadeMap* parades = nullptr)
 	{
 		std::vector<PermitPlace> out;
 		const auto& sched = theServer()->cache().vortex();
@@ -142,7 +159,7 @@ namespace Vortex
 		std::unordered_set<int32_t> areas, dungeons;
 		for (const auto& e : sched.entries)
 		{
-			const auto w = WindowOf(e, now, sched.utc_offset_hours);
+			const auto w = e.key ? Window{ true, 0 } : WindowOf(e, now, sched.utc_offset_hours);
 			if (!w.open) continue;
 			if (areas.insert(e.area).second)
 				NewPlayer::AddPermit(out, NewPlayer::Area, std::to_string(e.area));
@@ -154,8 +171,20 @@ namespace Vortex
 				if (!dungeons.insert(d).second) continue;
 				NewPlayer::AddPermit(out, NewPlayer::Dungeon, std::to_string(d));
 				auto& p = out.back();
-				p.time_limit = static_cast<int32_t>(std::min<int64_t>(w.ends_in, INT32_MAX));
 				p.period_text = e.period_text;
+				if (e.key)
+				{
+					const auto it = parades ? parades->find(d) : Db::ParadeMap::const_iterator{};
+					const bool active = parades && it != parades->end() && it->second.until > now;
+					p.enterable_flg = active;
+					p.time_limit = active ? static_cast<int32_t>(std::min<int64_t>(it->second.until - now, INT32_MAX)) : 0;
+					if (active)
+						for (const auto m : phase.dungeonMissions(d))
+							if (ParadeHas(it->second.missions, m))
+								NewPlayer::AddPermit(out, NewPlayer::Mission, std::to_string(m));
+					continue;
+				}
+				p.time_limit = static_cast<int32_t>(std::min<int64_t>(w.ends_in, INT32_MAX));
 				for (const auto m : phase.dungeonMissions(d))
 					if (e.missions.empty() || std::find(e.missions.begin(), e.missions.end(), m) != e.missions.end())
 						NewPlayer::AddPermit(out, NewPlayer::Mission, std::to_string(m));
@@ -169,18 +198,29 @@ namespace Vortex
 		return out;
 	}
 
-	// whether the Vortex dungeon holding this mission is open now (true for non-Vortex missions)
-	inline bool IsOpen(int32_t missionId, int64_t now = Now())
+	// whether the Vortex dungeon holding this mission is open now for the player (true for
+	// non-Vortex missions); a key dungeon is open only inside the player's parade window
+	inline bool IsOpen(int32_t missionId, int64_t now = Now(), const Db::ParadeMap* parades = nullptr)
 	{
 		const auto& phase = theServer()->cache().phase();
 		const auto dungeon = phase.vortexDungeonOf(missionId);
 		if (dungeon == 0) return true;
 		const auto& sched = theServer()->cache().vortex();
 		for (const auto& e : sched.entries)
-			if (std::find(e.dungeons.begin(), e.dungeons.end(), dungeon) != e.dungeons.end()
-				&& (e.missions.empty() || std::find(e.missions.begin(), e.missions.end(), missionId) != e.missions.end())
+		{
+			if (std::find(e.dungeons.begin(), e.dungeons.end(), dungeon) == e.dungeons.end()) continue;
+			if (e.key)
+			{
+				if (!parades) continue;
+				const auto it = parades->find(dungeon);
+				if (it != parades->end() && it->second.until > now && ParadeHas(it->second.missions, missionId))
+					return true;
+				continue;
+			}
+			if ((e.missions.empty() || std::find(e.missions.begin(), e.missions.end(), missionId) != e.missions.end())
 				&& WindowOf(e, now, sched.utc_offset_hours).open)
 				return true;
+		}
 		return false;
 	}
 
@@ -202,7 +242,7 @@ namespace Vortex
 		for (const auto& e : sched.entries)
 		{
 			const auto w = WindowOf(e, now, sched.utc_offset_hours);
-			s += (w.open ? "OPEN   " : "closed ") + e.name + " (area " + std::to_string(e.area) + ", dungeons";
+			s += (e.key ? "KEY    " : w.open ? "OPEN   " : "closed ") + e.name + " (area " + std::to_string(e.area) + ", dungeons";
 			for (const auto d : e.dungeons) s += " " + std::to_string(d);
 			s += ")";
 			if (w.open && w.ends_in > 0)

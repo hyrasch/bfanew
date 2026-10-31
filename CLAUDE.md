@@ -1011,6 +1011,46 @@ layout of `detail_msg` and tickets). Two channels, both server-side:
   manifest has no `usesCleartextTraffic`, see "Android client"). Fix = patch the manifest in
   `tools/patch_apk.py`; the Links banner works because it goes through the system browser.
 
+**Parade keys (2026-10-31).** The 2014 Metal / Jewel Parades opened for an hour per key, keys
+being daily-login presents on Mon/Tue/Thu/Fri (Metal) and Wednesday (Jewel). The 2.19.6 client
+carries the 2015 key system, so no item is involved: **`DungeonKeyMst`** (Initialize `4NG79sX1`,
+`deploy/system/dungeon_keys.json`, upstream's: `16KMNJLb` id, `BM29ZgnK` name, `MHx05sXt` the
+dungeon it opens, `i9sBW8uD` window seconds, `N7I9vYZb` possession limit, `EK5I6MQ9` distribute
+flag, **`fK15a73g` the weekdays it is handed out, "1,2,4,5" / "3", exactly the 2014 days**,
+`CR6aKWg8` the tiers "keys:event:name:missions:x/..." = 1 key Metal Parade! 100600, 3 keys Super
+100601, 5 keys Mega 100614; `phases/01/dungeon_keys.json` keeps Metal + Jewel, an hour, no Mega
+tier), **`UserDungeonKeyInfo`** in UserInfo (`eFU7Qtb0`, replaced whole: `wgV86x1q` possession
+is what the Vortex shows as "x2", `KI42FwRt` last receipt day, `BY8fZ7M1` active type,
+`g85qMNxf` receipt possible, `b6QR1CH5` next receipt date, `H6k1LIxC` cnt; `net/user.kdl`),
+and `features.json` **`dungeon_key` 1** (phase 1 now; with 0 the key dungeons are plain
+schedule entries). How it plays: `AreaSPSelectScene` lists a key dungeon (one that
+`DungeonKeyMstList::getObjectAtDungeonMst` knows) from its permit like any other, draws it
+chained with the key's `9unNZ6b0` seal banner while `C1vG0iKh` enterable is 0, shows the key
+counts under the list; a tap opens `DungeonKeyConfirmScene` (the tiers; the "5 keys / Mega"
+button shows even without the tier in the table, the server refuses it), the tier's Yes sends
+`aGT5S6qZ` **DungeonKeyUse** (key `3rPx6tTw`, URL `/actionSymbol/RmA2a5JM.php`, group
+`xki65BPq` {`phe9Ta54` keys to spend, `16KMNJLb` key id}; `gme/DungeonKeyUse.cpp`), and the
+reply (`eFU7Qtb0` keys left + `yXNM8kL3` the whole permit list) goes straight into the
+dungeon's mission list. Server side: `player_keys` (count, day of the last grant) and
+`player_parade` (per dungeon: until, the tier's missions), migration `31102026_PlayerKeys`;
+`gme/Keys.hpp` `Infos()` builds the key records and **grants one key per key-table row whose
+weekdays hold the game-clock weekday, once a day, at UserInfo** (the Randall key building,
+`RandallKeyScene` / `GetDistributeDungeonKeyInfo` / `DungeonKeyReceipt`, stays closed with
+Randall); `Vortex.hpp` entries with **`key`** are permitted at all times (area + dungeon,
+`enterable_flg` and `time_limit` from the player's window, the window's missions only), the
+`Permits` / `IsOpen` of UserInfo, UpdatePermitPlaceInfo and MissionStart take the player's
+`ParadeMap`. Dev: `/bfanew/give?user=<user id>&key=<id>&count=N`. Texts: the tier-select dialog
+rendered its `<param=...>` blanks ("You can use (s) to enter ."), so `USE_KEY_DESCRIPTION` and
+`USE_KEY_HAVEKEY_NUM` are placeholder-free in `data/sgtext_en_patch.csv` and
+`USE_KEY_CONFIRMATION2` says "1 hour" (`sgtext_en_341`, F_RESOURCE_MST 3278); the Yes/No
+dialog fills its params fine. Verified: `gme.py` login -> both keys at 0, Parade Garden permits
+not enterable; a key -> Metal Parade! enterable for 3600 s with mission 100600 only, Super
+refused, 5 keys refused; the client's Vortex lists "Parade Garden" -> "METAL PARADE! Remaining:
+58min" and "Jewel Parade!!" chained with x2 / x1 keys, tap -> tiers -> "Use 1 Jewel Key(s)...
+Jewel Key(s) on hand: x 1" -> Yes -> `DungeonKeyUse` key 2 -> the Jewel Parade! mission list
+(0 energy, 5 battles); the daily grant: Saturday added to the Metal Key's days for the test ->
+2 -> 3 at the first login, unchanged at the second, `last_day` 20757.
+
 **Feature gating (2026-10-31).** Three client mechanisms, all fed by the server:
 - `features.json` (`/bf/gme/featureCheck.php`, parsed by `FeatureManager::onFeatureCheckResS`;
   only the keys of `net/feature_check.kdl` are served, and the client spells three of them
@@ -1122,9 +1162,8 @@ without 003). **`GET /bfanew/vortex[?at=YYYY-MM-DDTHH:MM]`** (`DevController::Ha
 without waiting for the days. Phase 1 (`phases/01/vortex_schedule.json`, 44 entries): Monday
 Gathering of Souls + Ruins of Light and Dark (one capture, Oct 6 00:09 PST), Tuesday Faerie
 Paradise, Wednesday Cave of Greed + Jewel Parade, Thursday Garden of God, Friday Remains of
-Eternity, weekends Golden Slumberland + Super Metal Parade, Metal Parade Mon/Tue/Thu/Fri (the
-original used one-hour keys; two fixed hours a day, 12-13 and 20-21, stand in until keys exist),
-Grand Gaia Chronicles / Vortex Trials / Trial of the Gods always, and a **six-week event
+Eternity, weekends Golden Slumberland, the Parades by key (see "Parade keys"; the `key` field
+of an entry), Grand Gaia Chronicles / Vortex Trials / Trial of the Gods always, and a **six-week event
 rotation** of the Oct 2014 events (week 0 Sibyl Sisters staggered Mon-Sun, 1 Deemo + Keymaster's
 Eclipse, 2 Miku + Battle Maidens staggered, 3 Unholy Tower + Dark Side + XE Prologue, 4 Leaders
 of El Gaia staggered, 5 Thunder Turnout) with one Travellers' Saga dungeon (100700-101200) per
@@ -1146,7 +1185,7 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
-3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"; Parade keys are still fixed hours). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
+3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"); ~~Parade keys~~ **done 2026-10-31** (see "Parade keys"). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
 5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); the Arena is still unchecked.
 

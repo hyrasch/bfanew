@@ -1,3 +1,6 @@
 ENERGY_RECOVER_GEM_RECOVER_ENERGY^Fully restore your Energy?<br>Energy refills are free here.
 ENERGY_RECOVER_GEM_MAX_THRESHOLD^Your Energy is above the limit for a Gem refill.<br>Spend some Energy first.
 ENERGY_RECOVER_GEM_INSUFFICIENT_GEMS^You do not have enough Gems to restore your Energy.
+USE_KEY_DESCRIPTION^Use a key to open this Parade for one hour.<br>
+USE_KEY_HAVEKEY_NUM^Keys on hand:
+USE_KEY_CONFIRMATION2^You can use <param=keynum> <param=keyname>(s) to enter <param=dungeonname>. Do you want to Proceed?<br>*Time limit is 1 hour.<br>

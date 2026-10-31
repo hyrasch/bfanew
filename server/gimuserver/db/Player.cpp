@@ -445,6 +445,38 @@ namespace Db
 			userId, static_cast<int64_t>(kind), static_cast<int64_t>(id), static_cast<int64_t>(lv), static_cast<int64_t>(karma));
 	}
 
+	Task<std::unordered_map<int32_t, KeyState>> LoadKeys(std::string userId)
+	{
+		std::unordered_map<int32_t, KeyState> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT key_id, count, last_day FROM player_keys WHERE user_id = $1", userId);
+		for (const auto& r : res)
+			out[static_cast<int32_t>(r["key_id"].as<int64_t>())] = KeyState{ static_cast<int32_t>(r["count"].as<int64_t>()), r["last_day"].as<int64_t>() };
+		co_return out;
+	}
+
+	Task<void> SaveKey(std::string userId, int32_t keyId, int32_t count, int64_t lastDay)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_keys(user_id, key_id, count, last_day) VALUES ($1, $2, $3, $4) ON CONFLICT(user_id, key_id) DO UPDATE SET count = $3, last_day = $4",
+			userId, static_cast<int64_t>(keyId), static_cast<int64_t>(count), lastDay);
+	}
+
+	Task<ParadeMap> LoadParades(std::string userId)
+	{
+		ParadeMap out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT dungeon_id, until, missions FROM player_parade WHERE user_id = $1", userId);
+		for (const auto& r : res)
+			out[static_cast<int32_t>(r["dungeon_id"].as<int64_t>())] = Parade{ r["until"].as<int64_t>(), r["missions"].as<std::string>() };
+		co_return out;
+	}
+
+	Task<void> SaveParade(std::string userId, int32_t dungeonId, int64_t until, std::string missions)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_parade(user_id, dungeon_id, until, missions) VALUES ($1, $2, $3, $4) ON CONFLICT(user_id, dungeon_id) DO UPDATE SET until = $3, missions = $4",
+			userId, static_cast<int64_t>(dungeonId), until, missions);
+	}
+
 	Task<std::unordered_map<int32_t, TownCollect>> LoadCollect(std::string userId)
 	{
 		std::unordered_map<int32_t, TownCollect> out;

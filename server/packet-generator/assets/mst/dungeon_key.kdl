@@ -34,7 +34,7 @@ json DungeonKeyMst {
 
     field limit_sec type="i32::str" {
         key "i9sBW8uD"
-        doc "TODO"
+        doc "how long a used key keeps the dungeon open, seconds (1800 in the 2022 table, 3600 in phase 1: the 2014 keys gave an hour)"
     }
 
     field possession_limit type="str" {
@@ -47,9 +47,9 @@ json DungeonKeyMst {
         doc "TODO"
     }
 
-    field unk type="str" {
+    field distribute_weekdays type="str" {
         key "fK15a73g"
-        doc "TODO"
+        doc "bfanew: the weekdays the key is handed out, 0 = Sunday (Metal Key 1,2,4,5, Jewel Key 3: the 2014 key days); gme/Keys.hpp gives one a day on those days"
     }
 
     field unk2 type="i32::str" {
@@ -60,7 +60,7 @@ json DungeonKeyMst {
     // TODO: is this a boolean?
     field usage_pattern type="str" {
         key "CR6aKWg8"
-        doc "TODO"
+        doc "the parades a number of keys opens: keys:eventNum:name:missionIds:x joined with /, e.g. 1:1:Metal Parade!:100600:6/3:1:Super Metal Parade:100601:6 (DungeonKeyMst::createUsagePatternList; the confirm scene offers each tier)"
     }
 
     field state type="i32::str" {

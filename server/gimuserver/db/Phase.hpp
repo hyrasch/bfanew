@@ -25,6 +25,7 @@ struct VortexEntry
 	int32_t cycle_weeks = 0;                  //!< event rotation: length of the cycle in weeks (0 = none)
 	std::vector<int32_t> weeks;               //!< the weeks of the cycle (0-based, weeks start on Monday) the entry is open in
 	std::vector<std::string> dates;           //!< [from, to] "YYYY-MM-DD" inclusive in the game clock (one date = that day)
+	int32_t key = 0;                          //!< a key dungeon (DungeonKeyMst id): always listed, enterable while the player's window runs
 	std::string period_text;
 };
 

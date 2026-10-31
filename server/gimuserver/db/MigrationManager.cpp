@@ -175,6 +175,29 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: dungeon keys (Parade keys): the keys held per key id with the day of the last daily
+	// grant, and the parade windows a key opened (DungeonKeyUse, gme/Keys.hpp)
+	migrate("31102026_PlayerKeys", {
+		p->execSqlSync(
+			"CREATE TABLE player_keys("
+			"user_id TEXT NOT NULL,"
+			"key_id INTEGER NOT NULL,"
+			"count INTEGER NOT NULL DEFAULT 0,"
+			"last_day INTEGER NOT NULL DEFAULT -1,"
+			"PRIMARY KEY(user_id, key_id)"
+			");"
+		);
+		p->execSqlSync(
+			"CREATE TABLE player_parade("
+			"user_id TEXT NOT NULL,"
+			"dungeon_id INTEGER NOT NULL,"
+			"until INTEGER NOT NULL DEFAULT 0,"
+			"missions TEXT NOT NULL DEFAULT '',"
+			"PRIMARY KEY(user_id, dungeon_id)"
+			");"
+		);
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

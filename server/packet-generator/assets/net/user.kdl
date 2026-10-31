@@ -1535,51 +1535,46 @@ json UserTownLocationDetail {
 }
 
 json UserDungeonKeyInfo {
-    doc "TODO"
+    doc "One of the player's dungeon keys (UserInfo eFU7Qtb0, UserDungeonKeyInfoList, replaced whole; UserDungeonKeyInfoResponse::readParam). The Vortex (AreaSPSelectScene) reads getPossessionWithKeyID for the key count of a key dungeon (DungeonKeyMst, Initialize 4NG79sX1) and DungeonKeyUse spends them; the receipt fields belong to the Randall key building (RandallKeyScene, closed in phase 1: keys are handed out at login instead, see gme/Keys.hpp)."
 
     field user_id type="str" {
         key "h7eY3sAK"
         doc "ID of the user for this session."
     }
 
-    field unk type="i32::str" {
+    field key_id type="i32::str" {
         key "16KMNJLb"
-        doc "TODO"
+        doc "DungeonKeyMst id (1 Metal Key, 2 Jewel Key, 3 Imp Key)"
     }
 
-    field unk2 type="i32::str" {
+    field possession type="i32::str" {
         key "wgV86x1q"
-        doc "TODO"
+        doc "keys held (setPossession)"
     }
 
-    field unk3 type="i32::str" {
+    field last_receipt_day type="i32::str" {
         key "KI42FwRt"
-        doc "TODO"
+        doc "setLastReceiptDay"
     }
 
-    field unk4 type="i32::str" {
+    field active_type type="i32::str" {
         key "BY8fZ7M1"
-        doc "TODO"
+        doc "setActiveType"
     }
 
-    field unk5 type="i32::str" {
-        key "phe9Ta54"
-        doc "TODO"
-    }
-
-    field unk6 type="bool::bool" {
+    field receipt_possible type="bool::bool" {
         key "g85qMNxf"
-        doc "TODO"
+        doc "setReceiptPossibleFlg: a key can be claimed at Randall"
     }
 
-    field unk7 type="str" {
+    field next_receipt_date type="str" {
         key "b6QR1CH5"
-        doc "TODO"
+        doc "setNextReceiptPossibleDate"
     }
 
-    field unk8 type="i32::int" {
+    field cnt type="i32::int" {
         key "H6k1LIxC"
-        doc "TODO"
+        doc "setCnt"
     }
 }
 

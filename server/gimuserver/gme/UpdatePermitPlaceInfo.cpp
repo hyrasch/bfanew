@@ -26,7 +26,8 @@ HANDLEF(UpdatePermitPlaceInfo)
 
 	UpdatePermitPlaceInfoResp resp = {};
 	resp.permit_place = co_await Db::LoadPermits(p.user_id);
-	auto vortex = Vortex::Permits();
+	auto parades = co_await Db::LoadParades(p.user_id);
+	auto vortex = Vortex::Permits(Vortex::Now(), &parades);
 	LOG_DEBUG << "UpdatePermitPlaceInfo: user " << p.user_id << ": " << resp.permit_place.size() << " stored + " << vortex.size() << " Vortex permits";
 	resp.permit_place.insert(resp.permit_place.end(), vortex.begin(), vortex.end());
 

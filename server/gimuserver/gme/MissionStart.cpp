@@ -46,7 +46,8 @@ HANDLEF(MissionStart)
 		LOG_WARN << "MissionStart: user " << p.user_id << " asked for mission " << missionId << ", outside phase " << theServer()->cache().phase().cutoff();
 		co_return HandleResult::error("Not available yet", "mission " + std::to_string(missionId));
 	}
-	if (!Vortex::IsOpen(missionId))
+	auto parades = co_await Db::LoadParades(p.user_id);
+	if (!Vortex::IsOpen(missionId, Vortex::Now(), &parades))
 	{
 		LOG_WARN << "MissionStart: user " << p.user_id << " asked for Vortex mission " << missionId << " outside its schedule";
 		co_return HandleResult::error("This dungeon is closed right now", "mission " + std::to_string(missionId));

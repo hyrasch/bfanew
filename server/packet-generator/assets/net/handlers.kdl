@@ -234,6 +234,53 @@ json MissionEndResp {
     }
 }
 
+json DungeonKeyUseEntry {
+    doc "the one node of DungeonKeyUseRequest group xki65BPq"
+
+    field use_cnt type="i32::str" {
+        key "phe9Ta54"
+        doc "keys to spend (the usage pattern tier: 1 Metal Parade!, 3 Super Metal Parade, 5 Mega)"
+    }
+
+    field key_id type="i32::str" {
+        key "16KMNJLb"
+        doc "DungeonKeyMst id"
+    }
+}
+
+json DungeonKeyUseReq {
+    doc "DungeonKeyUse command (request id aGT5S6qZ, key 3rPx6tTw, URL /actionSymbol/RmA2a5JM.php): AreaSPSelectScene::updateEvent / DungeonSPSelectScene2 after the DungeonKeyConfirmScene Yes: spend keys to open the key's dungeon (a Parade) for DungeonKeyMst limit_sec. Body: login info, signal key, version, group xki65BPq with one node."
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field keys type="[DungeonKeyUseEntry]::size(1)" {
+        key "xki65BPq"
+        doc "which key and how many"
+    }
+}
+
+json DungeonKeyUseResp {
+    doc "DungeonKeyUse reply: the keys left and the whole permit list with the parade's dungeon enterable for the window (PermitPlaceResponse / UserDungeonKeyInfoResponse replace the client's lists)"
+
+    field dungeon_key_info type="[UserDungeonKeyInfo]" {
+        key "eFU7Qtb0"
+        doc "TODO"
+    }
+
+    field permit_place type="[PermitPlace]" {
+        key "yXNM8kL3"
+        doc "TODO"
+    }
+}
+
 json MissionContinueReq {
     doc "MissionContinue command (request id p8B2i9rJ, key G3FwvQfy5hcxHMen, URL /actionSymbol/vcn2pb38.php): MissionGameOverScene::initContinue, the Yes of the Continue? dialog after a defeat; the client then revives the squad (MissionScene::requestContinue). Group 5PR2VmH1 {k9cxD7Ba serial id, K2gIYm0h the battle's suspend data} is not read."
 

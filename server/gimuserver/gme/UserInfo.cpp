@@ -2,6 +2,7 @@
 #include "Handlers.hpp"
 #include "TownState.hpp"
 #include "Vortex.hpp"
+#include "Keys.hpp"
 #include <cstdlib>
 #include <unordered_set>
 
@@ -45,8 +46,11 @@ HANDLEF(UserInfo)
 	resp.clear_mission_info = co_await Db::LoadClears(p.user_id);
 	resp.permit_place = co_await Db::LoadPermits(p.user_id);
 	{
-		// the Vortex entries open now (gimuserver/gme/Vortex.hpp)
-		auto vortex = Vortex::Permits();
+		// the Vortex entries open now (gimuserver/gme/Vortex.hpp), the player's parade windows
+		// (dungeon keys, gimuserver/gme/Keys.hpp) and the keys, with the daily grant
+		resp.dungeon_key_info = co_await Keys::Infos(p.user_id);
+		auto parades = co_await Db::LoadParades(p.user_id);
+		auto vortex = Vortex::Permits(Vortex::Now(), &parades);
 		resp.permit_place.insert(resp.permit_place.end(), vortex.begin(), vortex.end());
 	}
 	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
