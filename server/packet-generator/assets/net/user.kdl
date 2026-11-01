@@ -1207,96 +1207,76 @@ json UserWarehouseInfo {
 }
 
 json UserGiftInfo {
-	doc "TODO"
+    doc "A gift from a friend (UserInfo / GetGiftInfo 30uygM9m -> UserGiftInfoResponse); keys off UserGiftInfoResponse::readParam"
 
-    field unk1 type="i32::str" {
+    field gift_identify_id type="i32::str" {
         key "gNE76SLp"
-        doc "TODO"
+        doc "our row id (UserGiftInfo::setGiftIdentifyID), what FixGiftInfo 23Xi0jom sends back to take it"
     }
 
-    field unk2 type="str" {
+    field user_id_from type="str" {
         key "yDiG31Fe"
-        doc "TODO"
+        doc "the sender"
     }
 
-    field unk3 type="str" {
+    field user_id_to type="str" {
         key "1px2dbX3"
-        doc "TODO"
+        doc "the receiver"
     }
 
-    field unk4 type="i32::str" {
+    field gift_id type="i32::str" {
         key "eDj82kMN"
-        doc "TODO"
+        doc "GiftItemMst id"
     }
 
-    field unk5 type="i32::str" {
+    field gift_type type="i32::str" {
         key "2bvT9hKt"
-        doc "TODO"
+        doc "GiftItemMst type: 1 zel, 2 friend points, 3 item, 4 karma"
     }
 
-    field unk6 type="i32::str" {
+    field item_id type="i32::str" {
         key "kixHbe54"
-        doc "TODO"
+        doc "the item for type 3"
     }
 
-    field unk7 type="i32::str" {
+    field possession type="i32::str" {
         key "wgV86x1q"
-        doc "TODO"
+        doc "the amount"
     }
 
-    field unk8 type="datetime" {
+    field gift_date type="datetime" {
         key "aHSvC81N"
-        doc "TODO"
+        doc "when it was sent"
     }
 
-    field unk9 type="i32::str" {
+    field gift_ymd type="i32::str" {
         key "q5Y4gUnb"
-        doc "TODO"
+        doc "the same as YYYYMMDD"
     }
 
-    field unk10 type="i32::str" {
+    field receive_flg type="i32::str" {
         key "fa6WwE9u"
-        doc "TODO"
+        doc "1 once taken"
     }
 
-    field unk11 type="i32::str" {
+    field unit_id type="i32::str" {
         key "pn16CNah"
-        doc "TODO"
+        doc "the sender leader unit (the row icon)"
     }
 
-    field unk12 type="str" {
+    field handle_name type="str" {
         key "B5JQyV8j"
-        doc "TODO"
+        doc "the sender name"
     }
 
-    field unk13 type="i32::str" {
+    field unit_img_type type="i32::str" {
         key "2pAyFjmZ"
-        doc "TODO"
+        doc "0"
     }
 
-    field un14 type="i32::int" {
+    field unk type="i32::str" {
         key "jkldTrhL"
-        doc "TODO"
-    }
-
-    field unk15 type="str" {
-        key "9i2xhMaJ"
-        doc "TODO"
-    }
-
-    field unk16 type="str" {
-        key "iNy0ZU5M"
-        doc "TODO"
-    }
-
-    field unk17 type="str" {
-        key "btZizNep"
-        doc "TODO"
-    }
-
-    field unk18 type="str" {
-        key "RVVgyuor"
-        doc "TODO"
+        doc "UserGiftInfo::set (9 chars), 0"
     }
 }
 

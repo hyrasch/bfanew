@@ -10,6 +10,10 @@
 */
 namespace NewPlayer
 {
+	//! the three gifts a player asks from friends (gme/Gifts.hpp): zel, friend points, karma; the gift
+	//! scenes dereference the GiftItemMst of every id in a want list, so an empty list is a crash
+	constexpr const char* kDefaultWantGifts = "100,200,300";
+
 	constexpr const char* kHandleName = "Summoner";
 
 	/*! The placeholder unit upstream gives every player (referenced by the decks). */
@@ -114,6 +118,7 @@ namespace NewPlayer
 		t.free_gems = scfg.initialFreeGems;
 		t.paid_gems = 0;
 		t.friend_point = scfg.initialFriendPoints;
+		t.want_gift = kDefaultWantGifts; // the gifts asked from friends (gme/Gifts.hpp): zel, friend points, karma
 		ApplyLevel(t, static_cast<int32_t>(scfg.initialLevel), true);
 	}
 

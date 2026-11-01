@@ -69,6 +69,8 @@ namespace
 		p.last_login = r["last_login"].isNull() ? 0 : r["last_login"].as<int64_t>();
 		p.scenario = r["scenario"].isNull() ? "" : r["scenario"].as<std::string>();
 		p.special_scenario = r["special_scenario"].isNull() ? "" : r["special_scenario"].as<std::string>();
+		p.bonus_day = r["bonus_day"].isNull() ? -1 : r["bonus_day"].as<int64_t>();
+		p.bonus_streak = r["bonus_streak"].isNull() ? 0 : static_cast<int32_t>(r["bonus_streak"].as<int64_t>());
 		return p;
 	}
 }
@@ -178,8 +180,8 @@ namespace Db
 
 	Task<void> SavePlayer(const Player& p)
 	{
-		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4, scenario = $5, special_scenario = $6 WHERE user_id = $7",
-			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.scenario, p.special_scenario, p.user_id);
+		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4, scenario = $5, special_scenario = $6, bonus_day = $7, bonus_streak = $8 WHERE user_id = $9",
+			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.scenario, p.special_scenario, p.bonus_day, static_cast<int64_t>(p.bonus_streak), p.user_id);
 	}
 
 	void RegenEnergy(Player& p)
@@ -582,6 +584,55 @@ namespace Db
 	Task<void> SetFavorite(std::string userId, std::string friendId, int32_t favorite)
 	{
 		co_await theDb()->execSqlCoro("UPDATE player_friends SET favorite = $1 WHERE user_id = $2 AND friend_id = $3", static_cast<int64_t>(favorite), userId, friendId);
+	}
+
+	Task<std::vector<PresentRow>> LoadPresents(std::string userId)
+	{
+		std::vector<PresentRow> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT id, type, target_id, count, description, created, expires, received FROM player_presents WHERE user_id = $1 ORDER BY id", userId);
+		for (const auto& r : res)
+			out.push_back({ r["id"].as<int64_t>(), static_cast<int32_t>(r["type"].as<int64_t>()), static_cast<int32_t>(r["target_id"].as<int64_t>()), static_cast<int32_t>(r["count"].as<int64_t>()),
+				r["description"].as<std::string>(), r["created"].as<int64_t>(), r["expires"].as<int64_t>(), r["received"].as<int64_t>() });
+		co_return out;
+	}
+
+	Task<void> AddPresent(std::string userId, int32_t type, int32_t targetId, int32_t count, std::string description, int64_t created, int64_t expires)
+	{
+		co_await theDb()->execSqlCoro("INSERT INTO player_presents(user_id, type, target_id, count, description, created, expires) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+			userId, static_cast<int64_t>(type), static_cast<int64_t>(targetId), static_cast<int64_t>(count), description, created, expires);
+	}
+
+	Task<void> MarkPresent(int64_t id, int64_t received)
+	{
+		co_await theDb()->execSqlCoro("UPDATE player_presents SET received = $1 WHERE id = $2", received, id);
+	}
+
+	Task<std::vector<GiftRow>> LoadGiftsTo(std::string userId)
+	{
+		std::vector<GiftRow> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT id, from_user, to_user, gift_id, created, received FROM player_gifts WHERE to_user = $1 ORDER BY id", userId);
+		for (const auto& r : res)
+			out.push_back({ r["id"].as<int64_t>(), r["from_user"].as<std::string>(), r["to_user"].as<std::string>(), static_cast<int32_t>(r["gift_id"].as<int64_t>()), r["created"].as<int64_t>(), r["received"].as<int64_t>() });
+		co_return out;
+	}
+
+	Task<void> AddGift(std::string fromUser, std::string toUser, int32_t giftId, int64_t created)
+	{
+		co_await theDb()->execSqlCoro("INSERT INTO player_gifts(from_user, to_user, gift_id, created) VALUES ($1, $2, $3, $4)", fromUser, toUser, static_cast<int64_t>(giftId), created);
+	}
+
+	Task<void> MarkGift(int64_t id, int64_t received)
+	{
+		co_await theDb()->execSqlCoro("UPDATE player_gifts SET received = $1 WHERE id = $2", received, id);
+	}
+
+	Task<std::unordered_set<std::string>> GiftsSentSince(std::string fromUser, int64_t since)
+	{
+		std::unordered_set<std::string> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT to_user FROM player_gifts WHERE from_user = $1 AND created >= $2", fromUser, since);
+		for (const auto& r : res)
+			out.insert(r["to_user"].as<std::string>());
+		co_return out;
 	}
 
 	Task<Run> RunFor(std::string serialId, std::string userId)

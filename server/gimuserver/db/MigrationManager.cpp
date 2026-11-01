@@ -247,6 +247,39 @@ static void RegisterMigrations(MigrationMap& map)
 		p->execSqlSync("ALTER TABLE player_units ADD COLUMN type_roll REAL NOT NULL DEFAULT 0.5;");
 	});
 
+	// bfanew: the Gift Box (gme/Presents.hpp) and the daily login bonus streak
+	migrate("01112026_Presents", {
+		p->execSqlSync(
+			"CREATE TABLE player_presents("
+			"id INTEGER PRIMARY KEY AUTOINCREMENT,"
+			"user_id TEXT NOT NULL,"
+			"type INTEGER NOT NULL,"
+			"target_id INTEGER NOT NULL DEFAULT 0,"
+			"count INTEGER NOT NULL DEFAULT 1,"
+			"description TEXT NOT NULL DEFAULT '',"
+			"created INTEGER NOT NULL,"
+			"expires INTEGER NOT NULL DEFAULT 0,"
+			"received INTEGER NOT NULL DEFAULT 0"
+			");"
+		);
+		p->execSqlSync("CREATE INDEX player_presents_user ON player_presents(user_id, received);");
+		p->execSqlSync("ALTER TABLE players ADD COLUMN bonus_day INTEGER NOT NULL DEFAULT -1;");
+		p->execSqlSync("ALTER TABLE players ADD COLUMN bonus_streak INTEGER NOT NULL DEFAULT 0;");
+		// gifts between friends (gme/Gifts.hpp)
+		p->execSqlSync(
+			"CREATE TABLE player_gifts("
+			"id INTEGER PRIMARY KEY AUTOINCREMENT,"
+			"from_user TEXT NOT NULL,"
+			"to_user TEXT NOT NULL,"
+			"gift_id INTEGER NOT NULL,"
+			"created INTEGER NOT NULL,"
+			"received INTEGER NOT NULL DEFAULT 0"
+			");"
+		);
+		p->execSqlSync("CREATE INDEX player_gifts_to ON player_gifts(to_user, received);");
+		p->execSqlSync("CREATE INDEX player_gifts_from ON player_gifts(from_user, created);");
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

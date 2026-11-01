@@ -1,0 +1,218 @@
+// bfanew: the Gift Box (CLAUDE.md "Gifts"). Keys read off UserPresentInfoResponse::readParam,
+// the request bodies off PresentListRequest / PresentReceiptRequest::createBody.
+
+json UserPresentInfo {
+    doc "One present (top-level sEA41vFK -> UserPresentInfoResponse, replaces UserPresentInfoList; PresentTopScene draws it)"
+
+    field present_id type="str" {
+        key "S1B82FHK"
+        doc "our row id, what PresentReceipt sends back"
+    }
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the player"
+    }
+
+    field present_type type="i32::str" {
+        key "30Kw4WBa"
+        doc "PresentTopScene::getPresentName: 8 gems, 3 zel, 11 karma, 2 friend points, 20 summoner points, 5 / 4 / 7 / 19 an item by target id (7 drawn in the sphere frame), 6 / 15 a unit by target id (a wrong type is a null ItemMst and a crash)"
+    }
+
+    field target_id type="i32::str" {
+        key "TdDHf59J"
+        doc "unit id / item id for types 5-7, 0 for currencies"
+    }
+
+    field target_cnt type="i32::str" {
+        key "wJsB35iH"
+        doc "amount (gems, zel, karma, points, items) or 1 for a unit"
+    }
+
+    field target_param type="str" {
+        key "37moriMq"
+        doc "a unit's extras as the scene parses them (unit id:type:lv..., colon separated); empty otherwise"
+    }
+
+    field receipt_type type="i32::str" {
+        key "i1WQkh4G"
+        doc "0"
+    }
+
+    field present_date type="i32::str" {
+        key "fAi8Th5s"
+        doc "unix seconds the present was sent"
+    }
+
+    field present_date_str type="str" {
+        key "ya7UHG9v"
+        doc "the same as text (shown on the row)"
+    }
+
+    field receipt_date type="i32::str" {
+        key "0wmDb9vi"
+        doc "unix seconds of the receipt, 0 while unclaimed"
+    }
+
+    field receipt_date_str type="str" {
+        key "vo1GT3Rs"
+        doc "the same as text"
+    }
+
+    field description type="str" {
+        key "ZC0msu2L"
+        doc "the message shown on the row (Login Bonus: Day 3...)"
+    }
+
+    field is_receipt type="i32::str" {
+        key "g85qMNxf"
+        doc "1 once claimed (the list only carries unclaimed ones)"
+    }
+
+    field operation type="i32::str" {
+        key "DbMVG16I"
+        doc "what the client does with the record at the end of the node (UserPresentInfoResponse::readParam): 1 or 2 = add / replace the present of that id in UserPresentInfoList, 3 = remove it, anything else = ignore the record"
+    }
+}
+
+json PresentReceiptParam {
+    doc "Request group o6uWU0Z7 of PresentReceipt"
+
+    field receipt_type type="i32::str" {
+        key "i1WQkh4G"
+        doc "UserState::getReceiptType: 1 = the one present (S1B82FHK), 2 = Claim All"
+    }
+
+    field present_id type="str" {
+        key "S1B82FHK"
+        doc "UserState::getPresentID, the row tapped (empty for Claim All)"
+    }
+}
+
+json PresentListReq {
+    doc "PresentList (nhjvB52R, key 6F9sMzBxEv8jXpau, URL /actionSymbol/XKF7BT8m.php): the Gift Box (Social > Gifts, PresentTopScene)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+}
+
+json PresentReceiptReq {
+    doc "PresentReceipt (bV5xa0ZW, key X2QFqAKfomPIg3rG, URL /actionSymbol/mwWk9Gh4.php): claim one present or all"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field param type="[PresentReceiptParam]::size(1)" {
+        key "o6uWU0Z7"
+        doc "the request group"
+    }
+}
+
+json PresentListResp {
+    doc "PresentList and PresentReceipt reply: the presents left, the wallet, the box and the warehouse (what a receipt changed)"
+
+    field presents type="[UserPresentInfo]" {
+        key "sEA41vFK"
+        doc "UserPresentInfoResponse: replaces UserPresentInfoList"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "the wallet"
+    }
+
+    field unit_info type="[UserUnitInfo]" {
+        key "4ceMWH6k"
+        doc "the whole unit box (a reply with the key replaces the client's list, so always the whole box)"
+    }
+
+    field warehouse type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "the whole warehouse"
+    }
+}
+
+json FixGiftParam {
+    doc "Request group Gg5c3eM6 of FixGiftInfo (FixGiftInfoRequest::createBody)"
+
+    field want_gift type="str" {
+        key "s2WnRw9N"
+        doc "UserTeamInfo::getWantGift: the three gift ids the player asks for, comma separated"
+    }
+
+    field receive_ids type="str" {
+        key "23Xi0jom"
+        doc "UserState::getUserGiftInfoListRecieve: the gift identify ids taken, comma separated"
+    }
+
+    field send_list type="str" {
+        key "qD74LPXb"
+        doc "UserState::getUserGiftInfoListSend: friend user id:gift id pairs sent, comma separated"
+    }
+}
+
+json GetGiftInfoReq {
+    doc "GetGiftInfo (ifYoPJ46, key 6zHEYa9U, URL /actionSymbol/sgeM70Nz.php): the gifts received (GiftRecieveConnectScene)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+}
+
+json FixGiftInfoReq {
+    doc "FixGiftInfo (gLRIn74v, key 15gTE9ft, URL /actionSymbol/L0Q3rMBW.php): the want list, the gifts taken and the gifts sent"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field param type="[FixGiftParam]::size(1)" {
+        key "Gg5c3eM6"
+        doc "the request group"
+    }
+}
+
+json GiftInfoResp {
+    doc "GetGiftInfo / FixGiftInfo reply: the gifts waiting, the wallet and the warehouse"
+
+    field gift_info type="[UserGiftInfo]" {
+        key "30uygM9m"
+        doc "UserGiftInfoResponse: replaces the client list"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "the wallet (want list, zel, karma, friend points)"
+    }
+
+    field warehouse type="[UserWarehouseInfo]" {
+        key "9wjrh74P"
+        doc "the whole warehouse"
+    }
+}

@@ -37,6 +37,7 @@ import "../net/mission.kdl"
 import "../net/raid.kdl"
 import "../net/npc.kdl"
 import "../net/friends.kdl"
+import "../net/present.kdl"
 import "../net/event.kdl"
 import "../net/featuring_gate.kdl"
 import "../net/mission_start.kdl"
@@ -1442,6 +1443,11 @@ json UserInfoResp {
         key "3aDk1xk7"
         doc "TODO"
     }
+    field present_info type="[UserPresentInfo]" {
+        key "sEA41vFK"
+        doc "bfanew: the presents waiting in the Gift Box (gme/Presents.hpp); PresentTopScene::initialize reads the list the login brought before its own PresentList request, so an empty one here says There are no Gifts to receive"
+    }
+
 }
 
 json DungeonEventUpdateReq {

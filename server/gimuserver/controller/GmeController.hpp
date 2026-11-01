@@ -39,7 +39,7 @@ public:
 	METHOD_LIST_BEGIN
 		ADD_METHOD_TO(GmeController::HandleGame, "/bf/gme/action.php", drogon::Post);
 		ADD_METHOD_TO(GmeController::HandleFeatureCheck, "/bf/gme/featureCheck.php", drogon::Get);
-		ADD_METHOD_TO(GmeController::HandleServerTime, "/bf/gme/action/getServerTime.php", drogon::Get);
+		ADD_METHOD_TO(GmeController::HandleServerTime, "/bf/gme/action/getServerTime.php", drogon::Get, drogon::Post); // bfanew: the client posts it
 		ADD_METHOD_TO(GmeController::HandleDailyLogin, "/bf/gme/action/Daily_login.php", drogon::Post);
 	METHOD_LIST_END
 

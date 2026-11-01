@@ -91,6 +91,10 @@ void GmeController::HandleServerTime(const HttpRequestPtr& rq, std::function<voi
 {
 	auto p = HttpResponse::newHttpResponse();
 	p->setStatusCode(k200OK);
+	// bfanew: the client POSTs this (NetworkManager, request tag "SERVER_TIME") and
+	// ServerTimeInfo::onNetworkRequestComplete runs StrToInt on the whole body (a trailing newline
+	// stripped), so the reply is the bare unix time; the route takes GET and POST (GET only left the
+	// client's server clock at 0 and the Gift Box said "Expiring in 20818d")
 	p->setContentTypeCode(CT_TEXT_HTML);
 	p->setBody(std::to_string(trantor::Date::date().secondsSinceEpoch()));
 	callback(p);

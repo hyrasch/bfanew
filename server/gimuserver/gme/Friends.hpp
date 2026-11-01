@@ -1,6 +1,7 @@
 #pragma once
 #include "App.hpp"
 #include "Arena.hpp"
+#include "NewPlayer.hpp"
 #include "Vortex.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -145,12 +146,14 @@ namespace Friends
 		co_return l;
 	}
 
-	inline FriendInfo Record(const Loaded& l, int32_t state, int32_t favorite, int64_t since, int64_t now)
+	inline FriendInfo Record(const Loaded& l, int32_t state, int32_t favorite, int64_t since, int64_t now, bool giftedToday = false)
 	{
 		FriendInfo r = {};
 		FillCommon(r, l.player, l.leader, l.arena_points, now);
 		r.friend_type = state;
 		r.favorite = favorite;
+		r.today_yale = giftedToday ? 1 : 0; // a gift was sent to this friend today (gme/Gifts.hpp)
+		r.want_gift = l.player.team.want_gift.empty() ? NewPlayer::kDefaultWantGifts : l.player.team.want_gift; // the send scene looks every id up
 		r.ranking_point = l.arena_points;
 		r.req_time = since ? GameClock(since) : "";
 		r.elapsed_agree_time = since ? static_cast<int32_t>(std::max<int64_t>(0, now - since)) : 0;
@@ -178,12 +181,16 @@ namespace Friends
 	inline drogon::Task<std::vector<FriendInfo>> Relations(const Db::Player& me, const std::vector<Db::FriendRow>& rows, int64_t now)
 	{
 		std::vector<FriendInfo> out;
+		const int64_t offset = static_cast<int64_t>(theServer()->cache().vortex().utc_offset_hours) * 3600;
+		const int64_t local = now + offset;
+		const int64_t dayStart = (local >= 0 ? local / 86400 : (local - 86399) / 86400) * 86400 - offset;
+		const auto gifted = co_await Db::GiftsSentSince(me.user_id, dayStart);
 		for (const auto& row : rows)
 		{
 			if (row.state != Friend && row.state != Received && row.state != Sent) continue;
 			const auto l = co_await LoadOther(row.friend_id);
 			if (!l) continue;
-			out.push_back(Record(*l, row.state, row.state == Friend ? row.favorite : 0, row.since, now));
+			out.push_back(Record(*l, row.state, row.state == Friend ? row.favorite : 0, row.since, now, gifted.count(row.friend_id) > 0));
 		}
 		std::stable_sort(out.begin(), out.end(), [](const auto& a, const auto& b) {
 			if (a.friend_type != b.friend_type) return a.friend_type < b.friend_type;

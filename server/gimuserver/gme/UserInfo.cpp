@@ -4,6 +4,8 @@
 #include "Vortex.hpp"
 #include "Keys.hpp"
 #include "Arena.hpp"
+#include "Presents.hpp"
+#include "Gifts.hpp"
 #include <cstdlib>
 #include <unordered_set>
 
@@ -49,6 +51,31 @@ HANDLEF(UserInfo)
 		p.team.friend_agree_count = 0;
 		for (const auto& f : co_await Db::LoadFriends(p.user_id))
 			if (f.state == 2) p.team.friend_agree_count++;
+	}
+	{
+		// bfanew: the daily login bonus, a present in the Gift Box on the first login of a game day
+		// (gme/Presents.hpp), and the badge count of the box
+		const int64_t now = Vortex::Now();
+		const int64_t today = Presents::GameDay(now);
+		if (p.bonus_day != today)
+		{
+			p.bonus_streak = (p.bonus_day == today - 1) ? p.bonus_streak + 1 : 1;
+			p.bonus_day = today;
+			const auto& table = Presents::LoginBonus();
+			const auto& b = table[(p.bonus_streak - 1) % table.size()];
+			co_await Db::AddPresent(p.user_id, b.type, b.target, b.count, b.text, now, now + Presents::kExpireDays * 86400);
+			LOG_DEBUG << "UserInfo: login bonus day " << p.bonus_streak << " for " << p.user_id << ": " << b.text;
+		}
+		// gifts between friends (gme/Gifts.hpp): the want list every player has, the gifts waiting
+		if (p.team.want_gift.empty()) p.team.want_gift = Gifts::kDefaultWants;
+		resp.gift_info = co_await Gifts::Received(p.user_id);
+		p.team.present_count = 0;
+		for (const auto& r : co_await Db::LoadPresents(p.user_id))
+			if (!r.received && (r.expires == 0 || r.expires > now))
+			{
+				p.team.present_count++;
+				resp.present_info.push_back(Presents::Record(r, p.user_id)); // the box's list is read at login too
+			}
 	}
 	{
 		// bfanew: the Arena record (orbs regenerated here too, so the home screen shows them)

@@ -78,6 +78,11 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("umNt8M7i", FriendSearch, "qa3sHuDgKxV5nI1F");
 	REGISTER("mE5gUQOp", FriendRandomSearch, "oK4VaDGF");
 	REGISTER("ps6Vgx4R", FriendFavorite, "XcE1CK6L");
+	REGISTER("nhjvB52R", PresentList, "6F9sMzBxEv8jXpau");
+	REGISTER("bV5xa0ZW", PresentReceipt, "X2QFqAKfomPIg3rG");
+	REGISTER("ifYoPJ46", GetGiftInfo, "6zHEYa9U");
+	REGISTER("gLRIn74v", FixGiftInfo, "15gTE9ft");
+	REGISTER("YPBU7MD8", GetAchievementInfo, "AKjzyZ81");
 	REGISTER("Uo86DcRh", GatchaList, "8JbxFvuSaB2CK7Ln");
 	REGISTER("F7JvPk5H", GachaAction, "bL9fipzaSy7xN2w1");
 	REGISTER("BjAt1D6b", DungeonEventUpdate, "k5EiNe9x");

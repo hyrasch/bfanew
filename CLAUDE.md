@@ -110,7 +110,7 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, arena
-orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Also DungeonEventUpdate (story events watched, stored since 2026-11-01). Stubs: UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"). Not implemented: gifts (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Also DungeonEventUpdate (story events watched, stored since 2026-11-01). Stubs: UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"), the Present Box, gifts between friends and the daily login bonus (PresentList / Receipt, GetGiftInfo / FixGiftInfo, see "Gifts"). Not implemented: the login campaign calendar (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -1046,6 +1046,70 @@ to the setter each key feeds, `getters.py` lists a class's accessors with their 
 `vt.py` reads vtable slots, `dis.py` / `syms.py` disassemble and list: the way the friend record was
 mapped (`FriendInfo` derives from `UserUnitInfoBase`).
 
+## Gifts (2026-11-01)
+
+Three things hide behind "gifts" in this client, all built: the **Present Box** (the home screen's
+gift icon -> Rewards hub -> Present Box, PresentTopScene), **gifts between friends** (Social > Gifts,
+GiftRecieveScene2 / GiftSendScene2) and the **daily login bonus**, delivered as a present. Files:
+`net/present.kdl` (every id, key and field of both systems), `gme/Presents.hpp` + `PresentHandlers.cpp`,
+`gme/Gifts.hpp` + `GiftHandlers.cpp`, `gme/GetAchievementInfo.cpp` (the hub's stub), tables
+`player_presents` and `player_gifts` (migration `01112026_Presents`, which also adds
+`players.bonus_day` / `bonus_streak`).
+
+**Present Box.** PresentList (`nhjvB52R`, key `6F9sMzBxEv8jXpau`) and PresentReceipt (`bV5xa0ZW`, key
+`X2QFqAKfomPIg3rG`, group `o6uWU0Z7` {`i1WQkh4G` receipt type 1 = one / 2 = Claim All, `S1B82FHK`
+present id}) answer `sEA41vFK` UserPresentInfo records + wallet + box + warehouse. What the client
+needs, learned the hard way: (1) **`DbMVG16I` per record: 1 / 2 = add or replace the present of that
+id in UserPresentInfoList, 3 = remove it, anything else = the record is ignored** (so the receipt
+reply carries the claimed ones with 3); (2) **`fAi8Th5s` is the expiry** (unix seconds:
+`UserPresentInfo::getPresentTimeLeft` = it minus the server clock, PresentTopScene::getPresentList
+drops the non-positive ones and sorts by it) and `ya7UHG9v` the expiry text; (3) **the present types
+of PresentTopScene::getPresentName: 8 gems, 3 zel, 11 karma, 2 friend (honor) points, 20 summoner
+points, 5 / 4 / 7 / 19 an item by target id (7 drawn in the sphere frame), 6 / 15 a unit** - a wrong
+type is a null ItemMst and a crash in getPresentName; (4) PresentTopScene::initialize reads the list
+the login brought (UserInfo `sEA41vFK`, now sent) before its own request, else it says "There are
+no Gifts to receive"; (5) a unit's `37moriMq` extras made the title "Fencer Vargas: MST_EXTRAPA..."
+(an extra-skill text key), so it stays empty. The hub (RewardsTopScene: Level Up Campaign, Brave
+Points, Present Box, Keys, Slots, Daily Spin) first sends GetAchievementInfo (`YPBU7MD8`, key
+`AKjzyZ81`); unanswered it popped "Unsupported request" and the client restarted, so it gets the four
+achievement lists empty (`Bnc4LpM8`, `YTRJLG65`, `9j3ALx8I`, `LcFCx1Uz`). Presents expire after
+`kExpireDays` 30. Verified on BlueStacks: five presents (gem, karma, Cures, a unit, honor points)
+listed with icons and texts, Receive All -> gems 6 -> 7, karma +500, honor 20 -> 70, the unit in the
+box, the list empty, the badge count (`UserTeamInfo.present_count`) on the home icon. Cosmetic gap:
+"Expiring in 20818d" - the client's server clock (ServerTimeInfo, `/bf/gme/action/getServerTime.php`,
+POSTed with the request tag SERVER_TIME; the reply is the bare unix time, route now GET + POST) is
+still 0 when the box opens on BlueStacks, so the countdown is the expiry itself.
+
+**Gifts between friends.** `GiftItemMst` (`deploy/system/gift.json`, Initialize `Bm1WNDQ0`; the base
+file's end dates were 2025-12-31, `phases/01/gift.json` extends them) lists the ten gifts: type 1 zel
+300, 2 friend points 10, 4 karma 100, 3 an item (`kixHbe54`) x `wgV86x1q`. Every player has a "want"
+list of three gift ids (`UserTeamInfo.want_gift`, "100,200,300" by default, `NewPlayer::
+kDefaultWantGifts`): **the gift scenes dereference the GiftItemMst of every id in a want list, so an
+empty or unknown list crashes them** (GiftRecieveScene2::setWantGiftList, GiftSendScene2::
+setFriendList on a friend's `s2WnRw9N`). The client keeps the gifts received in UserGiftInfoList
+(UserInfo / GetGiftInfo `ifYoPJ46` key `6zHEYa9U` -> `30uygM9m` UserGiftInfo: `gNE76SLp` our row id,
+from / to, gift id, type, item, amount, date, `q5Y4gUnb` YYYYMMDD, `fa6WwE9u` taken, the sender's
+leader unit and name) and does everything locally: Receive All pays the gift on the client
+(incZel...) and Send marks the friend, then ONE FixGiftInfo (`gLRIn74v`, key `15gTE9ft`) is queued
+through ConnectRequestList and sent with the next connection: `Gg5c3eM6` {`s2WnRw9N` the want list,
+`23Xi0jom` the row ids taken, `qD74LPXb` "friend user id:gift id,..." sent}. The server pays the
+gifts taken, stores the ones sent (one per friend per day, among the friend's wants; `FriendInfo
+today_yale` = 1 once done) and answers the gifts still waiting + wallet + warehouse. Verified: A sent
+300 zel to B, B's box showed it and took it (zel +300), A's list shows B as gifted today; on the
+client the Receive Gifts screen (Desired Gifts with the three icons, Receive All, Send) and Send Gifts
+(the friends with their wants) work, Receive All took B's 10 friend points (20 -> 30) once the
+queued FixGiftInfo went out with the next request.
+
+**Daily login bonus.** The first UserInfo of a game day drops the day's present of a 7-day cycle in
+the box (`Presents::LoginBonus`, ours: 1,000 zel / 500 karma / 50 honor / 3 Cures / 3,000 zel /
+1,500 karma / 1 gem; the streak resets after a missed day), the way the launch-era login bonuses
+reached the Gift Box. The client's other login-reward paths are dead or later: the old
+`Daily_login.php` list (DailyLoginRewardInfoList, PRESENT_TYPE / DAYS_LEFT_TO_GEM, the base64 JSON
+upstream still serves) has no scene drawing it in 2.19.6, the Daily Spin (DailyLoginRequest
+`4aClzokO`) is the 2016 slot machine, and the Login Campaign calendar (LoginCampaignMst / Reward,
+UserLoginCampaignInfo, claimed through the `4MCxgS5p` campaign-code tag of the next request) stays
+zeroed for phase 1 (it would need its reward table and the claim flow; a later step).
+
 ## Arena (2026-11-01)
 
 The classic PvP Arena works end to end against NPC summoners (and against other registered
@@ -1380,7 +1444,7 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"); ~~Parade keys~~ **done 2026-10-31** (see "Parade keys"). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~battle data for every phase-1 mission~~ **done 2026-11-01** (synthesized where no capture exists, see "Battle data synthesis"); ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
-5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; defence counts 2026-11-01, no ranking request exists in this client); ~~friends~~ **built 2026-11-01** (see "Friends").
+5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; defence counts 2026-11-01, no ranking request exists in this client); ~~friends~~ **built 2026-11-01** (see "Friends"); ~~gifts and the daily login bonus~~ **built 2026-11-01** (see "Gifts").
 
 ## Conventions
 

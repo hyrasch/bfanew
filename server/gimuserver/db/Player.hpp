@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <unordered_set>
 
 #include <drogon/orm/DbClient.h>
 #include <drogon/utils/coroutine.h>
@@ -40,6 +41,8 @@ namespace Db
 		int64_t last_login = 0; //!< unix time of the last UserInfo (shown to friends)
 		std::string scenario;         //!< story events watched: the client's UserScenarioInfoList save string (UserInfo N4XVE1uA)
 		std::string special_scenario; //!< special scenarios watched (UserInfo 9yVsu21R)
+		int64_t bonus_day = -1;       //!< game day of the last daily login bonus (gme/Presents.hpp)
+		int32_t bonus_streak = 0;     //!< consecutive days logged in (picks the bonus of the cycle)
 	};
 
 	/*! The level table row for a level (nullptr if none). */
@@ -156,6 +159,20 @@ namespace Db
 	drogon::Task<void> SetFriend(std::string userId, std::string friendId, int32_t state, int64_t since);
 	drogon::Task<void> RemoveFriend(std::string userId, std::string friendId);
 	drogon::Task<void> SetFavorite(std::string userId, std::string friendId, int32_t favorite);
+
+	/*! bfanew: the Gift Box (gme/Presents.hpp): a present waiting in the box or already claimed. */
+	struct PresentRow { int64_t id = 0; int32_t type = 0; int32_t target_id = 0; int32_t count = 1; std::string description; int64_t created = 0; int64_t expires = 0; int64_t received = 0; };
+	drogon::Task<std::vector<PresentRow>> LoadPresents(std::string userId);
+	drogon::Task<void> AddPresent(std::string userId, int32_t type, int32_t targetId, int32_t count, std::string description, int64_t created, int64_t expires);
+	drogon::Task<void> MarkPresent(int64_t id, int64_t received);
+
+	/*! bfanew: gifts between friends (gme/Gifts.hpp). */
+	struct GiftRow { int64_t id = 0; std::string from_user; std::string to_user; int32_t gift_id = 0; int64_t created = 0; int64_t received = 0; };
+	drogon::Task<std::vector<GiftRow>> LoadGiftsTo(std::string userId);
+	drogon::Task<void> AddGift(std::string fromUser, std::string toUser, int32_t giftId, int64_t created);
+	drogon::Task<void> MarkGift(int64_t id, int64_t received);
+	/*! The friends the player sent a gift to since a time (one gift per friend per day). */
+	drogon::Task<std::unordered_set<std::string>> GiftsSentSince(std::string fromUser, int64_t since);
 
 	/*! The run of a serial id: the mission and the helper picked ("" without one, "npc" for a fixed one). */
 	struct Run { int32_t mission_id = 0; std::string helper; };

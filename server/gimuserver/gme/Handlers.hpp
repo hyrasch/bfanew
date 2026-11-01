@@ -108,6 +108,11 @@ namespace GmeHandlers
 	HANDLE(FriendSearch);
 	HANDLE(FriendRandomSearch);
 	HANDLE(FriendFavorite);
+	HANDLE(PresentList);
+	HANDLE(PresentReceipt);
+	HANDLE(GetGiftInfo);
+	HANDLE(FixGiftInfo);
+	HANDLE(GetAchievementInfo);
 	HANDLE(GetPlayerInfo);
 	HANDLE(ItemMix);
 	HANDLE(ShopUse);
