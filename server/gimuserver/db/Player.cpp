@@ -227,10 +227,19 @@ namespace Db
 		co_return out;
 	}
 
-	Task<void> AddUnit(std::string userId, UserUnitInfo& unit)
+	Task<std::unordered_map<int32_t, double>> LoadUnitRolls(std::string userId)
+	{
+		std::unordered_map<int32_t, double> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT user_unit_id, type_roll FROM player_units WHERE user_id = $1", userId);
+		for (const auto& r : res)
+			out[static_cast<int32_t>(r["user_unit_id"].as<int64_t>())] = r["type_roll"].isNull() ? 0.5 : r["type_roll"].as<double>();
+		co_return out;
+	}
+
+	Task<void> AddUnit(std::string userId, UserUnitInfo& unit, double typeRoll)
 	{
 		unit.user_id = userId;
-		co_await theDb()->execSqlCoro("INSERT INTO player_units(user_id, unit_id, data) VALUES ($1, $2, $3)", userId, static_cast<int64_t>(unit.unit_id), ToJson(unit));
+		co_await theDb()->execSqlCoro("INSERT INTO player_units(user_id, unit_id, data, type_roll) VALUES ($1, $2, $3, $4)", userId, static_cast<int64_t>(unit.unit_id), ToJson(unit), typeRoll);
 		const auto res = co_await theDb()->execSqlCoro("SELECT last_insert_rowid() AS id");
 		unit.user_unit_id = static_cast<int32_t>(res[0]["id"].as<int64_t>());
 		// keep the stored copy consistent with the id the client will see

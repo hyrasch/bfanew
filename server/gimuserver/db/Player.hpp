@@ -64,7 +64,9 @@ namespace Db
 
 	drogon::Task<std::vector<UserUnitInfo>> LoadUnits(std::string userId);
 	/*! Inserts a unit; its user_unit_id is assigned by the database and written back. */
-	drogon::Task<void> AddUnit(std::string userId, UserUnitInfo& unit);
+	drogon::Task<void> AddUnit(std::string userId, UserUnitInfo& unit, double typeRoll = 0.5);
+	/*! user unit id -> the type roll (0..1) of the summon (Units::ApplyType), 0.5 when unknown. */
+	drogon::Task<std::unordered_map<int32_t, double>> LoadUnitRolls(std::string userId);
 	/*! Writes a changed unit back (fusion, evolution). */
 	drogon::Task<void> UpdateUnit(std::string userId, const UserUnitInfo& unit);
 	/*! Deletes units (and the squad slots that held them). */

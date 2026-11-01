@@ -125,7 +125,11 @@ HANDLEF(UnitEvo)
 	base->skill_id = evoDef->bb_id;
 	base->extra_skill_id = evoDef->es_id;
 	base->new_flag = true;
-	NewPlayer::SetUnitLevel(*base, *evoDef, 1);
+	{
+		const auto rolls = co_await Db::LoadUnitRolls(p.user_id);
+		const auto it = rolls.find(base->user_unit_id);
+		NewPlayer::SetUnitLevel(*base, *evoDef, 1, it == rolls.end() ? 0.5 : it->second); // type and roll kept
+	}
 
 	res.unit_id = std::to_string(base->unit_id);
 	res.user_unit_id = std::to_string(base->user_unit_id);

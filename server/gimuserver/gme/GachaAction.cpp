@@ -191,6 +191,7 @@ HANDLEF(GachaAction)
 		d.unit_id = u.unit_id;
 		// unit type (1 Lord, 2 Anima, 3 Breaker, 4 Guardian, 5 Oracle), random like the real summon
 		d.unit_type_id = std::uniform_int_distribution<int>(1, 5)(rng());
+		const double typeRoll = std::uniform_real_distribution<double>(0.0, 1.0)(rng()); // where in the type's stat range (Units::TypeBonus)
 		d.unit_lv = 1;
 		d.exp = 0;
 		d.total_exp = 0;
@@ -201,7 +202,9 @@ HANDLEF(GachaAction)
 		d.skill_lv = 1;
 		d.new_flag = true;
 		d.receive_date = now;
-		co_await Db::AddUnit(p.user_id, d);
+		if (const auto* def = theServer()->cache().unit(d.unit_id))
+			Units::ApplyType(d, *def, typeRoll);
+		co_await Db::AddUnit(p.user_id, d, typeRoll);
 
 		OpeUserUnit ope = {};
 		ope.user_unit_id = d.user_unit_id;

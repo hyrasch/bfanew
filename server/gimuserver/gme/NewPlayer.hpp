@@ -36,7 +36,7 @@ namespace NewPlayer
 	}
 
 	/*! A fresh level-1 unit of the unit table (deploy/units.json), user_unit_id unset. */
-	inline UserUnitInfo UnitFromTable(int32_t unitId, const UnitDef& def, int32_t unitType = 1)
+	inline UserUnitInfo UnitFromTable(int32_t unitId, const UnitDef& def, int32_t unitType = 1, double roll = 0.5)
 	{
 		static constexpr const char* kElements[] = { "", "fire", "water", "earth", "thunder", "light", "dark" };
 		UserUnitInfo d = {};
@@ -56,11 +56,12 @@ namespace NewPlayer
 		d.extra_skill_id = def.es_id;
 		d.new_flag = true;
 		d.receive_date = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+		Units::ApplyType(d, def, roll);
 		return d;
 	}
 
 	/*! Puts a unit at a level: exp from the unit's exp pattern, stats interpolated (Units::StatAt). */
-	inline void SetUnitLevel(UserUnitInfo& u, const UnitDef& def, int32_t lv)
+	inline void SetUnitLevel(UserUnitInfo& u, const UnitDef& def, int32_t lv, double roll = 0.5)
 	{
 		const auto& cache = theServer()->cache();
 		lv = std::max<int32_t>(1, std::min<int32_t>(lv, def.max_level));
@@ -71,6 +72,7 @@ namespace NewPlayer
 		u.base_atk = Units::StatAt(def.atk, lv, def.max_level);
 		u.base_def = Units::StatAt(def.def_, lv, def.max_level);
 		u.base_heal = Units::StatAt(def.rec, lv, def.max_level);
+		Units::ApplyType(u, def, roll);
 	}
 
 	/*! Fills the level-dependent fields of a team from the level table (user_level.json). */

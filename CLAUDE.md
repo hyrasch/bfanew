@@ -580,7 +580,18 @@ numbers the Fuse screen predicts (checked: zel 200 and XP 306 for a lv1 same-ele
 - zel (`GameUtils::getMixGold`): sum over materials of (base level + material level) * 100;
 - level from the unit's exp pattern (`unit_exp_pattern.json`: `5UvTp7q1` pattern, `D9wXQI2V`
   level, `grKTq15A` total exp), capped at the unit's max level; stats interpolated linearly
-  between the level-1 and max-level values (the real curve is not known yet);
+  between the level-1 (base) and max-level (Lord) values: **that is all the data there is**
+  (F_UNIT_MST has base + lord stats and an exp pattern, the client's UnitMst only getMinHp /
+  getMaxHp, the datamine lists the same two points, the community calculators grew stats
+  linearly), checked 2026-11-01; **unit types (2026-11-01)**: `deploy/units.json` now carries each
+  unit's per-type stat ranges (`types`: "2" Anima hp / rec, "3" Breaker atk / def, "4" Guardian
+  def / rec, "5" Oracle rec / def, [min, max] at max level, from the datamine's `info.json` via
+  `build_units.py --info`); a summon rolls the type (1-5) and a point of the range
+  (`player_units.type_roll`, migration `01112026_UnitTypeRoll`), `Units::ApplyType` puts the
+  percentage of the current base stat into `add_hp/atk/def/heal` (what the client adds to the
+  base: 3003 = 1000 + 1001 + 1002 on the stub Tilith) and every level-up / evolution rescales it
+  (`Db::LoadUnitRolls`). Verified by `gme.py`: a Breaker Rare Summon at lv 1 atk 1105 +131, def
+  900 -47; after a fusion to lv 4 atk 1122 +133, def 915 -48;
 - BB level: each material with the base's brave burst (same bb id or same unit family) has a
   20% chance to raise it (max 10).
 - **`server/deploy/units.json`** is the server-side unit table (`tools/build_units.py` from

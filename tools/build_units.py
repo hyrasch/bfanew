@@ -18,6 +18,24 @@ import json
 import zipfile
 
 
+TYPE_IDS = {"anima": "2", "breaker": "3", "guardian": "4", "oracle": "5"}
+
+
+def type_ranges(stats):
+    """info.json stats -> {"2": {"hp": [min, max], "rec": [min, max]}, ...}: the max-level value of
+    each stat a type changes, as a range the summon rolls in (the Lord value is the "_lord" stat)."""
+    out = {}
+    for name, tid in TYPE_IDS.items():
+        block = stats.get(name) or {}
+        ranges = {}
+        for stat in ("hp", "atk", "def", "rec"):
+            if f"{stat} min" in block and f"{stat} max" in block:
+                ranges[stat] = [to_int(block[f"{stat} min"]), to_int(block[f"{stat} max"])]
+        if ranges:
+            out[tid] = ranges
+    return out
+
+
 def to_int(v, d=0):
     try:
         return int(v or d)
@@ -29,11 +47,13 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mst", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--info", help="the datamine's info.json (cheahjs/bravefrontier_data): per-unit type stat ranges (Anima / Breaker / Guardian / Oracle)")
     ap.add_argument("--evos", help="also write the evolution table (F_UNIT_EVO_MST) to this file")
     ap.add_argument("--items", help="also write the item table (F_ITEM_MST) to this file")
     a = ap.parse_args()
 
     units = {}
+    info = json.load(open(a.info, encoding="utf-8")) if getattr(a, "info", None) else {}
     evos = {}
     items = {}
     with zipfile.ZipFile(a.mst) as z:
@@ -60,6 +80,7 @@ def main():
                         "bb_id": to_int(u.get("bbId")),
                         "es_id": to_int(u.get("esId")),
                         "sell_price": to_int(u.get("sellPrice")),
+                        "types": type_ranges(info.get(uid, {}).get("stats", {})) if info else {},
                         "group": to_int(u.get("group")),
                     }
             elif n.startswith("3-mst-translated/F_ITEM_MST"):

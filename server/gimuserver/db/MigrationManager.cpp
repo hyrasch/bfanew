@@ -242,6 +242,11 @@ static void RegisterMigrations(MigrationMap& map)
 		p->execSqlSync("ALTER TABLE players ADD COLUMN special_scenario TEXT NOT NULL DEFAULT '';");
 	});
 
+	// bfanew: the summon's type roll of a unit (db/UnitTable.hpp Units::TypeBonus), kept so level-ups rescale the type bonus
+	migrate("01112026_UnitTypeRoll", {
+		p->execSqlSync("ALTER TABLE player_units ADD COLUMN type_roll REAL NOT NULL DEFAULT 0.5;");
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

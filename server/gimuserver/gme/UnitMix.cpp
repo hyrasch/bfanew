@@ -184,6 +184,11 @@ HANDLEF(UnitMix)
 	base->base_atk = Units::StatAt(baseDef->atk, newLv, baseDef->max_level);
 	base->base_def = Units::StatAt(baseDef->def_, newLv, baseDef->max_level);
 	base->base_heal = Units::StatAt(baseDef->rec, newLv, baseDef->max_level);
+	{
+		const auto rolls = co_await Db::LoadUnitRolls(p.user_id);
+		const auto it = rolls.find(base->user_unit_id);
+		Units::ApplyType(*base, *baseDef, it == rolls.end() ? 0.5 : it->second); // the type bonus follows the level
+	}
 	base->skill_lv = std::min<int32_t>(kMaxBbLevel, std::max<int32_t>(1, base->skill_lv) + bbUps);
 	base->new_flag = false;
 
