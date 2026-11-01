@@ -111,7 +111,7 @@ MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckE
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, arena
 orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Stubs: DungeonEventUpdate (story events watched,
-not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: gifts, friends (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+not stored), UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"). Not implemented: gifts (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -924,6 +924,80 @@ first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile
 `netsh advfirewall firewall add rule name="gimuserver 9960" dir=in action=allow protocol=TCP localport=9960`.
 The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
+## Friends (2026-11-01)
+
+Friends work end to end: the Social tab (Friend List, Friend Request, Add Friend with the ID search
+and "Search From List"), the quest helper picker with friends and strangers, the friend points a
+helper earns, and the "send a friend request?" prompts after a quest or an arena battle. Files:
+`packet-generator/assets/net/friends.kdl` (every id, key, URL and field), `gimuserver/gme/Friends.hpp`
+(the rules and the record builders), `gimuserver/gme/FriendHandlers.cpp` (nine handlers),
+`db/Player.hpp` `FriendRow` (table `player_friends`, migration `01112026_Friends`, which also adds
+`players.last_login` and `player_runs.helper`).
+
+**How the client works.** It keeps ONE `FriendInfoList`, filled by FriendGet (`2o4axPIC`, sent by
+LoginScene, MissionResultScene after every quest, and the random-search scene) and replaced by the
+reply of every other friend request (`tojMy68W` -> FriendInfoResponse). Each scene filters that list
+by **`96Nxs2WQ` friend_type: 1 friend, 2 a request the player sent ("Pending", Remove), 3 a request
+received ("Waiting", Accept / Remove), 4 a stranger** (FriendListUtils::getFriendList keeps 1,
+FriendAgreeListScene draws 2 and 3, the ID / random search scenes list 4 and say "already friends"
+on 1). The Social top opens the Friend Request list without any request (scene 608,
+FriendAgreeListScene; 601 is the connect variant that sends FriendGetAgree `aVqJrR08`), so every
+reply carries the whole relation list. A record is the leader unit of one helper squad
+(UserUnitInfoBase: unit id, `4A6LzBxr` level, stats, skills...) plus the friend fields: name,
+`2Fh3J7ng` level, **`0CAQ6wUe` seconds since the last login ("Online 2 hrs ago"; a unix time
+reads as 999 days)**, `98WfKiyA` the 8-digit ID (our account_id, what "Your Player ID" shows and
+the ID search sends), `bM7RLu5K` message, `JmFn3g9t` arena rank id, `U4pMNjy0` ABP, `5JbjC3Pp`
+favorite, `3InKeya4` the request date **as text** ("Date Requested 2026/11/01 04:29"), `zsiAn9P1`
+deck number, `yu18xScw` priority (<= 1 counts). Request bodies: `BPz1e5tU` {`h7eY3sAK` user id} for
+FriendApply `WUNi08YL` / FriendAgree `NYKBH4V6` / FriendDelete `SfMN9w4p`, plus `7f3WL6Mx` all and
+a comma list for FriendRefuse `N5SQd7oA` (Reject All), {`98WfKiyA` id} for FriendSearch `umNt8M7i`,
+{`5JbjC3Pp`} for FriendFavorite `ps6Vgx4R`, `3fTYzqT6` {`3Ug2QynF` 0, `lzpDckWv` 100} for
+FriendRandomSearch `mE5gUQOp`; every int of a request body is a string (JsonNode::addParam(int)
+quotes). The quest helper picker (ReinforcementSelectScene2) draws **ReinforcementInfoList only**
+(`xZH6EIQ7` -> ReinforcementInfoResponse, same unit record + `q9Arz8Jv` friend_type, `edy7fq3L`),
+so FriendGet answers the friends first (type 1, the FRIEND ribbon) then other players; its
+"Honor +N" is `ReinforcementInfo::getFriendPoint()` = FriendPointInfo (`6e4b7sQt`, one node:
+**`4vamo28W` the points for a friend, `KgbM81wd` for anyone else**, each a CSV the client indexes)
+chosen by whether FriendInfoList holds the helper with type 1. MissionStart sends the helper's user
+id (`h7eY3sAK` of the mission group) and its csv (`1VagK32J`, echoed back): the client builds the
+helper unit from the record, the server only remembers the helper in `player_runs.helper`.
+
+**Server rules** (`Friends.hpp`): one row per direction (`state` 1 friends, 2 sent, 3 received);
+FriendApply writes both rows (an apply to someone who already asked is an acceptance; refused when
+the friend list is full: `UserTeamInfo.max_friend_count` from the level table, 34 at level 50);
+FriendAgree needs a received row; Remove on a sent request cancels it; FriendSearch finds the
+8-digit ID and answers the one record with the real relation (an unknown ID is an error the client
+shows); FriendRandomSearch answers up to 20 random players with no relation (`Db::RandomPlayers`,
+level range from the request); the last login is written at UserInfo (`Db::TouchLogin`). **Friend
+points**: a helper earns `kFriendPoints` 10 (friend) or `kNormalPoints` 5 at MissionEnd, into
+`UserTeamInfo.friend_point` (the honor points that pay Honor Summons); `rein_req_state`
+(`0egM9p7I`) is 1 for a stranger, which opens MissionResultFriendRequestScene (the client skips it
+when the helper is already in its FriendInfoList, e.g. a request pending). UserInfo also sends
+`friend_agree_count` (requests received, the Social tab's badge). The Arena: `friend_req_state` 1
+opens ArenaResultFriendRequestScene (`ArenaBattleResultInfo::enableFriendRequest` is `== 1`) for
+real players who are not friends, never NPCs; ArenaFriendList (`xkd9H50w`) answers the friends with
+an arena squad as FriendUserArenaInfo (`BYaF62TE`, keys in `arena.kdl`) and ArenaBattleStart takes a
+named player as the opponent when it is not the suggestion (a friend picked on ArenaFriendListScene).
+
+**Verified on BlueStacks** with three accounts (the dev loop: a second account is one guest login
+with a new `vid` plus an Initialize by `gme.py --gumi`): Friend List shows "Tester Two, Lv.1, Online
+2 hrs ago, Rookie, 1/34", Friend Info shows the ID, the leader unit and its stats, Add / Remove
+Favorite (Remove Friend is greyed for a favorite); Add Friend shows "Your Player ID 73482464",
+Search From List lists a stranger, Friend Request -> "Friend Request has been sent."; the Friend
+Request list shows the request received (Waiting, Accept) and the one sent (Pending), Accept ->
+"Friend Request accepted."; the helper picker lists "FRIEND Tester Two Honor +10" and "Tester Three
+Honor +5", a quest with the stranger pays 5 friend points and ends on the "Friend Request" prompt
+(-> "Friend Request has been sent."), a quest with a friend pays 10 and shows no prompt (a helper
+with a request pending shows none either). Not exercised on the client: Reject All, the ID search
+typing, the arena friend fights (ArenaFriendList and a friend ArenaBattleStart by gme.py only).
+Beware: `dev.py build` stops the detached server (the link step), which drops a client mid-quest
+("Connection error": OK resends MissionEnd once the server is back).
+
+**Tools**: `tools/client/` (README there): `keymap.py` follows a `*Response::readParam` strcmp chain
+to the setter each key feeds, `getters.py` lists a class's accessors with their object offsets,
+`vt.py` reads vtable slots, `dis.py` / `syms.py` disassemble and list: the way the friend record was
+mapped (`FriendInfo` derives from `UserUnitInfoBase`).
+
 ## Arena (2026-11-01)
 
 The classic PvP Arena works end to end against NPC summoners (and against other registered
@@ -978,14 +1052,16 @@ ArenaArchiveScene draws the statistics from the archive group. With 0 orbs the t
   rarity from the unit table, BC / HC, damage, healing, overkills, perfect and time-out wins,
   points won); the streak and best streak come from `series_win` / `max_series`. Sent in UserInfo
   and every arena response.
-- ArenaFriendList (`xkd9H50w`) answers an empty list; ArenaInfo (`oim9TU1D`, the arena place
-  select) = ArenaStart.
+- ArenaFriendList (`xkd9H50w`) answers the friends with an arena squad (see "Friends"); ArenaInfo
+  (`oim9TU1D`, the arena place select) = ArenaStart.
 
-**Known gaps.** The friend request prompt after a battle appears for NPC opponents too
-(`friend_req_state` 1 does not hide it; the client's check was not found): "Don't Send" returns to
-the top, "Friend Request" would hit the unsupported FriendRequest handler. Defence (being
-attacked), bonus points / random rules, the rankings and the "accept" counts are not simulated.
-`current_position` is always 1.
+**Known gaps.** Defence (being attacked), bonus points / random rules, the rankings and the
+not simulated; the "accept" counts are the defender's record when a real player is attacked
+(ArenaBattleEnd adds a defence, won when the attacker lost). `current_position` is always 1. The
+client has no arena ranking request at all (ArenaStart / Info / Matching / BattleStart / BattleEnd /
+Retire / BattleRestart / FriendList are its only arena requests), so there is nothing to rank. (The
+friend request prompt is right now: `friend_req_state` 1 opens it, so it is 1 only for real
+non-friends, see "Friends".)
 
 **Packet notes.** `[X]::size(1)` request groups arrive as one-element arrays (`"fq2C03jh":[{...}]`);
 send them that way with `gme.py`. The arena import in `handlers.kdl` must come after `user.kdl`
@@ -1256,7 +1332,7 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"); ~~Parade keys~~ **done 2026-10-31** (see "Parade keys"). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
-5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; left: the friend prompt after NPC battles, defence, rankings).
+5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; defence counts 2026-11-01, no ranking request exists in this client); ~~friends~~ **built 2026-11-01** (see "Friends").
 
 ## Conventions
 

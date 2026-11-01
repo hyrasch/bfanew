@@ -262,11 +262,101 @@ json ArenaBattleReward {
 }
 
 json FriendUserArenaInfo {
-    doc "ArenaFriendList reply BYaF62TE entries (FriendUserArenaInfoResponse); phase 1 answers an empty list (no friends yet)."
+    doc "ArenaFriendList reply BYaF62TE entries (FriendUserArenaInfoResponse::readParam): the friends to fight (ArenaFriendListScene), keys as the arena opponent record"
 
     field user_id type="str" {
         key "h7eY3sAK"
-        doc "TODO"
+        doc "the friend"
+    }
+
+    field handle_name type="str" {
+        key "B5JQyV8j"
+        doc "summoner name"
+    }
+
+    field team_lv type="i32::str" {
+        key "2Fh3J7ng"
+        doc "summoner level"
+    }
+
+    field unit_id type="i32::str" {
+        key "pn16CNah"
+        doc "leader of the arena squad"
+    }
+
+    field unit_lv type="i32::str" {
+        key "4A6LzBxr"
+        doc "its level"
+    }
+
+    field arena_rank_id type="str" {
+        key "JmFn3g9t"
+        doc "arena rank id"
+    }
+
+    field ranking_point type="i32::str" {
+        key "U4pMNjy0"
+        doc "Arena Battle Points"
+    }
+
+    field battle_cnt type="i32::str" {
+        key "69vnphig"
+        doc "battles"
+    }
+
+    field win_cnt type="i32::str" {
+        key "8CEu9Kcm"
+        doc "wins"
+    }
+
+    field battle_cnt_accept type="i32::str" {
+        key "20iEWRCV"
+        doc "defences"
+    }
+
+    field win_cnt_accept type="i32::str" {
+        key "0rAkzg7L"
+        doc "defences won"
+    }
+
+    field info_type type="i32::str" {
+        key "NH65Wj0f"
+        doc "FriendUserArenaInfo::setInfoType, 0"
+    }
+
+    field unit_img_type type="i32::str" {
+        key "2pAyFjmZ"
+        doc "0"
+    }
+
+    field current_position type="i32::str" {
+        key "2rqxaZ6K"
+        doc "ranking position, 1"
+    }
+
+    field unk type="i32::str" {
+        key "jkldTrhL"
+        doc "0"
+    }
+
+    field sex type="i32::str" {
+        key "9i2xhMaJ"
+        doc "summoner avatar sex, 0"
+    }
+
+    field unk2 type="i32::str" {
+        key "iNy0ZU5M"
+        doc "0"
+    }
+
+    field hair_id type="str" {
+        key "btZizNep"
+        doc "summoner avatar hair, empty"
+    }
+
+    field arm_id type="str" {
+        key "RVVgyuor"
+        doc "summoner avatar arm, empty"
     }
 }
 

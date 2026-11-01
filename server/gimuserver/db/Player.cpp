@@ -66,6 +66,7 @@ namespace
 		p.team = FromJson<UserTeamInfo>(r["team"].as<std::string>());
 		p.energy_at = r["energy_at"].as<int64_t>();
 		p.tutorial_end = r["tutorial_end"].as<int64_t>() != 0;
+		p.last_login = r["last_login"].isNull() ? 0 : r["last_login"].as<int64_t>();
 		return p;
 	}
 }
@@ -517,6 +518,75 @@ namespace Db
 		for (const auto& r : res)
 			out.push_back(RowToPlayer(r));
 		co_return out;
+	}
+
+	Task<std::vector<Player>> RandomPlayers(std::string userId, int32_t limit)
+	{
+		std::vector<Player> out;
+		const auto res = co_await theDb()->execSqlCoro(
+			"SELECT * FROM players WHERE user_id <> $1 AND user_id NOT IN (SELECT friend_id FROM player_friends WHERE user_id = $1) ORDER BY RANDOM() LIMIT $2",
+			userId, static_cast<int64_t>(limit));
+		for (const auto& r : res)
+			out.push_back(RowToPlayer(r));
+		co_return out;
+	}
+
+	Task<std::optional<Player>> LoadPlayerByUserId(std::string userId)
+	{
+		const auto res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE user_id = $1", userId);
+		if (res.empty())
+			co_return std::nullopt;
+		auto p = RowToPlayer(res[0]);
+		RegenEnergy(p);
+		co_return p;
+	}
+
+	Task<void> TouchLogin(std::string userId, int64_t now)
+	{
+		co_await theDb()->execSqlCoro("UPDATE players SET last_login = $1 WHERE user_id = $2", now, userId);
+	}
+
+	Task<std::vector<FriendRow>> LoadFriends(std::string userId)
+	{
+		std::vector<FriendRow> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT friend_id, state, favorite, since FROM player_friends WHERE user_id = $1 ORDER BY since DESC", userId);
+		for (const auto& r : res)
+			out.push_back({ r["friend_id"].as<std::string>(), static_cast<int32_t>(r["state"].as<int64_t>()), static_cast<int32_t>(r["favorite"].as<int64_t>()), r["since"].as<int64_t>() });
+		co_return out;
+	}
+
+	Task<void> SetFriend(std::string userId, std::string friendId, int32_t state, int64_t since)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_friends(user_id, friend_id, state, favorite, since) VALUES ($1, $2, $3, 0, $4) "
+			"ON CONFLICT(user_id, friend_id) DO UPDATE SET state = $3, since = $4",
+			userId, friendId, static_cast<int64_t>(state), since);
+	}
+
+	Task<void> RemoveFriend(std::string userId, std::string friendId)
+	{
+		co_await theDb()->execSqlCoro("DELETE FROM player_friends WHERE user_id = $1 AND friend_id = $2", userId, friendId);
+	}
+
+	Task<void> SetFavorite(std::string userId, std::string friendId, int32_t favorite)
+	{
+		co_await theDb()->execSqlCoro("UPDATE player_friends SET favorite = $1 WHERE user_id = $2 AND friend_id = $3", static_cast<int64_t>(favorite), userId, friendId);
+	}
+
+	Task<Run> RunFor(std::string serialId, std::string userId)
+	{
+		Run run;
+		const auto res = co_await theDb()->execSqlCoro("SELECT mission_id, helper FROM player_runs WHERE serial_id = $1 AND user_id = $2", serialId, userId);
+		if (res.empty())
+			co_return run;
+		run.mission_id = static_cast<int32_t>(res[0]["mission_id"].as<int64_t>());
+		run.helper = res[0]["helper"].isNull() ? "" : res[0]["helper"].as<std::string>();
+		co_return run;
+	}
+
+	Task<void> SetRunHelper(std::string serialId, std::string helper)
+	{
+		co_await theDb()->execSqlCoro("UPDATE player_runs SET helper = $1 WHERE serial_id = $2", helper, serialId);
 	}
 
 	Task<std::unordered_map<int32_t, TownCollect>> LoadCollect(std::string userId)

@@ -1444,24 +1444,6 @@ json UserInfoResp {
     }
 }
 
-json ReinforcementInfo {
-    doc "TODO"
-
-    field mock type="str" {
-        doc "TODO"
-        key "INVALID"
-    }
-}
-
-json FriendGetResp {
-    doc "TODO"
-
-    field info type="[ReinforcementInfo]" {
-        key "xZH6EIQ7"
-        doc "TODO"
-    }
-}
-
 json ChallengeArenaResetInfoResp {
     doc "Challenge Arena cooling/reset timer snapshot"
 

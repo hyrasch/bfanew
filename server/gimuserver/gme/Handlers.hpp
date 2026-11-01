@@ -100,6 +100,14 @@ namespace GmeHandlers
 	HANDLE(ArenaRetire);
 	HANDLE(ArenaBattleRestart);
 	HANDLE(ArenaFriendList);
+	HANDLE(FriendGetAgree);
+	HANDLE(FriendApply);
+	HANDLE(FriendAgree);
+	HANDLE(FriendRefuse);
+	HANDLE(FriendDelete);
+	HANDLE(FriendSearch);
+	HANDLE(FriendRandomSearch);
+	HANDLE(FriendFavorite);
 	HANDLE(GetPlayerInfo);
 	HANDLE(ItemMix);
 	HANDLE(ShopUse);

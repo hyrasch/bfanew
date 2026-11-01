@@ -70,6 +70,14 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("uYF93Mhc", ControlCenterEnter, "d0k6LGUu");
 	REGISTER("m2Ve9PkJ", DeckEdit, "d7UuQsq8");
 	REGISTER("2o4axPIC", FriendGet, "EoYuZ2nbImhCU1c0");
+	REGISTER("aVqJrR08", FriendGetAgree, "H4zJCK2jPeaskVdf");
+	REGISTER("WUNi08YL", FriendApply, "gbpdAEZuv8IP40UF");
+	REGISTER("NYKBH4V6", FriendAgree, "8PFVDiUIZyES2vzR");
+	REGISTER("N5SQd7oA", FriendRefuse, "fk8YaVy9puJbnLWv");
+	REGISTER("SfMN9w4p", FriendDelete, "yWXI80UKQNBZFozw");
+	REGISTER("umNt8M7i", FriendSearch, "qa3sHuDgKxV5nI1F");
+	REGISTER("mE5gUQOp", FriendRandomSearch, "oK4VaDGF");
+	REGISTER("ps6Vgx4R", FriendFavorite, "XcE1CK6L");
 	REGISTER("Uo86DcRh", GatchaList, "8JbxFvuSaB2CK7Ln");
 	REGISTER("F7JvPk5H", GachaAction, "bL9fipzaSy7xN2w1");
 	REGISTER("BjAt1D6b", DungeonEventUpdate, "k5EiNe9x");

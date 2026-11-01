@@ -97,6 +97,8 @@ HANDLEF(MissionStart)
 
 	resp.mission_num.serial_id = std::to_string(nowUnix) + p.account_id;
 	co_await Db::RememberRun(resp.mission_num.serial_id, p.user_id, missionId);
+	if (!req.mission.reinforce_user_id.empty() && req.mission.reinforce_user_id != "0")
+		co_await Db::SetRunHelper(resp.mission_num.serial_id, req.mission.reinforce_user_id); // friend points at MissionEnd (gme/Friends.hpp)
 	resp.mission_num.bonus_type = 0;
 	resp.mission_num.bonus_rate = "0";
 	resp.mission_num.drop_info = "";

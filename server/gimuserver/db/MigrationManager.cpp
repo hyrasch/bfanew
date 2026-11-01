@@ -220,6 +220,22 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: friends (gme/Friends.hpp), the players' last login and the helper of a mission run
+	migrate("01112026_Friends", {
+		p->execSqlSync(
+			"CREATE TABLE player_friends("
+			"user_id TEXT NOT NULL,"
+			"friend_id TEXT NOT NULL,"
+			"state INTEGER NOT NULL DEFAULT 0,"
+			"favorite INTEGER NOT NULL DEFAULT 0,"
+			"since INTEGER NOT NULL DEFAULT 0,"
+			"PRIMARY KEY(user_id, friend_id)"
+			");"
+		);
+		p->execSqlSync("ALTER TABLE players ADD COLUMN last_login INTEGER NOT NULL DEFAULT 0;");
+		p->execSqlSync("ALTER TABLE player_runs ADD COLUMN helper TEXT NOT NULL DEFAULT '';");
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

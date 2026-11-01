@@ -42,6 +42,13 @@ HANDLEF(UserInfo)
 
 	p.team.user_id = p.user_id;
 	{
+		// bfanew: friends (gme/Friends.hpp): the login time friends see, the requests waiting
+		co_await Db::TouchLogin(p.user_id, Vortex::Now());
+		p.team.friend_agree_count = 0;
+		for (const auto& f : co_await Db::LoadFriends(p.user_id))
+			if (f.state == 2) p.team.friend_agree_count++;
+	}
+	{
 		// bfanew: the Arena record (orbs regenerated here too, so the home screen shows them)
 		auto arena = co_await Db::LoadArena(p.user_id);
 		Arena::Regen(p, arena, Vortex::Now());

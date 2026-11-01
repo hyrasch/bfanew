@@ -37,6 +37,7 @@ namespace Db
 		UserTeamInfo team = {};
 		int64_t energy_at = 0; //!< unix time the energy value in team was computed at
 		bool tutorial_end = true;
+		int64_t last_login = 0; //!< unix time of the last UserInfo (shown to friends)
 	};
 
 	/*! The level table row for a level (nullptr if none). */
@@ -138,4 +139,22 @@ namespace Db
 	drogon::Task<void> SaveArena(std::string userId, const ArenaState& st);
 	/*! Up to limit other players (arena opponents), most recently created first. */
 	drogon::Task<std::vector<Player>> ListOtherPlayers(std::string userId, int32_t limit);
+	/*! Up to limit other players in random order, friends and pending requests excluded (FriendRandomSearch). */
+	drogon::Task<std::vector<Player>> RandomPlayers(std::string userId, int32_t limit);
+	drogon::Task<std::optional<Player>> LoadPlayerByUserId(std::string userId);
+	/*! Records the login time (what friends see as the last login). */
+	drogon::Task<void> TouchLogin(std::string userId, int64_t now);
+
+	/*! bfanew: friends (gme/Friends.hpp). One row per direction: state 1 = friends, 2 = a request
+	 *  from friend_id waiting for user_id's answer, 3 = user_id's request waiting on friend_id. */
+	struct FriendRow { std::string friend_id; int32_t state = 0; int32_t favorite = 0; int64_t since = 0; };
+	drogon::Task<std::vector<FriendRow>> LoadFriends(std::string userId);
+	drogon::Task<void> SetFriend(std::string userId, std::string friendId, int32_t state, int64_t since);
+	drogon::Task<void> RemoveFriend(std::string userId, std::string friendId);
+	drogon::Task<void> SetFavorite(std::string userId, std::string friendId, int32_t favorite);
+
+	/*! The run of a serial id: the mission and the helper picked ("" without one, "npc" for a fixed one). */
+	struct Run { int32_t mission_id = 0; std::string helper; };
+	drogon::Task<Run> RunFor(std::string serialId, std::string userId);
+	drogon::Task<void> SetRunHelper(std::string serialId, std::string helper);
 }

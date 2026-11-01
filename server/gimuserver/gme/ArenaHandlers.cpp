@@ -1,6 +1,7 @@
 #include "App.hpp"
 #include "Handlers.hpp"
 #include "Arena.hpp"
+#include "Friends.hpp"
 
 /*
 * bfanew: the Arena's requests (net/arena.kdl has the ids, keys, URLs and every field; the design
@@ -12,7 +13,7 @@
 *   ArenaBattleEnd oQNtKU51 the battle log: scores it                    -> result, rewards, record, wallet
 *   ArenaRetire  eyg8sA32  giving up                                     -> record + wallet
 *   ArenaBattleRestart NPyXDgV9 resuming a battle in progress            -> both squads again
-*   ArenaFriendList xkd9H50w friends to fight                            -> empty
+*   ArenaFriendList xkd9H50w friends to fight (ArenaFriendListScene)     -> the friends with an arena squad
 *   GetPlayerInfo vUQrAV65  the Record button (ArenaArchiveScene)        -> record + wallet + statistics
 */
 
@@ -119,7 +120,39 @@ HANDLEF(ArenaRetire)
 
 HANDLEF(ArenaFriendList)
 {
-	co_return HandleResult::success("{\"BYaF62TE\":[]}");
+	// the friends with an arena squad (gme/Friends.hpp): the client fights one through ArenaBattleStart with its user id
+	ArenaStartReq req = {};
+	if (auto err = Read(req, json, "ArenaFriendList")) co_return *err;
+	auto player = co_await Db::LoadPlayer(req.login_info);
+	if (!player) co_return HandleResult::error("Unknown user", req.login_info.user_id);
+	ArenaFriendListResp resp = {};
+	for (const auto& row : co_await Db::LoadFriends(player->user_id))
+	{
+		if (row.state != Friends::Friend) continue;
+		const auto other = co_await Db::LoadPlayerByUserId(row.friend_id);
+		if (!other) continue;
+		const auto o = co_await Arena::Real(*other);
+		if (!o) continue;
+		const auto st = co_await Db::LoadArena(other->user_id);
+		FriendUserArenaInfo f = {};
+		f.user_id = o->user_id;
+		f.handle_name = o->handle_name;
+		f.team_lv = o->lv;
+		f.unit_id = o->leader_unit;
+		f.unit_lv = 1;
+		for (const auto& u : co_await Db::LoadUnits(other->user_id))
+			if (u.unit_id == o->leader_unit) { f.unit_lv = u.unit_lv; break; }
+		f.arena_rank_id = std::to_string(Arena::RankId(st.rank_point));
+		f.ranking_point = st.rank_point;
+		f.battle_cnt = st.battle_cnt;
+		f.win_cnt = st.win_cnt;
+		f.battle_cnt_accept = st.accept_cnt;
+		f.win_cnt_accept = st.accept_win;
+		f.current_position = 1;
+		resp.friends.push_back(f);
+	}
+	LOG_DEBUG << "ArenaFriendList: user " << player->user_id << " -> " << resp.friends.size() << " friends";
+	co_return Reply(resp);
 }
 
 HANDLEF(ArenaMatching)
@@ -161,6 +194,12 @@ HANDLEF(ArenaBattleStart)
 	}
 	// the opponent the player saw (ArenaMatching), rebuilt when the client names another
 	auto enemy = Arena::FromJson(st.suggested);
+	if ((!enemy || enemy->user_id != req.enemy.user_id) && !req.enemy.user_id.empty() && req.enemy.user_id != "0")
+	{
+		// a named player who is not the suggestion: a friend picked on ArenaFriendListScene
+		if (const auto other = co_await Db::LoadPlayerByUserId(req.enemy.user_id))
+			if (auto o = co_await Arena::Real(*other)) enemy = o;
+	}
 	if (!enemy || enemy->user_id != req.enemy.user_id)
 	{
 		LOG_WARN << "ArenaBattleStart: user " << p.user_id << " names enemy " << req.enemy.user_id << ", the suggestion was " << (enemy ? enemy->user_id : "none") << ": picking afresh";
@@ -214,6 +253,14 @@ HANDLEF(ArenaBattleEnd)
 	st.battle_cnt++;
 	if (win) { st.win_cnt++; st.rank_point += Arena::WinPoints(before, enemy->rank_point); st.series_win++; st.max_series = std::max(st.max_series, st.series_win); }
 	else { st.rank_point = std::max(0, st.rank_point - Arena::kLoss); st.series_win = 0; }
+	if (!enemy->npc)
+	{
+		// the defender's record: a defence, won when the attacker lost (the "accept" counts of the arena top)
+		auto def = co_await Db::LoadArena(enemy->user_id);
+		def.accept_cnt++;
+		if (!win) def.accept_win++;
+		co_await Db::SaveArena(enemy->user_id, def);
+	}
 	auto archive = Arena::Archive(p, st);
 	Arena::Accumulate(archive, req.result, win, st.rank_point - before);
 	st.archive = Arena::ArchiveJson(archive);
@@ -255,7 +302,9 @@ HANDLEF(ArenaBattleEnd)
 	res.before_rank_point = before;
 	res.after_rank_point = st.rank_point;
 	res.karma = karma;
-	res.friend_req_state = 1; // 0 opens the "send a friend request?" prompt (ArenaResultFriendRequestScene): not for NPCs, and FriendRequest is not served yet
+	// 1 opens the "send a friend request?" prompt (ArenaBattleResultInfo::enableFriendRequest):
+	// real players who are not friends yet, never NPCs (gme/Friends.hpp)
+	res.friend_req_state = (!enemy->npc && !(co_await Friends::AreFriends(p.user_id, enemy->user_id))) ? 1 : 0;
 	res.bonus_point = 0;
 	res.bonus_type = 0;
 	res.bonus_param = "";

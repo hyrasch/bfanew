@@ -1,14 +1,843 @@
+// bfanew: friends (CLAUDE.md "Friends"). Keys read off FriendInfoResponse::readParam /
+// ReinforcementInfoResponse::readParam (the strcmp chain -> setter), request bodies off the
+// *Request::createBody functions. Every friend record is the leader unit of one helper squad
+// (UserUnitInfoBase) plus the friend fields; the client builds helper units from these records.
+
+json FriendInfo {
+    doc "One friend (top-level tojMy68W -> FriendInfoResponse, replaces FriendInfoList)"
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the player (16 digits), what every friend request sends back"
+    }
+
+    field handle_name type="str" {
+        key "B5JQyV8j"
+        doc "summoner name"
+    }
+
+    field team_lv type="i32::str" {
+        key "2Fh3J7ng"
+        doc "summoner level"
+    }
+
+    field friend_type type="i32::str" {
+        key "96Nxs2WQ"
+        doc "1 = friend (FriendListUtils::getFriendList keeps type 1), 2 = a request the player sent (Pending), 3 = a request received (Waiting, Accept); the Agree list draws both; 4 = a stranger (the ID and random search scenes list type 4 only)"
+    }
+
+    field last_login_date type="i32::str" {
+        key "0CAQ6wUe"
+        doc "last login as unix seconds (setLastLoginDate(int))"
+    }
+
+    field unit_id type="i32::str" {
+        key "pn16CNah"
+        doc "leader unit of the helper squad"
+    }
+
+    field unit_lv type="i32::str" {
+        key "4A6LzBxr"
+        doc "leader unit level (UserUnitInfoBase::setUnitLv through the vtable)"
+    }
+
+    field base_hp type="i32::str" {
+        key "e7DK0FQT"
+        doc "as in UserUnitInfo"
+    }
+
+    field base_atk type="i32::str" {
+        key "67CApcti"
+        doc "as in UserUnitInfo"
+    }
+
+    field base_def type="i32::str" {
+        key "q08xLEsy"
+        doc "as in UserUnitInfo"
+    }
+
+    field base_heal type="i32::str" {
+        key "PWXu25cg"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_hp type="i32::str" {
+        key "cuIWp89g"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_hp type="i32::str" {
+        key "TokWs1B3"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_atk type="i32::str" {
+        key "RT4CtH5d"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_atk type="i32::str" {
+        key "t4m1RH6Y"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_def type="i32::str" {
+        key "GcMD0hy6"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_def type="i32::str" {
+        key "e6mY8Z0k"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_heal type="i32::str" {
+        key "C1HZr3pb"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_heal type="i32::str" {
+        key "X6jf8DUw"
+        doc "as in UserUnitInfo"
+    }
+
+    field today_yale type="i32::str" {
+        key "a1Jp3TVb"
+        doc "1 when a gift was already sent to this friend today (FriendInfo::setTodayYale)"
+    }
+
+    field want_gift type="str" {
+        key "s2WnRw9N"
+        doc "the gift the friend asks for (FriendInfo::setWantGift), empty"
+    }
+
+    field favorite type="i32::str" {
+        key "5JbjC3Pp"
+        doc "1 = marked as a favorite (FriendFavorite ps6Vgx4R)"
+    }
+
+    field equipitem_id type="i32::str" {
+        key "Ge8Yo32T"
+        doc "as in UserUnitInfo"
+    }
+
+    field equipitem_id2 type="i32::str" {
+        key "mZA7fH2v"
+        doc "as in UserUnitInfo"
+    }
+
+    field friend_id type="str" {
+        key "98WfKiyA"
+        doc "the 8-digit ID shown in game and typed in the ID search (our account_id)"
+    }
+
+    field friend_message type="str" {
+        key "bM7RLu5K"
+        doc "the player message"
+    }
+
+    field friend_message_change_time type="i32::str" {
+        key "8DtoZdXE"
+        doc "FriendInfo::setFriendMessageChangeTime, 0"
+    }
+
+    field arena_rank_id type="str" {
+        key "JmFn3g9t"
+        doc "arena rank id (FriendInfo::setArenaRankID takes a string)"
+    }
+
+    field ranking_point type="i32::str" {
+        key "U4pMNjy0"
+        doc "arena battle points (FriendInfo::setRankingPoint)"
+    }
+
+    field unit_type_id type="i32::str" {
+        key "nBTx56W9"
+        doc "as in UserUnitInfo"
+    }
+
+    field skill_id type="i32::str" {
+        key "nj9Lw7mV"
+        doc "as in UserUnitInfo"
+    }
+
+    field skill_lv type="i32::str" {
+        key "3NbeC8AB"
+        doc "as in UserUnitInfo"
+    }
+
+    field extra_skill_id type="i32::str" {
+        key "iEFZ6H19"
+        doc "as in UserUnitInfo"
+    }
+
+    field extra_skill_lv type="i32::str" {
+        key "RQ5GnFE2"
+        doc "as in UserUnitInfo"
+    }
+
+    field req_time type="str" {
+        key "3InKeya4"
+        doc "the request date as the Agree list prints it after Date Requested: YYYY/MM/DD HH:MM in the game clock (FriendInfo::setReqTime takes a string)"
+    }
+
+    field elapsed_agree_time type="i32::str" {
+        key "paND1zM8"
+        doc "seconds since the request (FriendInfo::setElapsedAgreeTime)"
+    }
+
+    field unk1 type="i32::str" {
+        key "7x3pPB2C"
+        doc "int through a vtable setter (slot 0x2a8), 0"
+    }
+
+    field unk2 type="i32::str" {
+        key "Sv80kL5r"
+        doc "int through a vtable setter (slot 0x2b8), 0"
+    }
+
+    field extra_passive_skill_id type="i32::str" {
+        key "cP83zNsv"
+        doc "as in UserUnitInfo"
+    }
+
+    field extra_passive_skill_id2 type="i32::str" {
+        key "LjY4DfRg"
+        doc "as in UserUnitInfo"
+    }
+
+    field unit_img_type type="i32::str" {
+        key "2pAyFjmZ"
+        doc "FriendInfo::setUnitImgType, 0"
+    }
+
+    field fe_skill_info type="str" {
+        key "Fnxab5CN"
+        doc "as in UserUnitInfo"
+    }
+
+    field deck_no type="i32::str" {
+        key "zsiAn9P1"
+        doc "the helper squad number this leader comes from (FriendInfo::setDeckNo)"
+    }
+
+    field priority type="i32::str" {
+        key "yu18xScw"
+        doc "FriendInfo::setPriority; FriendInfoList::getCountAgreeOk counts friends with priority <= 1"
+    }
+
+    field unk3 type="i32::str" {
+        key "jkldTrhL"
+        doc "int at +0x250, 0"
+    }
+
+    field unk4 type="i32::str" {
+        key "9i2xhMaJ"
+        doc "int at +0x254, 0"
+    }
+
+    field element type="i32::str" {
+        key "iNy0ZU5M"
+        doc "int at +0x258 (the unit box sends the element here)"
+    }
+
+    field unk5 type="str" {
+        key "btZizNep"
+        doc "string at +0x260, empty"
+    }
+
+    field unk6 type="str" {
+        key "RVVgyuor"
+        doc "string at +0x278, empty"
+    }
+
+    field unk7 type="i32::str" {
+        key "U8FCB2Wj"
+        doc "int at +0x290, 0"
+    }
+
+    field unk8 type="i32::str" {
+        key "NqVAPbLC"
+        doc "int at +0x294, 0"
+    }
+
+    field unk9 type="str" {
+        key "mgNdrCEe"
+        doc "string at +0x298, empty"
+    }
+
+    field guild_id type="i32::str" {
+        key "sD73jd20"
+        doc "FriendInfo::setGuildID, 0"
+    }
+
+    field omni_level type="i32::int" {
+        key "49sa3sld"
+        doc "as in UserUnitInfo"
+    }
+
+}
+
+json ReinforcementInfo {
+    doc "One helper candidate (top-level xZH6EIQ7 -> ReinforcementInfoResponse, replaces ReinforcementInfoList); MissionStart 1VagK32J echoes ReinforcementInfo::getCsv of the one picked"
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the player (16 digits), what every friend request sends back"
+    }
+
+    field handle_name type="str" {
+        key "B5JQyV8j"
+        doc "summoner name"
+    }
+
+    field team_lv type="i32::str" {
+        key "2Fh3J7ng"
+        doc "summoner level"
+    }
+
+    field last_login_date type="i32::str" {
+        key "0CAQ6wUe"
+        doc "last login as unix seconds (setLastLoginDate(int))"
+    }
+
+    field friend_type type="i32::str" {
+        key "q9Arz8Jv"
+        doc "1 = friend, 0 = not a friend (the picker lists FriendInfoList friends first, then these)"
+    }
+
+    field unit_id type="i32::str" {
+        key "pn16CNah"
+        doc "leader unit of the helper squad"
+    }
+
+    field unit_lv type="i32::str" {
+        key "4A6LzBxr"
+        doc "leader unit level (UserUnitInfoBase::setUnitLv through the vtable)"
+    }
+
+    field base_hp type="i32::str" {
+        key "e7DK0FQT"
+        doc "as in UserUnitInfo"
+    }
+
+    field base_atk type="i32::str" {
+        key "67CApcti"
+        doc "as in UserUnitInfo"
+    }
+
+    field base_def type="i32::str" {
+        key "q08xLEsy"
+        doc "as in UserUnitInfo"
+    }
+
+    field base_heal type="i32::str" {
+        key "PWXu25cg"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_hp type="i32::str" {
+        key "cuIWp89g"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_hp type="i32::str" {
+        key "TokWs1B3"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_atk type="i32::str" {
+        key "RT4CtH5d"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_atk type="i32::str" {
+        key "t4m1RH6Y"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_def type="i32::str" {
+        key "GcMD0hy6"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_def type="i32::str" {
+        key "e6mY8Z0k"
+        doc "as in UserUnitInfo"
+    }
+
+    field add_heal type="i32::str" {
+        key "C1HZr3pb"
+        doc "as in UserUnitInfo"
+    }
+
+    field ext_heal type="i32::str" {
+        key "X6jf8DUw"
+        doc "as in UserUnitInfo"
+    }
+
+    field friend_point type="i32::str" {
+        key "J3stQ7jd"
+        doc "friend points for picking this helper when it is a friend (ReinforcementInfo::setFriendPoint)"
+    }
+
+    field normal_friend_point type="i32::str" {
+        key "w28VsQ7h"
+        doc "friend points when it is not (setNormalFriendPoint)"
+    }
+
+    field equipitem_id type="i32::str" {
+        key "Ge8Yo32T"
+        doc "as in UserUnitInfo"
+    }
+
+    field equipitem_id2 type="i32::str" {
+        key "mZA7fH2v"
+        doc "as in UserUnitInfo"
+    }
+
+    field friend_id type="str" {
+        key "98WfKiyA"
+        doc "the 8-digit ID shown in game and typed in the ID search (our account_id)"
+    }
+
+    field friend_message type="str" {
+        key "bM7RLu5K"
+        doc "the player message"
+    }
+
+    field arena_rank_id type="str" {
+        key "JmFn3g9t"
+        doc "arena rank id (FriendInfo::setArenaRankID takes a string)"
+    }
+
+    field unit_type_id type="i32::str" {
+        key "nBTx56W9"
+        doc "as in UserUnitInfo"
+    }
+
+    field skill_id type="i32::str" {
+        key "nj9Lw7mV"
+        doc "as in UserUnitInfo"
+    }
+
+    field skill_lv type="i32::str" {
+        key "3NbeC8AB"
+        doc "as in UserUnitInfo"
+    }
+
+    field extra_skill_id type="i32::str" {
+        key "iEFZ6H19"
+        doc "as in UserUnitInfo"
+    }
+
+    field extra_skill_lv type="i32::str" {
+        key "RQ5GnFE2"
+        doc "as in UserUnitInfo"
+    }
+
+    field user_unit_id type="i32::str" {
+        key "edy7fq3L"
+        doc "the leader unit record id"
+    }
+
+    field extra_passive_skill_id type="i32::str" {
+        key "cP83zNsv"
+        doc "as in UserUnitInfo"
+    }
+
+    field extra_passive_skill_id2 type="i32::str" {
+        key "LjY4DfRg"
+        doc "as in UserUnitInfo"
+    }
+
+    field unit_img_type type="i32::str" {
+        key "2pAyFjmZ"
+        doc "FriendInfo::setUnitImgType, 0"
+    }
+
+    field fe_skill_info type="str" {
+        key "Fnxab5CN"
+        doc "as in UserUnitInfo"
+    }
+
+    field deck_no type="i32::str" {
+        key "zsiAn9P1"
+        doc "the helper squad number this leader comes from (FriendInfo::setDeckNo)"
+    }
+
+    field priority type="i32::str" {
+        key "yu18xScw"
+        doc "FriendInfo::setPriority; FriendInfoList::getCountAgreeOk counts friends with priority <= 1"
+    }
+
+    field unk3 type="i32::str" {
+        key "jkldTrhL"
+        doc "int at +0x250, 0"
+    }
+
+    field unk4 type="i32::str" {
+        key "9i2xhMaJ"
+        doc "int at +0x254, 0"
+    }
+
+    field element type="i32::str" {
+        key "iNy0ZU5M"
+        doc "int at +0x258 (the unit box sends the element here)"
+    }
+
+    field unk5 type="str" {
+        key "btZizNep"
+        doc "string at +0x260, empty"
+    }
+
+    field unk6 type="str" {
+        key "RVVgyuor"
+        doc "string at +0x278, empty"
+    }
+
+    field unk7 type="i32::str" {
+        key "U8FCB2Wj"
+        doc "int at +0x290, 0"
+    }
+
+    field unk8 type="i32::str" {
+        key "NqVAPbLC"
+        doc "int at +0x294, 0"
+    }
+
+    field unk9 type="str" {
+        key "mgNdrCEe"
+        doc "string at +0x298, empty"
+    }
+
+    field guild_id type="i32::str" {
+        key "sD73jd20"
+        doc "FriendInfo::setGuildID, 0"
+    }
+
+    field omni_level type="i32::int" {
+        key "49sa3sld"
+        doc "as in UserUnitInfo"
+    }
+
+}
 
 json FriendPointInfo {
-    doc "TODO"
+    doc "Top-level 6e4b7sQt -> FriendPointInfoResponse (one node): the friend points a helper earns (each a CSV the client indexes, one value here)"
 
-    field unk type="str" {
+
+    field friend_point_num type="i32::str" {
         key "4vamo28W"
+        doc "points for a friend (FriendPointInfoResponse::readParam -> setFriendPointNum; ReinforcementInfo::getFriendPoint picks it when FriendInfoList has the helper with type 1)"
+    }
+
+
+    field normal_point_num type="i32::str" {
+        key "KgbM81wd"
+        doc "points for a helper who is not a friend (-> setNormalPointNum); the picker prints the pick as Honor +N"
+    }
+
+}
+
+json FriendGetParam {
+    doc "Request group StQIyohe of FriendGet / FriendRandomSearch (sent only when a global flag is set)"
+
+
+    field deck_no type="i32::str" {
+        key "jkldTrhL"
+        doc "an int of the request object (+0x20) sent as a string (JsonNode::addParam(int) quotes), 2 from the client"
+    }
+
+}
+
+json FriendTarget {
+    doc "Request group BPz1e5tU of FriendApply / FriendAgree / FriendDelete"
+
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the other player user id (16 digits)"
+    }
+
+}
+
+json FriendRefuseParam {
+    doc "Request group BPz1e5tU of FriendRefuse"
+
+
+    field user_ids type="str" {
+        key "h7eY3sAK"
+        doc "user ids joined with commas (Reject All sends every pending request)"
+    }
+
+
+    field all type="str" {
+        key "7f3WL6Mx"
+        doc "1 for Reject All"
+    }
+
+}
+
+json FriendSearchParam {
+    doc "Request group BPz1e5tU of FriendSearch"
+
+
+    field friend_id type="str" {
+        key "98WfKiyA"
+        doc "the 8-digit ID typed in (UserState::getFriendID)"
+    }
+
+}
+
+json FriendRandomParam {
+    doc "Request group 3fTYzqT6 of FriendRandomSearch"
+
+
+    field lv_min type="i32::str" {
+        key "3Ug2QynF"
+        doc "0"
+    }
+
+
+    field lv_max type="i32::str" {
+        key "lzpDckWv"
+        doc "100"
+    }
+
+}
+
+json FriendFavoriteParam {
+    doc "Request group BPz1e5tU of FriendFavorite"
+
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the friend"
+    }
+
+
+    field favorite type="i32::str" {
+        key "5JbjC3Pp"
+        doc "1 = favorite, 0 = not"
+    }
+
+}
+
+json FriendGetReq {
+    doc "FriendGet (2o4axPIC, key EoYuZ2nbImhCU1c0, URL /actionSymbol/Y2S1IQRa.php): the friend list, sent at login, after a mission result and by the Social tab"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
         doc "TODO"
     }
 
-    field unk2 type="str" {
-        key "KgbM81wd"
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
         doc "TODO"
     }
+
+
+    field param type="[FriendGetParam]::size(1)" {
+        key "StQIyohe"
+        doc "optional"
+    }
+
+}
+
+json FriendGetAgreeReq {
+    doc "FriendGetAgree (aVqJrR08, key H4zJCK2jPeaskVdf, URL /actionSymbol/4Yvmz3GP.php): the requests received (FriendAgreeListScene)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+}
+
+json FriendApplyReq {
+    doc "FriendApply (WUNi08YL, key gbpdAEZuv8IP40UF, URL /actionSymbol/F8LWts2x.php): send a friend request (search results, the arena / mission result prompts)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field target type="[FriendTarget]::size(1)" {
+        key "BPz1e5tU"
+        doc "the request group"
+    }
+
+}
+
+json FriendAgreeReq {
+    doc "FriendAgree (NYKBH4V6, key 8PFVDiUIZyES2vzR, URL /actionSymbol/9A2PWFEN.php): accept a request"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field target type="[FriendTarget]::size(1)" {
+        key "BPz1e5tU"
+        doc "the request group"
+    }
+
+}
+
+json FriendRefuseReq {
+    doc "FriendRefuse (N5SQd7oA, key fk8YaVy9puJbnLWv, URL /actionSymbol/cyJ8I31X.php): reject one request or all"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field param type="[FriendRefuseParam]::size(1)" {
+        key "BPz1e5tU"
+        doc "the request group"
+    }
+
+}
+
+json FriendDeleteReq {
+    doc "FriendDelete (SfMN9w4p, key yWXI80UKQNBZFozw, URL /actionSymbol/5Nx7SRyV.php): remove a friend (FriendDetailScene)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field target type="[FriendTarget]::size(1)" {
+        key "BPz1e5tU"
+        doc "the request group"
+    }
+
+}
+
+json FriendSearchReq {
+    doc "FriendSearch (umNt8M7i, key qa3sHuDgKxV5nI1F, URL /actionSymbol/v7PrMJ9h.php): search by ID"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field param type="[FriendSearchParam]::size(1)" {
+        key "BPz1e5tU"
+        doc "the request group"
+    }
+
+}
+
+json FriendRandomSearchReq {
+    doc "FriendRandomSearch (mE5gUQOp, key oK4VaDGF, URL /actionSymbol/89HuM6Qw.php): random summoners to befriend"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field param type="[FriendRandomParam]::size(1)" {
+        key "3fTYzqT6"
+        doc "the request group"
+    }
+
+
+    field deck type="[FriendGetParam]::size(1)" {
+        key "StQIyohe"
+        doc "optional"
+    }
+
+}
+
+json FriendFavoriteReq {
+    doc "FriendFavorite (ps6Vgx4R, key XcE1CK6L, URL /actionSymbol/bsP1S68Y.php): star / unstar a friend"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+
+    field param type="[FriendFavoriteParam]::size(1)" {
+        key "BPz1e5tU"
+        doc "the request group"
+    }
+
+}
+
+json FriendListResp {
+    doc "Every friend request answers this: the list the scene draws next (friends, pending requests, search results), the helper candidates, the friend point values and the wallet"
+
+
+    field friends type="[FriendInfo]" {
+        key "tojMy68W"
+        doc "FriendInfoResponse: replaces FriendInfoList"
+    }
+
+
+    field reinforcements type="[ReinforcementInfo]" {
+        key "xZH6EIQ7"
+        doc "ReinforcementInfoResponse: replaces ReinforcementInfoList (the helper picker non-friends)"
+    }
+
+
+    field point_info type="[FriendPointInfo]::size(1)" {
+        key "6e4b7sQt"
+        doc "FriendPointInfoResponse"
+    }
+
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "the wallet (friend points, friend counts)"
+    }
+
 }

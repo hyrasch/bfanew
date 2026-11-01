@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Friends.hpp"
 #include <cstdio>
 
 #include <gimuserver/gme/NewPlayer.hpp>
@@ -41,7 +42,8 @@ HANDLEF(MissionEnd)
 	auto& p = *player;
 
 	// The request carries the serial id, not the mission id: MissionStart remembered the pair.
-	const int32_t missionId = co_await Db::MissionForRun(req.mission.serial_id, p.user_id);
+	const auto run = co_await Db::RunFor(req.mission.serial_id, p.user_id);
+	const int32_t missionId = run.mission_id;
 	if (missionId == 0)
 	{
 		LOG_WARN << "MissionEnd: unknown run " << req.mission.serial_id << " for user " << p.user_id;
@@ -74,6 +76,15 @@ HANDLEF(MissionEnd)
 	r.before_lv = beforeLv;
 	r.inc_exp = cleared ? data.exp : 0;
 	r.rein_req_state = 0;
+	if (!run.helper.empty())
+	{
+		// bfanew: a helper earns friend points (Friends::kFriendPoints for a friend, kNormalPoints
+		// otherwise) and a non-friend gets the "send a friend request?" prompt (MissionResultFriendRequestScene)
+		const bool isFriend = co_await Friends::AreFriends(p.user_id, run.helper);
+		p.team.friend_point += isFriend ? Friends::kFriendPoints : Friends::kNormalPoints;
+		r.rein_req_state = isFriend ? 0 : 1;
+		LOG_DEBUG << "MissionEnd: helper " << run.helper << (isFriend ? " (friend)" : "") << ", friend points " << p.team.friend_point;
+	}
 	r.clear_dungeon_id = "";
 	r.clear_area_id = "";
 	r.clear_mission_id = "";
