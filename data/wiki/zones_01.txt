@@ -1,0 +1,53 @@
+== Secluded Sanctuary ==
+{{Zone:Header |element=Light |name= Secluded Sanctuary }}
+{{Quest |quest = Conqueror of the Heavens |energy = 12 |battles = 11 |exp = 2400 |boss1 = 50103 |capture1 = 50021 |capture2 = 50122 }}
+{{Quest |quest = The Goddess of War |energy = 9 |battles = 9 |exp = 2050 |boss1 = 50082 |capture1 = 50122 |capture2 = 50061 }}
+{{Quest |quest = Knight of the Light |energy = 9 |battles = 9 |exp = 1820 |boss1 = 50112 |capture1 = 50021 |capture2 = 50122 }}
+{{Quest |quest = The Flourishing Garden |energy = 9 |battles = 8 |exp = 1430 |boss1 = 30072 |boss1hp = 25000 |boss2 = 30072 |boss2hp = 25000 |boss3 = 20072 |boss4 = 20072 |capture1 = 50122 }}
+{{Quest |quest = Forbidden Sacred Grounds |energy = 9 |battles = 8 |exp = 1250 |boss1 = 50072 |boss1hp = 40000 |boss2 = 30112 |boss2hp = 35000 |capture1 = 50122 }}
+{{Zone:Footer |units = [[Bat Mimic]], [[Light Idol]], [[Ramia]], [[Sage Mimir]], [[Priestess Maria]], [[Luna]], [[Unicorn]], [[Archangel]], [[Fairy]] |drops = Bara Nut, Don Nut, Suzu Nut, Hard Bone, Spirit Stone, Green Grass, Light Eye, Red Fang, Yomi Feather, Buru Nut, Green Drop, Angel Tear |dropsrare = Fujin's Eye, Gospel Stone}}
+
+== Cave of Malice ==
+{{Zone:Header |element=Dark |name= Cave of Malice }}
+{{Quest |quest = The Death-beckoning Devil |energy = 12 |battles = 11 |exp = 2440 |boss1 = 60103 |drops = [[Gospel Stone]] |capture1 = 60021 |capture2 = 60122 }}
+{{Quest |quest = The Midnight Aristocrat |energy = 9 |battles = 9 |exp = 2100 |boss1 = 60082 |drops = [[Divine Light]], [[God Stone]], [[Hollow Rock]] |capture1 = 60122 |capture2 = 60062 }}
+{{Quest |quest = Dwelling of the Souls |energy = 9 |battles = 9 |exp = 1850 |boss1 = 60112 |capture1 = 60021 |capture2 = 60122 }}
+{{Quest |quest = Vagabond of the Monster's Den |energy = 9 |battles = 8 |exp = 1460 |boss1 = 10072 |boss2 = 10072 |boss3 = 40072 |boss4 = 40072 |capture1 = 60122 }}
+{{Quest |quest = A Putrid Abyss |energy = 9 |battles = 8 |exp = 1280 |boss1 = 60102 |boss2 = 60072 |capture1 = 60122 }}
+{{Zone:Footer |units = [[Bat Mimic]], [[Dark Idol]], [[Orthos]], [[Sorceress Lily]], [[Skeleton King]], [[Mifune]], [[Medusa]], [[Lilin]], [[Minotaur]] |drops = Green Drop, Spirit Stone, Hard Bone, Dark Eye, God Stone (Vampire), Blue Grass, Red Fang, Suzu Nut, Green Grass |dropsrare = God Stone }}
+
+== Julep Village ==
+{{Zone:Header |element=Fire |name= Julep Village}}
+{{Quest |quest = In Comes a Fire God |energy = 14 |battles = 11 |exp = 2350 |boss1 = 10014 |boss1hp = 120000 |drops =[[Spring Stone]] |capture1 = 10131 }}
+{{Quest |quest = Of Thunder and Flames |energy = 12 |battles = 10 |exp = 2200 |boss1 = 10103 |boss2 = 40092 |boss2hp = 70000 |drops = [[Spring Stone]] }}
+{{Quest |quest = Presence of Flames |energy = 12 |battles = 9 |exp = 2100 |boss1 = 10023 |boss1hp = 70000 |boss2 = 10113 |capture1 = 10202 }}
+{{Quest |quest = Abandoned Ruins |energy = 10 |battles = 8 |exp = 1950 |boss1 = 10152 |boss2 = 10041 |boss3 = 10062 |drops = Demon Claw |capture1 = 10131 }}
+{{Quest |quest = The Scars of War |energy = 10 |battles = 8 |exp = 1800 |boss1 = 10092 |boss2 = 10072 |boss3 = 10072 |boss4 = 10072 |capture1 = 10202 }}
+{{Zone:Footer |drops = Blue Grass, Demon Claw, Fire Eye, Green Drop, Green Grass, Heth Feather, Red Drop, Yellow Pelt |units = [[Redcap]], [[Orthos]], [[Thief Leon]], [[Witch Liza]], [[Salamander]], [[Orc]], [[Fire Spirit]], [[Fire Ghost]], [[Bat Mimic]] |dropsrare = [[Spring Stone]]}}
+
+== Ghost Ship Legnia ==
+{{Zone:Header |element=Water |name= Ghost Ship Legnia}}
+{{Quest |quest = A Water God Appears |energy = 14 |battles = 11 |exp = 2380 |boss1 = 20014 |boss1hp = 110000 |drops =[[Spring Stone]] |capture1 = 20202 }}
+{{Quest |quest = Frozen Blades |energy = 12 |battles = 10 |exp = 2240 |boss1 = 20103 |boss2 = 30092 |drops =[[Spring Stone]] }}
+{{Quest |quest = Dragon's Roar |energy = 12 |battles = 9 |exp = 2140 |boss1 = 20023 |boss2 = 20113 }}
+{{Quest |quest = Venture Inside |energy = 10 |battles = 8 |exp = 1980 |boss1 = 20152 |boss2 = 20041 |boss3 = 20062 }}
+{{Quest |quest = Party On Board |energy = 10 |battles = 8 |exp = 1830 |boss1 = 20092 |boss2 = 20072 |boss3 = 20072 |boss4 = 20072 }}
+{{Zone:Footer |drops = Green Drop, Green Grass, Red Drop, Blue Grass, Demon Claw, Heth Feather, Water Eye, Yellow Pelt |units = [[Ramia]], [[Pirate Verica]], [[Priest Merith]], [[Sahuagin]], [[Rantoul]], [[Wendigo]], [[Water Spirit]], [[Mimic]], [[Bat Mimic]], [[Water Ghost]]}}
+
+== Elios Plains ==
+{{Zone:Header |name = Elios Plains |element = Earth}}
+{{Quest |quest = The Gallant Earth God |energy = 14 |battles = 11 |exp = 2440 |boss1 = 30014 |boss1hp = 120000 |drops = [[Forge Stone]] |capture1 = 30131 }}
+{{Quest |quest = Princess of the Pond |energy = 12 |battles = 10 |exp = 2300 |boss1 = 30103 |boss2 = 20092 |boss2hp = 60000 |drops = [[Forge Stone]] |capture1 = 30202 }}
+{{Quest |quest = From Forest's Shadow |energy = 12 |battles = 9 |exp = 2220 |boss1 = 30113 |boss2 = 30023 |capture1 = 30131 |capture2 = 30202 }}
+{{Quest |quest = The Graceful Figure |energy = 10 |battles = 8 |exp = 2030 |boss1 = 30152 |boss2 = 30041 |boss3 = 30062 |capture1 = 30202 }}
+{{Quest |quest = Windswept Prairie |energy = 10 |battles = 8 |exp = 1890 |boss1 = 30092 |boss2 = 30072 |boss3 = 30072 |boss4 = 30072 |capture1 = 30131 }}
+{{Zone:Footer |units = [[Fairy]], [[Bandit Zaza]], [[Geomancer Claris]], [[Polevik]], [[Trent]], [[Dwarf]], [[Earth Spirit]], [[Earth Ghost]] |drops = Green Drop, Green Grass, Red Drop, Blue Grass, Demon Claw, Golden Bug, Yellow Bone, Heth Feather, Yellow Pelt }}
+
+== Saji Mines ==
+{{Zone:Header |name = Saji Mines |element = Thunder}}
+{{Quest |quest = A Thunder God Strikes |energy = 14 |battles = 11 |exp = 2450 |boss1 = 40014 |drops = [[Forge Stone]]}}
+{{Quest |quest = Lightning Quick Attack |energy = 12 |battles = 10 |exp = 2340 |boss1 = 40103 |boss2 = 10092 }}
+{{Quest |quest = Where Thunder Pulses |energy = 12 |battles = 9 |exp = 2260 |boss1 = 40113 |boss2 = 40023 }}
+{{Quest |quest = Enlightenment of the Ages |energy = 10 |battles = 8 |exp = 2050 |boss1 = 40152 |boss2 = 40041 |boss3 = 40062 }}
+{{Quest |quest = The Rotting Bridge |energy = 10 |battles = 8 |exp = 1920 |boss1 = 40092 |boss2 = 40072 |boss3 = 40072 |boss4 = 40072 }}
+{{Zone:Footer |drops = Green Drop, Green Grass, Red Drop, Blue Grass, Demon Claw, Golden Bug, Yellow Bone, Heth Feather, Yellow Pelt |units = [[Sylph]], [[Djin]], [[Sky Pirate Grafl]], [[Dancer May]], [[Aero]], [[Minotaur]], [[Empusa]], [[Thunder Spirit]], [[Thunder Ghost]], [[Mimic]]}}

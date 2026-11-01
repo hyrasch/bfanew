@@ -445,8 +445,40 @@ next mission is permitted. Two handlers and a data pipeline:
   with their dungeon/area/land from F_MISSION_MST). **Coverage:** 204 missions have a capture
   (199 distinct names), 121 more **borrow** the battles of the nearest captured mission of the
   same dungeon (`borrowed_from` in the file; e.g. mission 12 plays mission 11's enemies); that
-  leaves ~970 of the 1,292 phase-1 missions without enemy data (the whole of Cordelica
-  onwards is thin), which needs another source (wiki enemy lists, JP datamine).
+  the other 404 of the 696 phase-1 missions are **synthesized** (`tools/synth_battles.py`,
+  2026-11-01, see "Battle data synthesis" below), so every phase-1 mission has a battle file.
+- **Battle data synthesis (2026-11-01).** `tools/synth_battles.py --datamine ... --mst ... --out
+  server/deploy/battle --phase server/deploy/phase.json [--wiki data/wiki] [--force]` writes a
+  battle file for every phase mission that has none, marked `"synthesized": "wiki" | "land" |
+  "land:<Other land>"`. Sources: **`data/wiki/*.txt`**, the Brave Frontier Global wiki's zone
+  pages as raw wikitext (one page per dungeon: open `https://bravefrontierglobal.fandom.com/wiki/
+  <Zone_Name>?action=raw` in a browser and save the text, several pages per file under `== Zone
+  Name ==` lines; the `{{Quest}}` template gives each quest's bosses as **unit ids** (`boss1..6`,
+  `bossNhp`), its capturable units and energy / battle count, `{{Zone:Footer}}` the zone's mobs
+  and drops by name); 15 zones are saved (Mistral's Tower / Egor Mountains, Morgan, St. Lamia,
+  Encervis = 70 missions), the wiki refuses automated fetches (HTTP 402 for tools, the in-app
+  browser reads pages one at a time). Without a page, a mission takes the mobs and bosses that the
+  captures of its land show (`land`), and a land with no capture at all (Cordelica) borrows the
+  land whose captured missions are nearest in XP (`land:Palmyna`). Stats: the unit's max stats
+  (`deploy/units.json`) times a factor fitted on the 4,886 captured enemies, log-linear in the
+  mission's XP and separate for mobs and for the last battle's bosses (fit 2026-11-01: mob hp
+  0.12·xp^0.42, atk 0.68·xp^0.09, def 0.31·xp^0.03; boss hp 0.11·xp^0.60, atk 0.77·xp^0.06, def
+  0.26·xp^0.08; a wiki `bossNhp` wins); the AI, act counts, resists, passives and skills of a unit
+  come from its latest capture anywhere, else the captures' most common AI (id 20, "attack
+  weakness / hp_max / random"); 2-3 mobs per battle, the bosses (plus a mob when alone) in the
+  last one, drops from the zone's list at 3% / 10%, zel and karma split from the mission's totals;
+  everything is seeded by the mission id. Dev: `/bfanew/give?user=<id>&mission=<id>&dungeon=<id>
+  &area=<id>&land=<id>` permits a mission on a test account (the ids from `build_battles.
+  load_mission_places`: 81 -> dungeon 80, area 100, land 1). **Verified** 2026-11-01: mission 81
+  "The Skyhigh Tower" (wiki, 7 battles, bosses King Glowy / King Gloomy) plays on BlueStacks from
+  the Tower of Mistral list to the clear in 230 s on auto. **Lesson (a client crash):** the first
+  try died 2 s after MissionStart (SIGSEGV at 0x48 on the GL thread): the enemies carried skill
+  ids such as 1553 / 1253 / 1853 resolved by name from the full F_SKILL_MST, and **the client's
+  UnitSkillMstList holds only the brave bursts of the units it has** (the phase-filtered
+  F_UNIT_MST), so any other id is a null lookup at mission start. Both builders now take
+  `--phase` and drop every skill that is not a brave burst of a phase unit (974 kept, 2,375
+  dropped across the captures: the boss-only dialogue and attack skills are gone until a way to
+  serve them is found; the enemy then just attacks).
 - **Enemy skills (2026-10-31).** The captures list each enemy's skills by English name with
   the hit count, the damage distribution and bfdb's parsed effects, not the raw rows; but the
   client's own `F_SKILL_MST` / `F_SKILL_LEVEL_MST` already hold every enemy skill (unit brave
@@ -1055,7 +1087,7 @@ ArenaArchiveScene draws the statistics from the archive group. With 0 orbs the t
 - ArenaFriendList (`xkd9H50w`) answers the friends with an arena squad (see "Friends"); ArenaInfo
   (`oim9TU1D`, the arena place select) = ArenaStart.
 
-**Known gaps.** Defence (being attacked), bonus points / random rules, the rankings and the
+**Known gaps.** Defence battles (being attacked), bonus points / random rules and rankings are
 not simulated; the "accept" counts are the defender's record when a real player is attacked
 (ArenaBattleEnd adds a defence, won when the attacker lost). `current_position` is always 1. The
 client has no arena ranking request at all (ArenaStart / Info / Matching / BattleStart / BattleEnd /
@@ -1331,7 +1363,7 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"); ~~Parade keys~~ **done 2026-10-31** (see "Parade keys"). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
-4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
+4. Core loop: ~~battle data for every phase-1 mission~~ **done 2026-11-01** (synthesized where no capture exists, see "Battle data synthesis"); ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
 5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; defence counts 2026-11-01, no ranking request exists in this client); ~~friends~~ **built 2026-11-01** (see "Friends").
 
 ## Conventions

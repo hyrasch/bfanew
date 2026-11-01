@@ -64,12 +64,13 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	const int lv = std::atoi(rq->getParameter("lv").c_str());
 	const int level = std::atoi(rq->getParameter("level").c_str());
 	const int keyId = std::atoi(rq->getParameter("key").c_str());
+	const auto permitMission = rq->getParameter("mission"); // + dungeon, area, land, gate: permits (NewPlayer::Place kinds)
 	const auto* def = theServer()->cache().unit(unitId);
 	const auto* itemDef = theServer()->cache().item(itemId);
-	if (user.empty() || (!def && !itemDef && level <= 0 && keyId <= 0))
+	if (user.empty() || (!def && !itemDef && level <= 0 && keyId <= 0 && permitMission.empty()))
 	{
 		resp->setStatusCode(k400BadRequest);
-		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level> | &key=<dungeon key id>&count=N");
+		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level> | &key=<dungeon key id>&count=N | &mission=<id>&dungeon=<id>&area=<id>&land=<id> (permits)");
 		callback(resp);
 		co_return;
 	}
@@ -92,6 +93,22 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 		co_await Db::SaveKey(player->user_id, keyId, st.count, st.last_day);
 		resp->setStatusCode(k200OK);
 		resp->setBody("player " + player->user_id + " key " + std::to_string(keyId) + ": " + std::to_string(st.count));
+		callback(resp);
+		co_return;
+	}
+	if (!permitMission.empty())
+	{
+		// bfanew: open a mission on the client (dev tests of battle data): the mission and the places that hold it
+		std::string done;
+		for (const auto& [kind, name] : { std::pair{ NewPlayer::Mission, "mission" }, std::pair{ NewPlayer::Dungeon, "dungeon" }, std::pair{ NewPlayer::Area, "area" }, std::pair{ NewPlayer::Land, "land" }, std::pair{ NewPlayer::Gate, "gate" } })
+		{
+			const auto id = rq->getParameter(name);
+			if (id.empty()) continue;
+			co_await Db::AddPermit(player->user_id, kind, id);
+			done += std::string(name) + " " + id + " ";
+		}
+		resp->setStatusCode(k200OK);
+		resp->setBody("player " + player->user_id + " permitted: " + done);
 		callback(resp);
 		co_return;
 	}

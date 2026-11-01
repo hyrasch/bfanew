@@ -261,7 +261,7 @@ def ai_rows(ai_id, ai_json, fallback, skill_index=None, warn=None):
     return rows
 
 
-def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlocks=(), first_clear=(), skills=None, skill_names=None, skill_stats=None, unit_bbs=(), named_ids=()):
+def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlocks=(), first_clear=(), skills=None, skill_names=None, skill_stats=None, unit_bbs=(), named_ids=(), strict_bbs=False):
     mid = str(mission_id)
     out = {
         "energy_use": int(info.get("energy_use", 0)),
@@ -313,10 +313,16 @@ def build(mission_id, info, battles, units, items_by_name, ai_json, warn, unlock
             skill_ids, skill_index = [], {}
             for cap in m.get("skills") or []:
                 hit = resolve_skill(cap, skills or {}, skill_names or {}, u.get("bbId") if u else None, unit_bbs)
+                if hit and strict_bbs and hit[0] not in unit_bbs:
+                    # the client's UnitSkillMstList holds the brave bursts of the units it has, not every
+                    # F_SKILL_MST row: an id outside that set is a null lookup at mission start (SIGSEGV)
+                    warn(f"skill {cap.get('name')!r} of {m.get('_name')} (mission {mid}): {hit[0]} is not a brave burst of a phase unit, dropped")
+                    hit = None
                 if skill_stats is not None:
                     skill_stats["resolved" if hit else "unresolved"] += 1
                 if not hit:
-                    warn(f"skill {cap.get('name')!r} of {m.get('_name')} (mission {mid}): no skill of that name in the client table")
+                    if not strict_bbs:
+                        warn(f"skill {cap.get('name')!r} of {m.get('_name')} (mission {mid}): no skill of that name in the client table")
                     continue
                 skill_index.setdefault(cap.get("name"), len(skill_ids))
                 skill_ids.append(f"{hit[0]}:{hit[1]}")
@@ -378,6 +384,7 @@ def main():
     ap.add_argument("--out", required=True, help="output folder (server/deploy/battle)")
     ap.add_argument("--only", nargs="*", help="mission ids to build (default: every captured mission)")
     ap.add_argument("--sgtext", help="content/sgtext folder holding sgtext_skillName_<v>.zip (default: <out>/../game_content/content/sgtext)")
+    ap.add_argument("--phase", help="server/deploy/phase.json: enemy skills are then limited to the brave bursts of the phase's units (what the client's UnitSkillMstList holds)")
     a = ap.parse_args()
 
     dm = a.datamine
@@ -391,6 +398,11 @@ def main():
     named_ids = load_monster_name_ids(sgtext_dir)
     skill_stats = {"resolved": 0, "unresolved": 0}
     unit_bbs = {str(u.get("bbId")) for u in units.values()}  # brave bursts of units the client knows
+    strict = False
+    if a.phase:
+        phase_units = {str(u) for u in json.load(open(a.phase, encoding="utf-8")).get("units", [])}
+        unit_bbs = {str(u.get("bbId")) for uid, u in units.items() if uid in phase_units}
+        strict = True
     places = load_mission_places(a.mst)
     rewards = load_mission_rewards(a.mst)
     unlocked_by = {}
@@ -429,7 +441,7 @@ def main():
         for mid, info in targets:
             if only and mid not in only:
                 continue
-            out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()), skills, skill_names, skill_stats, unit_bbs, named_ids)
+            out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()), skills, skill_names, skill_stats, unit_bbs, named_ids, strict)
             with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
                 json.dump(out, fo, ensure_ascii=False, indent=1)
             written += 1
@@ -452,7 +464,7 @@ def main():
         src = min(siblings, key=lambda m: abs(int(m) - int(mid)) if m.isdigit() and mid.isdigit() else 1 << 30)
         data = json.load(open(captured_ids[src], encoding="utf-8"))
         battles = next(iter(data.values())).get("battles", [])
-        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()), skills, skill_names, skill_stats, unit_bbs, named_ids)
+        out = build(mid, info, battles, units, items_by_name, ai_json, warnings.append, unlocked_by.get(mid, ()), rewards.get(mid, ()), skills, skill_names, skill_stats, unit_bbs, named_ids, strict)
         out["borrowed_from"] = src
         with open(os.path.join(a.out, f"{mid}.json"), "w", encoding="utf-8", newline="\n") as fo:
             json.dump(out, fo, ensure_ascii=False, indent=1)

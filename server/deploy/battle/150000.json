@@ -91,7 +91,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "10011:1@2000001:1@2000002:1@2000003:1@2000004:1@2000005:1",
+   "F4bQ7r8C": "10011:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "100:25:100:50:100:50",
    "Najhr8m6": "6000",
@@ -131,7 +131,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "3",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "10012:1@2000011:1@2000012:1@2000013:1",
+   "F4bQ7r8C": "10012:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "100:100:100:90:100:90",
    "Najhr8m6": "7200",
@@ -171,7 +171,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "10123:1@2000021:1@2000022:1@2000023:1@2000024:1",
+   "F4bQ7r8C": "10123:1",
    "XE7Yi5c3": "1",
    "CEeqs63b": "90:25:100:100:100:100",
    "Najhr8m6": "11000",
@@ -192,7 +192,7 @@
   {
    "4eEVw5hL": "20000",
    "yu18xScw": "1",
-   "q7Nit8JW": "0:0:0:0#act:1@limited_act:1@skill:2",
+   "q7Nit8JW": "0:0:0:0#act:1@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -202,7 +202,7 @@
   {
    "4eEVw5hL": "20000",
    "yu18xScw": "2",
-   "q7Nit8JW": "0:0:0:0#act:2@limited_act:1@skill:4",
+   "q7Nit8JW": "0:0:0:0#act:2@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -212,7 +212,7 @@
   {
    "4eEVw5hL": "20000",
    "yu18xScw": "3",
-   "q7Nit8JW": "0:0:0:0#act:4@limited_act:1@skill:5",
+   "q7Nit8JW": "0:0:0:0#act:4@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -222,7 +222,7 @@
   {
    "4eEVw5hL": "20000",
    "yu18xScw": "4",
-   "q7Nit8JW": "0:0:0:0#hp_pr_under:50@limited_act:1@skill:3",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:50@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -232,7 +232,7 @@
   {
    "4eEVw5hL": "20000",
    "yu18xScw": "5",
-   "q7Nit8JW": "0:0:0:0#hp_pr_under:25@limited_act:1@skill:6",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:25@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -292,7 +292,7 @@
   {
    "4eEVw5hL": "20001",
    "yu18xScw": "1",
-   "q7Nit8JW": "0:0:0:0#party_members:1@limited_act:1@skill:2",
+   "q7Nit8JW": "0:0:0:0#party_members:1@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -302,7 +302,7 @@
   {
    "4eEVw5hL": "20001",
    "yu18xScw": "2",
-   "q7Nit8JW": "0:0:0:0#act:1@limited_act:1@skill:3",
+   "q7Nit8JW": "0:0:0:0#act:1@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -312,7 +312,7 @@
   {
    "4eEVw5hL": "20001",
    "yu18xScw": "3",
-   "q7Nit8JW": "0:0:0:0#hp_pr_under:25@skill:4@skill_unuse:0@limited_act:1",
+   "q7Nit8JW": "0:0:0:0#hp_pr_under:25@skill_unuse:0@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -382,7 +382,7 @@
   {
    "4eEVw5hL": "20002",
    "yu18xScw": "1",
-   "q7Nit8JW": "0:0:0:0#party_members:1@limited_act:1@skill:2",
+   "q7Nit8JW": "0:0:0:0#party_members:1@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -392,7 +392,7 @@
   {
    "4eEVw5hL": "20002",
    "yu18xScw": "2",
-   "q7Nit8JW": "0:0:0:0#act:2@skill:3@limited_act:1",
+   "q7Nit8JW": "0:0:0:0#act:2@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -402,7 +402,7 @@
   {
    "4eEVw5hL": "20002",
    "yu18xScw": "3",
-   "q7Nit8JW": "0:0:0:0#act:4@skill:4@limited_act:1",
+   "q7Nit8JW": "0:0:0:0#act:4@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -412,7 +412,7 @@
   {
    "4eEVw5hL": "20002",
    "yu18xScw": "4",
-   "q7Nit8JW": "0:0:0:0#act:6@skill:5@limited_act:1",
+   "q7Nit8JW": "0:0:0:0#act:6@limited_act:1",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",

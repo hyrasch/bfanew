@@ -1456,7 +1456,7 @@
    "oMGC3hW0": "3",
    "m4EK7Gt6": "2",
    "6fwL59FT": "100",
-   "F4bQ7r8C": "4700:1",
+   "F4bQ7r8C": "",
    "XE7Yi5c3": "1",
    "CEeqs63b": "0:80:0:80:0:80",
    "Najhr8m6": "2400",
@@ -1587,7 +1587,7 @@
   {
    "4eEVw5hL": "5004",
    "yu18xScw": "2",
-   "q7Nit8JW": "0:0:0:0#act:1@skill:1@skill_unuse:0",
+   "q7Nit8JW": "0:0:0:0#act:1@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
@@ -1597,7 +1597,7 @@
   {
    "4eEVw5hL": "5004",
    "yu18xScw": "3",
-   "q7Nit8JW": "0:0:0:0#actbetween:3@skill:1@skill_unuse:0",
+   "q7Nit8JW": "0:0:0:0#actbetween:3@skill_unuse:0",
    "4xctV8gF": "2",
    "VBj9u0ot": "random",
    "Hhgi79M1": "skill@-1",
