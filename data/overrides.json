@@ -1,12 +1,48 @@
 {
   "_doc": "Served-file overrides built by tools/build_overrides.py into server/deploy/overrides/ (gitignored). sgtext_en: the version suffix of the patched UI text table (data/sgtext_en_patch.csv on top of the archive's sgtext_en_<base>); F_RESOURCE_MST: the version of the re-encoded resource table that lists it (also written to deploy/system/version_info.json).",
-  "sgtext_en": { "base": 338, "version": 341 },
-  "F_RESOURCE_MST": { "base": 3275, "version": 3278 },
+  "sgtext_en": {
+    "base": 338,
+    "version": 341
+  },
+  "F_RESOURCE_MST": {
+    "base": 3275,
+    "version": 3278
+  },
   "_phase": "tools/build_phase.py: id = the phase number (deploy/system/phases/<id>/ tables win over deploy/system/); cutoff = last month (YYYY-MM) of data/*_timeline.json first_seen that is in; bump = added to the archive's version of every filtered table (raise it whenever the filter output changes, so clients re-download).",
-  "phase": { "id": 1, "cutoff": "2014-10", "bump": 4 },
+  "phase": {
+    "id": 1,
+    "cutoff": "2014-10",
+    "bump": 4
+  },
   "_pools": "tools/build_pools.py: per summon (gacha id), which F_UNIT_MST getting type feeds it (2 = rare summon families, 3 = common units) and the odds: either rates {rarity: weight} or per_unit true + rarities [..] (every unit of the pool has the same odds, a rarity's weight = its unit count). gumi never published the 2014 odds; when it did publish (2018) its legacy pools were flat per unit (Legacy Summon 'evenly distributed', Brave Summon '2% fixed per unit', Super Rare Summon Plus per batch group), so phase 1 uses that rule.",
   "pools": {
-    "1000": { "name": "Honor Summon", "getting_type": 3, "per_unit": true, "rarities": ["1", "2"] },
-    "2000": { "name": "Rare Summon", "getting_type": 2, "per_unit": true, "rarities": ["3", "4"] }
+    "1000": {
+      "name": "Honor Summon",
+      "getting_type": 3,
+      "per_unit": true,
+      "rarities": [
+        "1",
+        "2"
+      ]
+    },
+    "2000": {
+      "name": "Rare Summon",
+      "getting_type": 2,
+      "per_unit": true,
+      "rarities": [
+        "3",
+        "4"
+      ]
+    },
+    "20000": {
+      "name": "Tutorial Summon",
+      "getting_type": 2,
+      "per_unit": true,
+      "rarities": [
+        "3",
+        "4"
+      ],
+      "_doc": "the tutorial's one summon (gacha type 20000, chapter 10): the Rare Summon pool"
+    }
   }
 }

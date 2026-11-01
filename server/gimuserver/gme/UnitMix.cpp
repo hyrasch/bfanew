@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Tutorial.hpp"
 
 #include <cmath>
 #include <random>
@@ -215,12 +216,14 @@ HANDLEF(UnitMix)
 	co_await Db::UpdateUnit(p.user_id, *base);
 	co_await Db::RemoveUnits(p.user_id, gone);
 	p.team.zel -= zel;
+	p.unit_mix_cnt++; // the tutorial counts fusions (gme/Tutorial.hpp)
 	co_await Db::SavePlayer(p);
 
 	UnitMixResp resp = {};
 	resp.result = res;
 	resp.team_info = p.team;
 	resp.unit_info = co_await Db::LoadUnits(p.user_id);
+	resp.archive = { Tutorial::Archive(p) };
 
 	std::string buffer{};
 	const auto& ec2 = glz::write_json(resp, buffer);

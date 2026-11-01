@@ -2,6 +2,7 @@
 #include "DevController.hpp"
 
 #include <gimuserver/gme/NewPlayer.hpp>
+#include <gimuserver/gme/Tutorial.hpp>
 #include <gimuserver/gme/Vortex.hpp>
 
 using namespace drogon;
@@ -65,12 +66,13 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	const int level = std::atoi(rq->getParameter("level").c_str());
 	const int keyId = std::atoi(rq->getParameter("key").c_str());
 	const auto permitMission = rq->getParameter("mission"); // + dungeon, area, land, gate: permits (NewPlayer::Place kinds)
+	const auto tutorial = rq->getParameter("tutorial");      // end | reset (gme/Tutorial.hpp)
 	const auto* def = theServer()->cache().unit(unitId);
 	const auto* itemDef = theServer()->cache().item(itemId);
-	if (user.empty() || (!def && !itemDef && level <= 0 && keyId <= 0 && permitMission.empty()))
+	if (user.empty() || (!def && !itemDef && level <= 0 && keyId <= 0 && permitMission.empty() && tutorial.empty()))
 	{
 		resp->setStatusCode(k400BadRequest);
-		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level> | &key=<dungeon key id>&count=N | &mission=<id>&dungeon=<id>&area=<id>&land=<id> (permits)");
+		resp->setBody("usage: /bfanew/give?user=<gumi user id or user id>&unit=<unit id>|item=<item id>&count=1&lv=1 | &level=<player level> | &key=<dungeon key id>&count=N | &mission=<id>&dungeon=<id>&area=<id>&land=<id> (permits) | &tutorial=end|reset");
 		callback(resp);
 		co_return;
 	}
@@ -82,6 +84,24 @@ Task<> DevController::HandleGive(HttpRequestPtr rq, std::function<void(const Htt
 	{
 		resp->setStatusCode(k404NotFound);
 		resp->setBody("no such player");
+		callback(resp);
+		co_return;
+	}
+	if (!tutorial.empty())
+	{
+		// bfanew: end the tutorial of a test account (starters, first missions) or send it back to chapter 1
+		if (tutorial == "end")
+			co_await Tutorial::Finish(*player);
+		else
+		{
+			player->tutorial_end = false;
+			player->tutorial_status = Tutorial::kStart;
+			co_await Db::AddItems(player->user_id, NewPlayer::kStarterItems);
+			co_await Db::SaveEquip(player->user_id, NewPlayer::StarterEquip());
+		}
+		co_await Db::SavePlayer(*player);
+		resp->setStatusCode(k200OK);
+		resp->setBody("player " + player->user_id + " tutorial " + (player->tutorial_end ? "ended" : "at chapter " + std::to_string(player->tutorial_status)));
 		callback(resp);
 		co_return;
 	}

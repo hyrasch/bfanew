@@ -46,6 +46,7 @@ import "../net/deck_edit.kdl"
 import "../net/unit_mix.kdl"
 import "../net/unit_sell.kdl"
 import "../net/unit_evo.kdl"
+import "../net/tutorial.kdl"
 
 json GachaActionParam {
     doc "Which summon the client wants to perform (GachaActionRequest::createBody)"
@@ -405,6 +406,11 @@ json UnitMixResp {
         key "4ceMWH6k"
         doc "TODO"
     }
+
+    field archive type="[UserTeamArchive]" {
+        key "zI2tJB7R"
+        doc "bfanew: the fusion / synthesis counters the tutorial reads (gme/Tutorial.hpp Archive)"
+    }
 }
 
 json UnitSellReq {
@@ -634,6 +640,11 @@ json ItemMixResp {
     field warehouse_info type="[UserWarehouseInfo]" {
         key "9wjrh74P"
         doc "TODO"
+    }
+
+    field archive type="[UserTeamArchive]" {
+        key "zI2tJB7R"
+        doc "bfanew: the fusion / synthesis counters the tutorial reads (gme/Tutorial.hpp Archive)"
     }
 }
 

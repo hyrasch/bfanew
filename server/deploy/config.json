@@ -61,6 +61,7 @@
                     "notice_url": "http://ios21900.bfww.gumi.sg/pages/versioninfo", // notice url (this points to a drogon orm page)
                     "mst_root": "./system", // MST cache directory
 					"initial_level": 1,
+					"tutorial": true, // new players play the tutorial (name, element, first battles, tutorial summon); false = the old skipped start
 					"initial_free_gems": 5,
 					"initial_friend_points": 1000, // honor points (Honor Summon costs 200)
 					"energy_regen_seconds": 180, // one energy point every 3 minutes

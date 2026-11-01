@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Tutorial.hpp"
 #include "TownState.hpp"
 #include "Vortex.hpp"
 #include "Keys.hpp"
@@ -39,7 +40,8 @@ HANDLEF(UserInfo)
 	resp.login_info.friend_id = p.account_id; // what the Links page appends to web pages (?friend_id=)
 	resp.login_info.handle_name = p.handle_name;
 	resp.login_info.tutorial_end_flag = p.tutorial_end;
-	resp.login_info.tutorial_status = 0;
+	resp.login_info.tutorial_status = Tutorial::Status(p); // the chapter (gme/Tutorial.hpp)
+	resp.archive = { Tutorial::Archive(p) };            // the counters the tutorial checks
 	resp.login_info.feature_gate = 0;
 	resp.login_info.user_scenario_info = p.scenario;                 // story events watched (gme/DungeonEventUpdate.cpp)
 	resp.login_info.user_special_scenario_info = p.special_scenario;

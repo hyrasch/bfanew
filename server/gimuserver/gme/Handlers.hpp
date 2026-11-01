@@ -130,4 +130,8 @@ namespace GmeHandlers
 	HANDLE(UpdatePermitPlaceInfo);
 	HANDLE(UpdateInfoLight);
 	HANDLE(UserInfo);
+	HANDLE(CreateUser);
+	HANDLE(TutorialUpdate);
+	HANDLE(TutorialSkip);
+	HANDLE(NgwordCheck);
 }

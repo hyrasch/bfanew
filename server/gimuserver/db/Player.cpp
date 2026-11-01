@@ -71,6 +71,9 @@ namespace
 		p.special_scenario = r["special_scenario"].isNull() ? "" : r["special_scenario"].as<std::string>();
 		p.bonus_day = r["bonus_day"].isNull() ? -1 : r["bonus_day"].as<int64_t>();
 		p.bonus_streak = r["bonus_streak"].isNull() ? 0 : static_cast<int32_t>(r["bonus_streak"].as<int64_t>());
+		p.tutorial_status = r["tutorial_status"].isNull() ? 12 : static_cast<int32_t>(r["tutorial_status"].as<int64_t>());
+		p.unit_mix_cnt = r["unit_mix_cnt"].isNull() ? 0 : static_cast<int32_t>(r["unit_mix_cnt"].as<int64_t>());
+		p.item_mix_cnt = r["item_mix_cnt"].isNull() ? 0 : static_cast<int32_t>(r["item_mix_cnt"].as<int64_t>());
 		return p;
 	}
 }
@@ -123,10 +126,26 @@ namespace Db
 		p.team.user_id = p.user_id;
 		NewPlayer::FillTeam(p.team, scfg);
 		p.energy_at = NowUnix();
+		// bfanew: with the tutorial on (config.json "tutorial") the player starts nameless and empty at
+		// chapter 1: the client's TutorialScene1 asks the name and element and CreateUser gives the
+		// starter set (gme/Tutorial.hpp); off, the 2013 "skipped tutorial" start below
+		p.tutorial_end = !scfg.tutorial;
+		p.tutorial_status = scfg.tutorial ? 1 : 12;
+		if (scfg.tutorial) p.handle_name = "";
 
 		co_await theDb()->execSqlCoro(
-			"INSERT INTO players(user_id, gumi_user_id, account_id, handle_name, team, energy_at, tutorial_end, created_at) VALUES ($1, $2, $3, $4, $5, $6, 1, $7)",
-			p.user_id, p.gumi_user_id, p.account_id, p.handle_name, ToJson(p.team), p.energy_at, p.energy_at);
+			"INSERT INTO players(user_id, gumi_user_id, account_id, handle_name, team, energy_at, tutorial_end, tutorial_status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+			p.user_id, p.gumi_user_id, p.account_id, p.handle_name, ToJson(p.team), p.energy_at, p.tutorial_end ? 1 : 0, static_cast<int64_t>(p.tutorial_status), p.energy_at);
+
+		for (const auto& [kind, id] : NewPlayer::Permits())
+			co_await AddPermit(p.user_id, kind, id);
+		if (scfg.tutorial)
+		{
+			co_await AddItems(p.user_id, NewPlayer::kStarterItems);
+			co_await SaveEquip(p.user_id, NewPlayer::StarterEquip());
+			LOG_INFO << "Db: new player " << p.user_id << " (account " << p.account_id << ") for gumi user " << gumiUserId << ", tutorial at chapter 1";
+			co_return p;
+		}
 
 		// the starter unit in slot 0 of every squad, like the tutorial would leave it
 		auto starter = NewPlayer::StarterUnit();
@@ -145,8 +164,6 @@ namespace Db
 		}
 		co_await SaveDecks(p.user_id, decks);
 
-		for (const auto& [kind, id] : NewPlayer::Permits())
-			co_await AddPermit(p.user_id, kind, id);
 		for (const auto mission : NewPlayer::ClearedMissions())
 			co_await AddClear(p.user_id, mission, "2013-11-01 00:00:00");
 
@@ -156,14 +173,16 @@ namespace Db
 
 	Task<std::optional<Player>> LoadPlayer(const LoginInfoReq& login)
 	{
-		Result res;
+		// a default-constructed Result has no rows object: empty() on it is a null deref (crashed
+		// CreateUser, whose login info has no user id yet), hence the optional
+		std::optional<Result> res;
 		if (!login.user_id.empty())
 			res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE user_id = $1", login.user_id);
-		if (res.empty() && !login.gumi_live_userid.empty())
+		if ((!res || res->empty()) && !login.gumi_live_userid.empty())
 			res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE gumi_user_id = $1", login.gumi_live_userid);
-		if (res.empty())
+		if (!res || res->empty())
 			co_return std::nullopt;
-		auto p = RowToPlayer(res[0]);
+		auto p = RowToPlayer((*res)[0]);
 		RegenEnergy(p);
 		co_return p;
 	}
@@ -180,8 +199,9 @@ namespace Db
 
 	Task<void> SavePlayer(const Player& p)
 	{
-		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4, scenario = $5, special_scenario = $6, bonus_day = $7, bonus_streak = $8 WHERE user_id = $9",
-			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.scenario, p.special_scenario, p.bonus_day, static_cast<int64_t>(p.bonus_streak), p.user_id);
+		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4, scenario = $5, special_scenario = $6, bonus_day = $7, bonus_streak = $8, tutorial_status = $9, unit_mix_cnt = $10, item_mix_cnt = $11 WHERE user_id = $12",
+			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.scenario, p.special_scenario, p.bonus_day, static_cast<int64_t>(p.bonus_streak),
+			static_cast<int64_t>(p.tutorial_status), static_cast<int64_t>(p.unit_mix_cnt), static_cast<int64_t>(p.item_mix_cnt), p.user_id);
 	}
 
 	void RegenEnergy(Player& p)

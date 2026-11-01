@@ -110,7 +110,7 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, arena
-orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Also DungeonEventUpdate (story events watched, stored since 2026-11-01). Stubs: UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"), the Present Box, gifts between friends and the daily login bonus (PresentList / Receipt, GetGiftInfo / FixGiftInfo, see "Gifts"). Not implemented: the login campaign calendar (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Also DungeonEventUpdate (story events watched, stored since 2026-11-01). Stubs: UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"), the Present Box, gifts between friends and the daily login bonus (PresentList / Receipt, GetGiftInfo / FixGiftInfo, see "Gifts"). The tutorial (CreateUser / TutorialUpdate / TutorialSkip / NgwordCheck, see "Tutorial") plays for new players. Not implemented: the login campaign calendar (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -140,6 +140,7 @@ python tools/dev.py reload                # GET /bfanew/reload: re-read deploy/s
 python tools/dev.py bump M_GACHA_MST      # bump a table version in version_info.json (+reload)
 python tools/dev.py client --to summon    # relaunch the game on BlueStacks and drive it there (~30 s)
 python tools/dev.py client --to mission   # ... or to the world map (quest) / the first mission list (mission)
+python tools/dev.py client --fresh --tutorial   # a new player: stop at the tutorial's name entry (see "Tutorial")
 python tools/dev.py summon [--rare] [--multi]   # from the Summon scene: summon, open the door (~25 s)
 python tools/dev.py shot name             # screenshot -> ..\build\shots\name.png (+ window frame)
 python tools/dev.py tapk tab_unit | tap X Y | swipe ... | key back
@@ -972,6 +973,84 @@ first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile
 `netsh advfirewall firewall add rule name="gimuserver 9960" dir=in action=allow protocol=TCP localport=9960`.
 The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
+## Tutorial (2026-11-01)
+
+New players play the client's own tutorial (the 2.19.6 one: Lucius, the name and element choice,
+Tilith's two battles, Karl's summon lesson), driven by the client from the state the server sends.
+Files: `net/tutorial.kdl` (ids, keys, URLs, fields), `gme/Tutorial.hpp` (the rules), `gme/
+TutorialHandlers.cpp` (CreateUser, TutorialUpdate, TutorialSkip, NgwordCheck), `players.tutorial_status
+/ unit_mix_cnt / item_mix_cnt` (migration `01112026_Tutorial`), `config.json` `"tutorial": true`
+(false = the 2013 "skipped tutorial" start with the template starter).
+
+**How the client runs it.** The login info carries `9sQM2XcN` the chapter (`UserInfo::
+setTutoChapterID`) and `sv6BEI8X` the end flag (`isTutoPlaying` = end flag 0). Chapters are
+TutorialStepScene scripts, `content/tuto/tuto<N>.txt` (`GameUtils::getTutorialScriptFile`: chapters 1-9 ->
+tuto1-9, 50-54 -> tuto10-14, 10 -> tuto15, 11 -> tuto16, 12 = done), and **`TutorialStepScene::
+checkChapter` advances the chapter from the state the server sent**, so the server never has to track
+it finely: chapter 1 (Tilith, the first battle = mission 1) becomes 9 once UserClearMissionInfoList
+holds mission "1" (Karl, the elements lesson = mission 2), 9 becomes 10 once mission "2" is cleared and
+`UserTeamInfo.brave_coin` >= 5 (the summon lesson; < 5 skips to 11), 11 is the farewell and 12 the
+end. The one TutorialUpdate the step scene sends is at chapter 12 (`isTutoServerUpdate`), the item
+tutorial queues one at 54. Chapters 5-6 read `UserTeamArchive` (`zI2tJB7R`: `WMC6rNF1` fusions,
+`c3Bo97kI` syntheses, now counted by UnitMix / ItemMix and sent in UserInfo and their replies) and the
+party; 50-54 (Karl poisoned, the Synthesis House, the antidote, the item tutorial) are the later
+"triggerable" tutorial of the town footer (`GameScene::checkTouchFooter` sets 50 when the chapter is
+12 and `getTriggerableTutorialEnabled`), 2-8 the 2013 order (fusion, squads) - both left to the client.
+The player exists from the first Initialize (our account per device), but **a player the tutorial has
+not named yet gets an empty `h7eY3sAK` user id from Initialize**: `UserInfo::existUser` is the user
+id, with one the LoginScene asks for UserInfo and stops on EMPTY_PARTY_INFO, without one it goes to
+TutorialScene1 (the name, "Max 8 characters", then the element: four TutorialUserElement pages built
+from DefineMst `21ovwqYT` initial_unit = `<element>-<disp>@<member type>@<unit id>:...` per element,
+fire / water / earth / thunder, i.e. the 2* starter 10011 / 20011 / 30011 / 40011 with Burny 10030 and
+Sparky 40030). The name goes through **NgwordCheck** (`TA4MnZX8`, key `r4Smw5TX`, URL `/actionSymbol/
+3qrWb9Q6.php`, `IKqx1Cn9` {`B5JQyV8j`}; no response class, the response message is the verdict,
+unanswered it popped "Unsupported request"), then **CreateUser** (`uV6yH5MX`, key
+`4agnATy2DrJsWzQk`, URL `/actionSymbol/7jz4FDpS.php`; `IKqx1Cn9` {`B5JQyV8j` name, `iN7buP2h` /
+`iN7buP1i` the gumi account, `37d2Hi5p` the skip flag of the popup, device fields}, `9u45RGcV`
+{`Kn51uR4Y` element}) names the player, gives the starter set (every squad, the 2* as leader) and
+answers the login info with the user id; the scene then sends UserInfo, UpdateInfoLight, DeckEdit and
+MissionStart for mission 1 by itself. The "Complete Tutorial to receive these Rewards! 3 Gems,
+100,000 Zel" popup (TutorialSkipPopupScene) offers Begin; the Skip of the tutorial battle asks "Do
+you wish to skip the tutorial?" and Yes sends **TutorialSkip** (`d36DaiJl`, key `p3qD61db`, login info
+only; reply `3tWuc7de` 1): `MissionScene::updateEvent` jumps to chapter 10, so the server clears
+missions 1 and 2, permits the new-player places and tops the gems up to 5. **TutorialUpdate**
+(`T1nCVvx4`, key `7hqzmR3T`, URL `/actionSymbol/01YABGWc.php`, `BaseRequest::createTutoUserInfoTag`:
+the login info plus `9sQM2XcN` and `sv6BEI8X`) stores the chapter; the end flag ends the tutorial and
+drops the completion reward in the Gift Box as two presents (3 gems, 100,000 zel: the client's own
+dialog says "Gifts have been awarded to you. Visit your presents box to receive them"). The tutorial
+battle teaches item use on an equipped Cure ("Tap the cure to give it a try", a dead end with an empty
+tray), so a new player starts with 3 Cures (20000) in the warehouse and in item slot 1
+(`NewPlayer::kStarterItems` / `StarterEquip`); the summon lesson wants the gems "you just received",
+so the 5 initial free gems are the shown balance (`brave_coin` = free + paid in `FillTeam`; it used to
+be 0). **The tutorial summon** is gacha type 20000 (`SummonsTopScene::getGachaInfoList` lists only
+that type while the tutorial plays and never otherwise; the 2022 Rare Summon row itself was type
+20000): `phases/01/gacha_info.json` row 20000 = the Rare Summon pool (`data/overrides.json` pools,
+`build_pools.py`) at 1 gem; `gacha.json` row 20000 (the 2020 "Fiery Heart Summon") redrawn as the
+Rare Summon (M_GACHA_MST 956). A 0 gem price there sends SummonsConfirmScene down the honor branch
+("Summon once for 0 Honor Pt(s)... Insufficient Honor Points") and the button does nothing, hence 1
+gem; GachaAction charges it like the Rare Summon. The script's "summon a Unit at any time with 5 Gems"
+line is overridden to "1 Gem" (`data/content/tuto/tuto15.txt` -> `overrides/content/tuto/`, fresh
+installs only: the client caches a downloaded file for good).
+
+**Verified on BlueStacks** (a new player, `python tools/dev.py client --fresh --tutorial`): Lucius'
+intro, the name "Newbie", the Earth starter (Pikeman Lance + Burny + Sparky), the rewards popup, the
+skip question (No), Tilith's battle with its action-button / target / Cure / treasure-chest steps,
+mission 1 cleared (MissionEnd `47cJBUxz` "20000:1" -> the Cure left the warehouse: the "items used in
+battle" path is verified), Karl's elements battle (mission 2) cleared on AUTO, a relaunch in between
+resumed at the right chapter (the server still said 1, checkChapter did the rest), the 5 (+2
+first-clear) gems, the tutorial summon (a 4* "SUPER RARE!!", 7 -> 6 gems), the farewell, TutorialUpdate
+chapter 12 / end 1, "Tutorial Complete" and the home screen (then the client's own Facebook Connect
+prompt, Cancel). Dev notes: the fresh-install driver's `--tutorial` waits for Initialize, then rides
+out the tutorial file download (`pre_tutorial_filelist.csv`, ~2,000 files, then the Background DLC
+prompt and the Play Games prompt again) until the request log is quiet; the rest is `tap` / `shot`
+by hand (the TOUCH markers). The BlueStacks device id is the account key, so a `pm clear` brings test
+account A back: to play the tutorial on it, park A's mapping (`UPDATE accounts SET device_vid =
+'parked-A-<vid>' WHERE gumi_user_id = '00000001'`; the device is now gumi 00000005 "Newbie",
+restore by putting the vid back and deleting the new row), or `/bfanew/give?user=<id>&tutorial=reset`
+(back to chapter 1, Cures given; `end` finishes it). Gaps: the "triggerable" tutorials (50-54, the
+town's synthesis / antidote lesson) are untested; a crash found on the way, `Db::LoadPlayer` with an
+empty user id called `empty()` on a default-constructed drogon Result (a null deref), is fixed.
+
 ## Friends (2026-11-01)
 
 Friends work end to end: the Social tab (Friend List, Friend Request, Add Friend with the ID search
@@ -1443,8 +1522,8 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"); ~~Parade keys~~ **done 2026-10-31** (see "Parade keys"). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
-4. Core loop: ~~battle data for every phase-1 mission~~ **done 2026-11-01** (synthesized where no capture exists, see "Battle data synthesis"); ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
-5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; defence counts 2026-11-01, no ranking request exists in this client); ~~friends~~ **built 2026-11-01** (see "Friends"); ~~gifts and the daily login bonus~~ **built 2026-11-01** (see "Gifts").
+4. Core loop: ~~battle data for every phase-1 mission~~ **done 2026-11-01** (synthesized where no capture exists, see "Battle data synthesis"); ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle verified 2026-11-01 by the tutorial's Cure); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
+5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; defence counts 2026-11-01, no ranking request exists in this client); ~~friends~~ **built 2026-11-01** (see "Friends"); ~~gifts and the daily login bonus~~ **built 2026-11-01** (see "Gifts"); ~~the tutorial~~ **built 2026-11-01** (see "Tutorial").
 
 ## Conventions
 

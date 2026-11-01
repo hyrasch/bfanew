@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Tutorial.hpp"
 
 #include <gimuserver/utils/Random.hpp>
 
@@ -66,8 +67,14 @@ HANDLEF(Initialize)
 	resp.login_info.account_id = player.account_id;
 	resp.login_info.handle_name = player.handle_name;
 	resp.login_info.user_id = player.user_id; // the client keeps it and sends it in every request
+	// a player the tutorial has not named yet does not exist for the client (UserInfo::existUser is
+	// the user id): with an id the LoginScene asks for UserInfo and stops on EMPTY_PARTY_INFO,
+	// without one it goes to TutorialScene1 (name, element) and CreateUser answers the id
+	// (gme/Tutorial.hpp)
+	if (!player.tutorial_end && player.handle_name.empty())
+		resp.login_info.user_id = "";
 	resp.login_info.tutorial_end_flag = player.tutorial_end;
-	resp.login_info.tutorial_status = 12;
+	resp.login_info.tutorial_status = Tutorial::Status(player); // the chapter (gme/Tutorial.hpp)
 
 	//resp.user_info.gumi_live_token = req.user_info.gumi_live_token;
 	//resp.user_info.gumi_live_userid = req.user_info.gumi_live_userid;

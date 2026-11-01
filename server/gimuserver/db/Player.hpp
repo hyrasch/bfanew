@@ -38,6 +38,9 @@ namespace Db
 		UserTeamInfo team = {};
 		int64_t energy_at = 0; //!< unix time the energy value in team was computed at
 		bool tutorial_end = true;
+		int32_t tutorial_status = 12;  //!< the tutorial chapter reached (gme/Tutorial.hpp; 12 = done)
+		int32_t unit_mix_cnt = 0;      //!< fusions done (UserTeamArchive, read by the tutorial)
+		int32_t item_mix_cnt = 0;      //!< syntheses done
 		int64_t last_login = 0; //!< unix time of the last UserInfo (shown to friends)
 		std::string scenario;         //!< story events watched: the client's UserScenarioInfoList save string (UserInfo N4XVE1uA)
 		std::string special_scenario; //!< special scenarios watched (UserInfo 9yVsu21R)

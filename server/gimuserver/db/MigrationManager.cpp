@@ -280,6 +280,13 @@ static void RegisterMigrations(MigrationMap& map)
 		p->execSqlSync("CREATE INDEX player_gifts_from ON player_gifts(from_user, created);");
 	});
 
+	// bfanew: the tutorial chapter and the counters its chapter checks read (gme/Tutorial.hpp)
+	migrate("01112026_Tutorial", {
+		p->execSqlSync("ALTER TABLE players ADD COLUMN tutorial_status INTEGER NOT NULL DEFAULT 12;");
+		p->execSqlSync("ALTER TABLE players ADD COLUMN unit_mix_cnt INTEGER NOT NULL DEFAULT 0;");
+		p->execSqlSync("ALTER TABLE players ADD COLUMN item_mix_cnt INTEGER NOT NULL DEFAULT 0;");
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

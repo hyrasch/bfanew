@@ -63,13 +63,14 @@ namespace
 	};
 
 	constexpr int32_t kRareGacha = 2000;
+	constexpr int32_t kTutorialGacha = 20000; // bfanew: the tutorial summon (gme/Tutorial.hpp), a Rare Summon by another id
 	constexpr int32_t kGemCost = 1; // bfanew: cheap summons (the gacha table says 1 Gem too)
 	constexpr int32_t kHonorCost = 200;
 
 	// GachaEffectMst ids (deploy/system/gacha_effects.json) per gacha and rarity.
 	int32_t effectFor(int32_t gachaId, int32_t rarity)
 	{
-		if (gachaId == kRareGacha) // Rare Summon: 8 gold->R, 11 red->SR, 16 rainbow->SSR
+		if (gachaId == kRareGacha || gachaId == kTutorialGacha) // Rare Summon: 8 gold->R, 11 red->SR, 16 rainbow->SSR
 			return rarity >= 5 ? 16 : rarity == 4 ? 11 : 8;
 		return rarity;        // Honor Summon: ids 1..5 map 1:1 to rarity
 	}
@@ -88,7 +89,7 @@ namespace
 		for (int tries = 0; tries < 50; ++tries)
 		{
 			const PoolUnit* u;
-			if (gachaId == kRareGacha)
+			if (gachaId == kRareGacha || gachaId == kTutorialGacha)
 			{
 				// launch Rare Summon: 3* most of the time, 4* sometimes
 				std::uniform_int_distribution<int> pct(0, 99);
@@ -157,9 +158,9 @@ HANDLEF(GachaAction)
 	LOG_DEBUG << "GachaAction: user " << p.user_id << " gacha " << gachaId << " x" << count << " ticket=" << req.gacha.use_ticket;
 
 	// pay first: free gems before paid gems for the Rare Summon, honor points otherwise
-	if (gachaId == kRareGacha)
+	if (gachaId == kRareGacha || gachaId == kTutorialGacha)
 	{
-		const auto cost = kGemCost * count;
+		const auto cost = kGemCost * count; // the tutorial summon too: a 0 gem price sends SummonsConfirmScene down the honor branch ("Insufficient Honor Points")
 		// the gem balance the client shows and checks is brave_coin (03UGMHxF, the gacha table's
 		// price is in it too); free_gems / paid_gems are the accounting split, kept in step
 		if (p.team.brave_coin < cost)

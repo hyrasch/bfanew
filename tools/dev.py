@@ -8,7 +8,7 @@ dev.py - one-command iteration loop for bfanew (Windows).
     python tools/dev.py stop
     python tools/dev.py reload                GET /bfanew/reload: re-read deploy/system/*.json, no restart
     python tools/dev.py bump M_GACHA_MST      bump that table's version in version_info.json (+reload)
-    python tools/dev.py client [--to home|summon] [--fresh]
+    python tools/dev.py client [--to home|summon] [--fresh] [--tutorial]
                                               relaunch the game on the device and drive it there
     python tools/dev.py summon [--rare] [--multi]   from the Summon scene: press Summon, confirm, open the door
     python tools/dev.py shot [name]           screenshot -> build/shots/<name>.png
@@ -318,8 +318,9 @@ def launch_game(fresh: bool):
     adb("shell", "monkey", "-p", PKG, "-c", "android.intent.category.LAUNCHER", "1")
 
 
-def drive_to_home(fresh: bool, verbose=True) -> bool:
-    """Launch and get to the home screen. Returns False if the game died."""
+def drive_to_home(fresh: bool, verbose=True, tutorial=False) -> bool:
+    """Launch and get to the home screen (or, with tutorial, to the first tutorial screen: the
+    client sends nothing between Initialize and the name entry). Returns False if the game died."""
     since = time.time()
     launch_game(fresh)
     say = print if verbose else (lambda *a, **k: None)
@@ -369,6 +370,28 @@ def drive_to_home(fresh: bool, verbose=True) -> bool:
         if not dismiss_dialogs() and fresh:
             tapk("bgdlc_no")
 
+    if tutorial:
+        # a new player (CLAUDE.md "Tutorial"): Initialize, then TutorialScene1 (name, element) with no
+        # request until the name is entered; drive the rest by hand (shot / tap)
+        if not wait_for_log({"MfZyu1q9"}, since, 420 if fresh else 90, tick):  # Initialize
+            say("Initialize never came"); return False
+        # the tutorial's own file list downloads now (pre_tutorial_filelist.csv, ~2,000 files), then
+        # the Background DLC prompt (No) and the Play Games profile prompt (Cancel) again: tick until
+        # the request log has been quiet for 10 s (or 300 s)
+        t0, last_n = time.time(), -1
+        quiet = time.time()
+        while time.time() - t0 < 300:
+            n = len(list(LOGDIR.glob("http_log_*")))
+            if n != last_n:
+                last_n, quiet = n, time.time()
+            elif time.time() - quiet > 10:
+                break
+            last[0] = 0.0; tick()
+            time.sleep(3)
+        if not game_alive():
+            say("game process died"); return False
+        say("tutorial start (name entry)")
+        return True
     if not wait_for_log({"NiYWKdzs"}, since, 420 if fresh else 90, tick):  # HomeInfo
         say("HomeInfo never came (crash during Initialize/UserInfo?)"); return False
     time.sleep(3)
@@ -382,9 +405,11 @@ def drive_to_home(fresh: bool, verbose=True) -> bool:
 
 def cmd_client(a):
     connect()
-    if not drive_to_home(a.fresh):
+    if not drive_to_home(a.fresh, tutorial=a.tutorial):
         shot("client_failed"); print(f"screenshot: {SHOTS / 'client_failed.png'}"); sys.exit(1)
-    if a.to == "summon":
+    if a.tutorial:
+        pass
+    elif a.to == "summon":
         tapk("tab_summon"); time.sleep(4); print("summon scene")
     elif a.to == "unit":
         tapk("tab_unit"); time.sleep(4); print("unit scene")
@@ -480,7 +505,7 @@ def main():
     sub.add_parser("restart").set_defaults(f=cmd_restart)
     sub.add_parser("reload").set_defaults(f=cmd_reload)
     p = sub.add_parser("bump"); p.add_argument("table"); p.set_defaults(f=cmd_bump)
-    p = sub.add_parser("client"); p.add_argument("--to", default="home", choices=["home", "summon", "unit", "quest", "mission"]); p.add_argument("--fresh", action="store_true"); p.set_defaults(f=cmd_client)
+    p = sub.add_parser("client"); p.add_argument("--to", default="home", choices=["home", "summon", "unit", "quest", "mission"]); p.add_argument("--fresh", action="store_true"); p.add_argument("--tutorial", action="store_true", help="stop at the tutorial's name entry (a new player)"); p.set_defaults(f=cmd_client)
     p = sub.add_parser("summon"); p.add_argument("--rare", action="store_true"); p.add_argument("--multi", action="store_true"); p.set_defaults(f=cmd_summon)
     p = sub.add_parser("shot"); p.add_argument("name", nargs="?", default="shot"); p.set_defaults(f=cmd_shot)
     p = sub.add_parser("tap"); p.add_argument("x", type=int); p.add_argument("y", type=int); p.set_defaults(f=cmd_tap)

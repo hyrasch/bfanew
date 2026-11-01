@@ -39,4 +39,10 @@ struct ServerConfig
 	* bfanew: seconds per energy point regenerated (0 = no regeneration).
 	*/
 	uint32_t energyRegenSeconds;
+
+	/*!
+	* bfanew: new players play the client's tutorial (name, element, the first battles, the
+	* tutorial summon); false = the 2013 "skipped tutorial" start with the template starter.
+	*/
+	bool tutorial;
 };

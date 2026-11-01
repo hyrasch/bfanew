@@ -1,0 +1,180 @@
+// bfanew: the tutorial (CLAUDE.md "Tutorial"). Keys read off CreateUserRequest::createBody,
+// BaseRequest::createTutoUserInfoTag, TutorialSkipResponse::readParam and
+// UserTeamArchiveResponse::readParam.
+
+json CreateUserLogin {
+    doc "The IKqx1Cn9 group of CreateUser (CreateUserRequest::createBody): no user id yet, the gumi account params identify the player"
+
+    field handle_name type="str" {
+        key "B5JQyV8j"
+        doc "the name typed on TutorialScene1 (UserState::getHandleName)"
+    }
+
+    field device_name type="str" {
+        key "iN7buP0j"
+        doc "device name"
+    }
+
+    field model_change_count type="i32::str" {
+        key "nrg19RGe"
+        doc "model change count"
+    }
+
+    field device_id type="str" {
+        key "Ma5GnU0H"
+        doc "device id"
+    }
+
+    field push_token type="str" {
+        key "dzhBs92A"
+        doc "UserState::getPushDeviceToken"
+    }
+
+    field target_os type="str" {
+        key "DFY3k6qp"
+        doc "target os as a string"
+    }
+
+    field advertising_id type="str" {
+        key "6K7LToCD"
+        doc "advertising id"
+    }
+
+    field skip_main_tutorial type="i32::str" {
+        key "37d2Hi5p"
+        doc "UserInfo::getSkipMainTutorialFlag: 1 when the skip popup of TutorialScene1 was accepted"
+    }
+
+    field gumi_live_userid type="str" {
+        key "iN7buP2h"
+        doc "the gumi account id of the guest login"
+    }
+
+    field gumi_live_token type="str" {
+        key "iN7buP1i"
+        doc "the gumi account token"
+    }
+}
+
+json CreateUserSelect {
+    doc "The 9u45RGcV group of CreateUser"
+
+    field element type="i32::str" {
+        key "Kn51uR4Y"
+        doc "UserState::getSelectElement: the element picked on TutorialScene1 (1 fire, 2 water, 3 earth, 4 thunder), which starter set DefineMst initial_unit gives"
+    }
+}
+
+json CreateUserReq {
+    doc "CreateUser (uV6yH5MX, key 4agnATy2DrJsWzQk, URL /actionSymbol/7jz4FDpS.php): the name and element entered at the start of the tutorial (UserCreateResultScene::initConnect)"
+
+    field login_info type="[CreateUserLogin]::size(1)" {
+        key "IKqx1Cn9"
+        doc "the name and device"
+    }
+
+    field select type="[CreateUserSelect]::size(1)" {
+        key "9u45RGcV"
+        doc "the element"
+    }
+}
+
+json CreateUserResp {
+    doc "CreateUser reply: the login info (UserCreateResultScene only checks the response message, then sends UserInfo)"
+
+    field login_info type="[LoginInfoResp]::size(1)" {
+        key "IKqx1Cn9"
+        doc "user id, handle name, tutorial state"
+    }
+}
+
+json TutorialLogin {
+    doc "The IKqx1Cn9 group of TutorialUpdate (BaseRequest::createTutoUserInfoTag): the regular login info plus the tutorial state"
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the player"
+    }
+
+    field contact_id type="str" {
+        key "90LWtVUN"
+        doc "contact id"
+    }
+
+    field model_change_count type="i32::str" {
+        key "nrg19RGe"
+        doc "model change count"
+    }
+
+    field device_name type="str" {
+        key "iN7buP0j"
+        doc "device name"
+    }
+
+    field target_os type="str" {
+        key "DFY3k6qp"
+        doc "target os"
+    }
+
+    field build_platform_id type="str" {
+        key "j2lk52Be"
+        doc "build platform"
+    }
+
+    field tutorial_status type="i32::str" {
+        key "9sQM2XcN"
+        doc "UserInfo::getTutoChapterID: the chapter reached (1..9, 50..54, 10, 11, 12 = done)"
+    }
+
+    field tutorial_end_flag type="i32::str" {
+        key "sv6BEI8X"
+        doc "UserInfo::getTutoEndFlg: 1 once the tutorial is over"
+    }
+
+    field gumi_live_userid type="str" {
+        key "iN7buP2h"
+        doc "gumi account id"
+    }
+
+    field gumi_live_token type="str" {
+        key "iN7buP1i"
+        doc "gumi account token"
+    }
+}
+
+json TutorialUpdateReq {
+    doc "TutorialUpdate (T1nCVvx4, key 7hqzmR3T, URL /actionSymbol/01YABGWc.php): TutorialStepScene::initConnect sends it when the chapter reaches 12 (the end), ItemEditTopScene::endTutorial queues one at chapter 54"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[TutorialLogin]::size(1)" {
+        key "IKqx1Cn9"
+        doc "the tutorial state"
+    }
+}
+
+json TutorialSkipReq {
+    doc "TutorialSkip (d36DaiJl, key p3qD61db): the Skip button of the tutorial battle (MissionScene::skipTutorialRequest, confirmAnswerYes)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+}
+
+json TutorialSkipResp {
+    doc "TutorialSkip reply (TutorialSkipResponse::readParam -> TutorialSkipInfo::setResult): MissionScene::updateEvent jumps to chapter 10 (the gems and summon lesson) when it is 1"
+
+    field result type="i32::str" {
+        key "3tWuc7de"
+        doc "1 = skipped"
+    }
+}

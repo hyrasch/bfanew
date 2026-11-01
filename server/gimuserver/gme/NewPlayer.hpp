@@ -13,6 +13,17 @@ namespace NewPlayer
 	//! the three gifts a player asks from friends (gme/Gifts.hpp): zel, friend points, karma; the gift
 	//! scenes dereference the GiftItemMst of every id in a want list, so an empty list is a crash
 	constexpr const char* kDefaultWantGifts = "100,200,300";
+	// the tutorial battle teaches item use on an equipped Cure ("Tap the cure to give it a try"): what a
+	// new player carries in the warehouse and in item slot 1 (gme/Tutorial.hpp)
+	constexpr const char* kStarterItems = "20000:3";
+	inline std::vector<UserEquipItemInfo> StarterEquip()
+	{
+		UserEquipItemInfo e = {};
+		e.item_id = "20000";
+		e.disp_order = 0;
+		e.item_num = 3;
+		return { e };
+	}
 
 	constexpr const char* kHandleName = "Summoner";
 
@@ -114,9 +125,12 @@ namespace NewPlayer
 		t.max_unit_count = 100;
 		t.zel = scfg.initialZel;
 		t.karma = scfg.initialKarma;
-		t.brave_coin = scfg.initialBraveCoins;
+		// brave_coin is the balance the client shows and spends (CLAUDE.md "Free economy"), free /
+		// paid the split: the 5 initial free gems are the tutorial's "You received 5 Gems" (chapter 10
+		// wants them in the wallet, gme/Tutorial.hpp)
 		t.free_gems = scfg.initialFreeGems;
-		t.paid_gems = 0;
+		t.paid_gems = scfg.initialBraveCoins;
+		t.brave_coin = t.free_gems + t.paid_gems;
 		t.friend_point = scfg.initialFriendPoints;
 		t.want_gift = kDefaultWantGifts; // the gifts asked from friends (gme/Gifts.hpp): zel, friend points, karma
 		ApplyLevel(t, static_cast<int32_t>(scfg.initialLevel), true);

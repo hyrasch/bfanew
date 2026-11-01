@@ -98,6 +98,10 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("eyg8sA32", ArenaRetire, "93i8EbyM");
 	REGISTER("NPyXDgV9", ArenaBattleRestart, "sWofKGMl");
 	REGISTER("xkd9H50w", ArenaFriendList, "L3TDhrn2");
+	REGISTER("uV6yH5MX", CreateUser, "4agnATy2DrJsWzQk");
+	REGISTER("T1nCVvx4", TutorialUpdate, "7hqzmR3T");
+	REGISTER("d36DaiJl", TutorialSkip, "p3qD61db");
+	REGISTER("TA4MnZX8", NgwordCheck, "r4Smw5TX");
 	REGISTER("vUQrAV65", GetPlayerInfo, "7pW4xF9H");
 	REGISTER("4P5GELTF", ItemMix, "AFqKIJ8Z4mHPB9xg");
 	REGISTER("xe8tiSf4", ShopUse, "qthMXTQSkz3KfH9R");

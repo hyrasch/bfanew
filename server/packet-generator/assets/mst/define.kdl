@@ -126,10 +126,9 @@ json DefineMst {
         doc "TODO"
     }
 
-    // // TODO: number of continues?
     field initial_unit type="str" {
         key "21ovwqYT"
-        doc "TODO"
+        doc "bfanew: the tutorial starter sets (LoginScene::setInitialUnits -> InitialUnitList): element-dispOrder@memberType@unitId:... per element, comma separated (gme/Tutorial.hpp Starters)"
     }
 
     // // TODO: I'm sure this is not JUST a string
@@ -460,4 +459,5 @@ json DefineMst {
         doc "TODO"
         // NOTE: not used in last version
     }
+
 }

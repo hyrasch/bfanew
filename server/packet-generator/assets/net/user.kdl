@@ -1309,11 +1309,21 @@ json UserItemDictionaryInfo {
 
 
 json UserTeamArchive {
-    doc "TODO"
+    doc "bfanew: the team archive (group zI2tJB7R, UserTeamArchiveResponse::readParam; 40 keys in the client, mostly 2015+ counters). Only what TutorialStepScene::checkChapter reads is filled: the fusions done (chapter 5) and the syntheses done (chapter 51). Sent in UserInfo, UnitMix and ItemMix replies (gme/Tutorial.hpp Archive)"
 
-    field mock type="str" {
-		key "INVALID"
-		doc "TODO"
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the player"
+    }
+
+    field unit_mix_cnt type="i32::str" {
+        key "WMC6rNF1"
+        doc "UserTeamArchive::getUnitMixCnt: fusions done"
+    }
+
+    field item_mix_cnt type="i32::str" {
+        key "c3Bo97kI"
+        doc "UserTeamArchive::getItemMixCnt: syntheses done"
     }
 }
 

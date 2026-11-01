@@ -69,6 +69,7 @@ void ServerCache::Setup(const Json::Value& serverObj)
 	m_serverConfig.initialFreeGems = serverObj.get("initial_free_gems", 0).asUInt();
 	m_serverConfig.initialFriendPoints = serverObj.get("initial_friend_points", 0).asUInt();
 	m_serverConfig.energyRegenSeconds = serverObj.get("energy_regen_seconds", 180).asUInt();
+	m_serverConfig.tutorial = serverObj.get("tutorial", true).asBool();
 
 	// bfanew: the content phase (tools/build_phase.py) comes first: its id picks the phase folder
 	// for every table below; optional, nothing is enforced without it

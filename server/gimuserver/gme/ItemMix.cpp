@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Tutorial.hpp"
 
 /*
 * ItemMix ("4P5GELTF", encode key AFqKIJ8Z4mHPB9xg, URL /actionSymbol/cmk86pt4.php): item
@@ -107,6 +108,7 @@ HANDLEF(ItemMix)
 		co_await Db::TakeItems(p.user_id, taken);
 		co_await Db::AddItems(p.user_id, given);
 		p.team.karma -= karma;
+		p.item_mix_cnt += mixes; // the tutorial counts syntheses (gme/Tutorial.hpp)
 		co_await Db::SavePlayer(p);
 	}
 	LOG_DEBUG << "ItemMix: user " << p.user_id << " " << mixes << " mixes, took " << taken << ", made " << given << ", karma " << karma;
@@ -114,6 +116,7 @@ HANDLEF(ItemMix)
 	ItemMixResp resp = {};
 	resp.team_info = p.team;
 	resp.warehouse_info = co_await Db::LoadItems(p.user_id);
+	resp.archive = { Tutorial::Archive(p) };
 
 	std::string buffer{};
 	const auto& ec2 = glz::write_json(resp, buffer);
