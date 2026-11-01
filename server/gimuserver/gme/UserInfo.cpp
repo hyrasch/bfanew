@@ -3,6 +3,7 @@
 #include "TownState.hpp"
 #include "Vortex.hpp"
 #include "Keys.hpp"
+#include "Arena.hpp"
 #include <cstdlib>
 #include <unordered_set>
 
@@ -40,6 +41,14 @@ HANDLEF(UserInfo)
 	resp.login_info.feature_gate = 0;
 
 	p.team.user_id = p.user_id;
+	{
+		// bfanew: the Arena record (orbs regenerated here too, so the home screen shows them)
+		auto arena = co_await Db::LoadArena(p.user_id);
+		Arena::Regen(p, arena, Vortex::Now());
+		co_await Db::SaveArena(p.user_id, arena);
+		resp.arena_info = { Arena::Info(p, arena) };
+		resp.arena_archive = { Arena::Archive(p, arena) };
+	}
 	resp.team_info = p.team;
 	resp.unit_info = co_await Db::LoadUnits(p.user_id);
 	resp.party_deck_info = co_await Db::LoadDecks(p.user_id);

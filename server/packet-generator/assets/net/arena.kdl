@@ -1,0 +1,539 @@
+// bfanew: the classic Arena (PvP auto-battles against other summoners' squads), as the 2.19.6
+// client plays it. Scenes: ArenaTopConnectScene sends ArenaStart on entry; the top scene's Battle
+// button sends ArenaMatching and shows the ONE suggested enemy (ArenaSuggestEnemyScene, "Next"
+// re-rolls with another ArenaMatching); Fight -> ArenaBattleStartConnectScene -> ArenaBattleStart,
+// whose reply carries both squads as the NPC JSON strings the battle parses (NpcTeamParse /
+// NpcPartyParseList / NpcUnitParseList, picojson); the battle runs on the client; its end sends
+// ArenaBattleEnd with the battle log and reads back the result, the rewards and the arena record.
+// Every key below was read off the *Response::readParam / *Request::createBody functions.
+
+json UserArenaInfo {
+    doc "The player's arena record (UserInfo 8jBJ7uKR and every arena reply; UserArenaInfoResponse::readParam). A non-empty battle id means a battle is in progress: ArenaInfoConnectScene::arenaBattleTheWay resumes it (ArenaBattleRestart)."
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "TODO"
+    }
+
+    field arena_rank_id type="i32::str" {
+        key "JmFn3g9t"
+        doc "ArenaRankMst id (arena_rank.json: points bands, 1 Rookie ... )"
+    }
+
+    field rank_point type="i32::str" {
+        key "U4pMNjy0"
+        doc "ABP, arena battle points"
+    }
+
+    field battle_cnt type="i32::str" {
+        key "69vnphig"
+        doc "battles fought"
+    }
+
+    field win_cnt type="i32::str" {
+        key "8CEu9Kcm"
+        doc "battles won"
+    }
+
+    field battle_cnt_accept type="i32::str" {
+        key "20iEWRCV"
+        doc "battles fought as the defender"
+    }
+
+    field win_cnt_accept type="i32::str" {
+        key "0rAkzg7L"
+        doc "battles won as the defender"
+    }
+
+    field max_arena_rank_id type="str" {
+        key "8uJ1XGwx"
+        doc "highest rank reached (setMaxArenaRankID; the top scene compares it with the rank for the rank-up reward marker)"
+    }
+
+    field current_position type="i32::str" {
+        key "2rqxaZ6K"
+        doc "ranking position"
+    }
+
+    field battle_id type="str" {
+        key "xL0p2MkY"
+        doc "the battle in progress, empty when none"
+    }
+}
+
+json ArenaSuggestEnemy {
+    doc "The opponent ArenaMatching proposes (fQ3XImM2, a single object: ArenaSuggestEnemy::shared). The suggest scene shows its handle, level, rank, record and leader unit; Fight sends the user id back in ArenaBattleStart."
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "TODO"
+    }
+
+    field handle_name type="str" {
+        key "B5JQyV8j"
+        doc "TODO"
+    }
+
+    field lv type="i32::str" {
+        key "D9wXQI2V"
+        doc "summoner level"
+    }
+
+    field arena_rank_id type="i32::str" {
+        key "JmFn3g9t"
+        doc "TODO"
+    }
+
+    field unit_id type="str" {
+        key "pn16CNah"
+        doc "leader unit id, drawn as the opponent's portrait"
+    }
+
+    field battle_cnt type="i32::str" {
+        key "69vnphig"
+        doc "TODO"
+    }
+
+    field win_cnt type="i32::str" {
+        key "8CEu9Kcm"
+        doc "TODO"
+    }
+
+    field battle_cnt_accept type="i32::str" {
+        key "20iEWRCV"
+        doc "TODO"
+    }
+
+    field win_cnt_accept type="i32::str" {
+        key "0rAkzg7L"
+        doc "TODO"
+    }
+
+    field rank_point type="i32::str" {
+        key "U4pMNjy0"
+        doc "TODO"
+    }
+
+    field friend_id type="str" {
+        key "98WfKiyA"
+        doc "setFriendID; empty when the opponent is not a friend"
+    }
+
+    field unit_img_type type="i32::str" {
+        key "2pAyFjmZ"
+        doc "the leader's image variant (0)"
+    }
+}
+
+json ArenaBattleEnemyInfo {
+    doc "The opponent's squad for the battle (ArenaBattleStart / ArenaBattleRestart reply 9NX83YVe, ArenaBattleEnemyInfoResponse::readParam -> ArenaBattleEnemyInfo). team_info / party_info / unit_info are JSON strings in the NPC format (RivalParty::entry): team {P_USER_ID, P_LV, P_FRIEND_MESSAGE, P_GUILD_ID}, party [{P_USER_UNIT_ID, P_MEMBER_TYPE (0 = leader), P_DISPORDER (slot 0-4)}], units [{P_USER_UNIT_ID, P_UNIT_ID, P_UNIT_TYPE_ID, P_LV, P_HP, P_ATK, P_DEF, P_HEL, P_SKILL_ID, P_SKILL_LV, P_EXTRA_SKILL_ID, P_EXTRA_SKILL_LV, P_EXTRA_PASSIVE_SKILL_ID, P_EXTRA_PASSIVE_SKILL_ID2, P_ADD_HP, P_EXT_HP, P_ADD_ATK, P_EXT_ATK, P_ADD_DEF, P_EXT_DEF, P_ADD_HEL, P_EXT_HEL, P_EQP_ITEM_ID, P_EQP_ITEM_ID2, P_IMG_TYPE, P_FE_INFO, P_OMNI_LV}], every value a string."
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "TODO"
+    }
+
+    field battle_id type="i32::str" {
+        key "xL0p2MkY"
+        doc "setBattleID"
+    }
+
+    field team_info type="str" {
+        key "INT1K9Pf"
+        doc "NPC team JSON"
+    }
+
+    field party_info type="str" {
+        key "nZc1Ip3N"
+        doc "NPC party JSON"
+    }
+
+    field unit_info type="str" {
+        key "U42YcFNu"
+        doc "NPC units JSON"
+    }
+
+    field friend_message type="str" {
+        key "bM7RLu5K"
+        doc "TODO"
+    }
+
+    field rule type="i32::str" {
+        key "IvuccUuD"
+        doc "UserArenaRuleInfo::setRule: an ArenaExtraRuleMst id, 0 = none"
+    }
+}
+
+json ArenaBattlePartyInfo {
+    doc "The player's own squad for the battle, same JSON strings (ArenaBattleStart reply 5K5wsBoL -> ArenaBattlePartyInfo, read by PlayerParty::entry)."
+
+    field party_info type="str" {
+        key "nZc1Ip3N"
+        doc "NPC party JSON"
+    }
+
+    field unit_info type="str" {
+        key "U42YcFNu"
+        doc "NPC units JSON"
+    }
+}
+
+json ArenaBattleResult {
+    doc "ArenaBattleEnd reply yTEvm85f (ArenaBattleResultResponse::readParam -> ArenaBattleResultInfo): what the result screens show."
+
+    field battle_id type="str" {
+        key "xL0p2MkY"
+        doc "TODO"
+    }
+
+    field result type="str" {
+        key "3pAQY5KW"
+        doc "the battle result as the client sent it (BattleState::getArenaResult)"
+    }
+
+    field before_arena_rank_id type="str" {
+        key "s07yWuZR"
+        doc "TODO"
+    }
+
+    field after_arena_rank_id type="str" {
+        key "C1w4H62i"
+        doc "TODO"
+    }
+
+    field before_rank_point type="i32::str" {
+        key "jPoM1UV8"
+        doc "TODO"
+    }
+
+    field after_rank_point type="i32::str" {
+        key "TJ9cQ8AY"
+        doc "TODO"
+    }
+
+    field karma type="i32::str" {
+        key "HTVh8a65"
+        doc "karma won"
+    }
+
+    field friend_req_state type="i32::str" {
+        key "Sx5H0Ikn"
+        doc "0: no friend request offered"
+    }
+
+    field bonus_point type="i32::str" {
+        key "tvWWL9wI"
+        doc "campaign bonus points (0)"
+    }
+
+    field bonus_type type="i32::str" {
+        key "ciDqCjAF"
+        doc "campaign bonus type (0)"
+    }
+
+    field bonus_param type="str" {
+        key "59b1eE6N"
+        doc "campaign bonus param"
+    }
+
+    field battle_cnt type="i32::str" {
+        key "69vnphig"
+        doc "TODO"
+    }
+}
+
+json ArenaBattleReward {
+    doc "One entry of the ArenaBattleEnd reply okd0y3Ir (ArenaBattleRewardInfoList): a rank-up reward."
+
+    field dia_num type="i32::str" {
+        key "1ef7JNSC"
+        doc "gems"
+    }
+
+    field items type="str" {
+        key "4T0Q2Bh5"
+        doc "itemId:count,..."
+    }
+
+    field first_rank_up type="i32::str" {
+        key "ZBwx5ct3"
+        doc "1 when the rank was reached for the first time"
+    }
+}
+
+json FriendUserArenaInfo {
+    doc "ArenaFriendList reply BYaF62TE entries (FriendUserArenaInfoResponse); phase 1 answers an empty list (no friends yet)."
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "TODO"
+    }
+}
+
+json ArenaMatchingParam {
+    doc "group fq2C03jh of ArenaMatching / ArenaBattleStart"
+
+    field deck_num type="i32::str" {
+        key "Z0Y4RoD7"
+        doc "the arena squad (UserTeamInfo::getArenaDeckNum, the active squad when none)"
+    }
+
+    field bonus_type type="i32::str" {
+        key "ciDqCjAF"
+        doc "GeneralEventMst arena campaign bonus (0)"
+    }
+
+    field bonus_param type="str" {
+        key "59b1eE6N"
+        doc "TODO"
+    }
+}
+
+json ArenaEnemyParam {
+    doc "group 9NX83YVe of ArenaBattleStart: the chosen opponent"
+
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "UserState::getEnemyUserID, the suggested enemy's id"
+    }
+
+    field random_rule type="i32::str" {
+        key "Z7PXoxc2"
+        doc "SaveData::isArenaRandomRule"
+    }
+}
+
+json ArenaBattleEndParam {
+    doc "group yTEvm85f of ArenaBattleEnd / ArenaRetire: the battle log (only the fields the server reads; the rest are statistics)"
+
+    field battle_id type="i32::str" {
+        key "xL0p2MkY"
+        doc "TODO"
+    }
+
+    field result type="i32::str" {
+        key "3pAQY5KW"
+        doc "BattleState::getArenaResult"
+    }
+
+    field bc type="i32::str" {
+        key "hoG2ieT5"
+        doc "TODO"
+    }
+
+    field hc type="i32::str" {
+        key "6PLsn8xo"
+        doc "TODO"
+    }
+
+    field perfect type="i32::str" {
+        key "s92RgSwp"
+        doc "TODO"
+    }
+
+    field timeout type="i32::str" {
+        key "x3ZgJS9W"
+        doc "TODO"
+    }
+
+    field defeat_unit_cnt type="i32::str" {
+        key "mFID53JZ"
+        doc "enemy units knocked out (the archive's arena_defeat_unit_cnt)"
+    }
+
+    field defeat_unit_ids type="str" {
+        key "sQ2aMk8B"
+        doc "their unit ids, comma separated with a trailing comma (50102,50483,): the archive's per-element / per-rarity counts"
+    }
+
+    field sum_damage type="str" {
+        key "hI68VzHu"
+        doc "damage dealt"
+    }
+
+    field sum_heal type="str" {
+        key "F32xJzsH"
+        doc "HP healed"
+    }
+
+    field overkill_cnt type="i32::str" {
+        key "Wnc6A31E"
+        doc "overkill attacks"
+    }
+}
+
+json ArenaStartReq {
+    doc "ArenaStart (zu6ifpy0, key bGjK4UH1, URL /actionSymbol/mfR3I0rx.php), ArenaInfo (oim9TU1D, key oqQxdFfa, URL /actionSymbol/j75hvf07.php) and GetPlayerInfo (vUQrAV65, key 7pW4xF9H, URL /actionSymbol/DheJ07aI.php, the Record button: ArenaArchiveScene): login info only"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+}
+
+json ArenaMatchingReq {
+    doc "ArenaMatching (82ztj6Iy, key Q53tUIBE, URL /actionSymbol/NGc6xk8w.php)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field param type="[ArenaMatchingParam]::size(1)" {
+        key "fq2C03jh"
+        doc "TODO"
+    }
+}
+
+json ArenaBattleStartReq {
+    doc "ArenaBattleStart (7f1rg92L, key zaMR9o0d, URL /actionSymbol/wJ68P0at.php); group 60subGk3 {EfbZ7mh9 1} and rj5fgJh0 {t5R47iwj drop display} are not read"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field enemy type="[ArenaEnemyParam]::size(1)" {
+        key "9NX83YVe"
+        doc "TODO"
+    }
+
+    field param type="[ArenaMatchingParam]::size(1)" {
+        key "fq2C03jh"
+        doc "TODO"
+    }
+}
+
+json ArenaBattleEndReq {
+    doc "ArenaBattleEnd (oQNtKU51, key jkgWq1d0, URL /actionSymbol/CnaeP2S9.php) and ArenaRetire (eyg8sA32, key 93i8EbyM, URL /actionSymbol/cn21aFSj.php, battle id only)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field loginInfo type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+
+    field result type="[ArenaBattleEndParam]::size(1)" {
+        key "yTEvm85f"
+        doc "TODO"
+    }
+}
+
+json ArenaStartResp {
+    doc "ArenaStart / ArenaInfo / ArenaRetire reply: the record and the wallet (orbs)"
+
+    field arena_info type="[UserArenaInfo]" {
+        key "8jBJ7uKR"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field arena_archive type="[UserTeamArenaArchive]" {
+        key "PQ56vbkI"
+        doc "the statistics (Record screen, win streak)"
+    }
+}
+
+json ArenaMatchingResp {
+    doc "ArenaMatching reply: the one suggested opponent"
+
+    field suggest_enemy type="[ArenaSuggestEnemy]" {
+        key "fQ3XImM2"
+        doc "TODO"
+    }
+
+    field arena_info type="[UserArenaInfo]" {
+        key "8jBJ7uKR"
+        doc "TODO"
+    }
+}
+
+json ArenaBattleStartResp {
+    doc "ArenaBattleStart / ArenaBattleRestart reply: both squads, the record with the battle id, the wallet with the orb spent"
+
+    field enemy_info type="[ArenaBattleEnemyInfo]" {
+        key "9NX83YVe"
+        doc "TODO"
+    }
+
+    field party_info type="[ArenaBattlePartyInfo]" {
+        key "5K5wsBoL"
+        doc "TODO"
+    }
+
+    field arena_info type="[UserArenaInfo]" {
+        key "8jBJ7uKR"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field arena_archive type="[UserTeamArenaArchive]" {
+        key "PQ56vbkI"
+        doc "the statistics (Record screen, win streak)"
+    }
+}
+
+json ArenaBattleEndResp {
+    doc "ArenaBattleEnd reply"
+
+    field result type="[ArenaBattleResult]" {
+        key "yTEvm85f"
+        doc "TODO"
+    }
+
+    field reward type="[ArenaBattleReward]" {
+        key "okd0y3Ir"
+        doc "TODO"
+    }
+
+    field arena_info type="[UserArenaInfo]" {
+        key "8jBJ7uKR"
+        doc "TODO"
+    }
+
+    field team_info type="[UserTeamInfo]::size(1)" {
+        key "fEi17cnx"
+        doc "TODO"
+    }
+
+    field arena_archive type="[UserTeamArenaArchive]" {
+        key "PQ56vbkI"
+        doc "the statistics (Record screen, win streak)"
+    }
+}
+
+json ArenaFriendListResp {
+    doc "ArenaFriendList (xkd9H50w, key L3TDhrn2, URL /actionSymbol/WgQX4M7p.php) reply"
+
+    field friends type="[FriendUserArenaInfo]" {
+        key "BYaF62TE"
+        doc "TODO"
+    }
+}

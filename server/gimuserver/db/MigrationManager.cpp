@@ -198,6 +198,28 @@ static void RegisterMigrations(MigrationMap& map)
 		);
 	});
 
+	// bfanew: the Arena record (gme/Arena.hpp, db/Player.hpp ArenaState)
+	migrate("01112026_PlayerArena", {
+		p->execSqlSync(
+			"CREATE TABLE player_arena("
+			"user_id TEXT PRIMARY KEY,"
+			"rank_point INTEGER NOT NULL DEFAULT 0,"
+			"battle_cnt INTEGER NOT NULL DEFAULT 0,"
+			"win_cnt INTEGER NOT NULL DEFAULT 0,"
+			"accept_cnt INTEGER NOT NULL DEFAULT 0,"
+			"accept_win INTEGER NOT NULL DEFAULT 0,"
+			"max_rank INTEGER NOT NULL DEFAULT 1,"
+			"series_win INTEGER NOT NULL DEFAULT 0,"
+			"max_series INTEGER NOT NULL DEFAULT 0,"
+			"battle_id TEXT NOT NULL DEFAULT '',"
+			"enemy TEXT NOT NULL DEFAULT '',"
+			"suggested TEXT NOT NULL DEFAULT '',"
+			"fight_at INTEGER NOT NULL DEFAULT 0,"
+			"archive TEXT NOT NULL DEFAULT ''"
+			");"
+		);
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

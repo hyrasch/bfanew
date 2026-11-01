@@ -109,9 +109,9 @@ permitted places, mission runs, the warehouse (item pickups) and the items equip
 Handlers that write: GachaAction (units, gems / honor points), MissionStart (energy, run),
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
-UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, slot
-extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule). Stubs: DungeonEventUpdate (story events watched,
-not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: arena, gifts, friends, shop. The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, arena
+orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Stubs: DungeonEventUpdate (story events watched,
+not stored), UpdateEventInfo (home screen 5-minute poll). Not implemented: gifts, friends (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -924,6 +924,75 @@ first (what `/dls` advertises) and `127.0.0.1:9960` second. The Ethernet profile
 `netsh advfirewall firewall add rule name="gimuserver 9960" dir=in action=allow protocol=TCP localport=9960`.
 The old single-listener config is kept as `deploy/config.json.bak-127only`.
 
+## Arena (2026-11-01)
+
+The classic PvP Arena works end to end against NPC summoners (and against other registered
+players' arena squads once there are some). Files: `packet-generator/assets/net/arena.kdl` (every
+request, response and field, with the client's ids, keys and URLs), `gimuserver/gme/Arena.hpp`
+(the rules), `gimuserver/gme/ArenaHandlers.cpp` (the nine handlers), `db/Player.hpp` `ArenaState`
+(table `player_arena`, migration `01112026_PlayerArena`).
+
+**How the client plays it.** The home carousel's Arena page (tap (790,690) from home) opens
+ArenaTopScene, which sends ArenaStart (`zu6ifpy0`) and draws the record: rank name
+(`arena_rank.json`, 101 ranks by Arena Battle Points: Rookie 0-499, Novice 500-1199, Amateur
+1200-1999, Warrior 2000-2999, Contender 3000-4999...), wins / losses, the win streak
+("Consecutive Victories" comes from a *separate* group, the UserTeamArenaArchive `PQ56vbkI`, not
+from UserArenaInfo), points and the bar to the next rank. The first visit plays the tutorial
+(scripted Kevin vs Seria battle from `arena_tutorial_npc_info`). Enter sends ArenaMatching
+(`82ztj6Iy`) and shows one opponent (ArenaSuggestEnemy: name, level, rank, leader unit, record);
+Refresh asks again. Battle!! -> "Start Battle? 1 Arena Orb will be used" -> ArenaBattleStart
+(`7f1rg92L`): the server spends an orb and returns **both squads as NPC JSON strings** (the
+picojson format of `NpcTeamParse` / `NpcPartyParseList` / `NpcUnitParseList`: every value a
+string; team `{P_USER_ID, P_LV, P_FRIEND_MESSAGE, P_GUILD_ID}`, party `[{P_USER_UNIT_ID,
+P_MEMBER_TYPE (0 = leader), P_DISPORDER}]`, units `[{P_USER_UNIT_ID, P_UNIT_ID, P_UNIT_TYPE_ID,
+P_LV, P_HP, P_ATK, P_DEF, P_HEL, P_SKILL_ID, P_SKILL_LV, ..., P_EQP_ITEM_ID, P_IMG_TYPE, P_FE_INFO,
+P_OMNI_LV}]`): the enemy in `9NX83YVe` (ArenaBattleEnemyInfo) and **the player's own arena squad in
+`5K5wsBoL`** (the client builds its party from that, not from the box). The battle is automatic
+on the client (about a minute). ArenaBattleEnd (`oQNtKU51`) sends the log (group `yTEvm85f`:
+`3pAQY5KW` result **1 = win, 0 = loss** (verified both ways), BC / HC collected, units knocked
+out and their ids, damage, healing, overkills, perfect, time-out...) and gets the scoring back;
+the result screens, then the "send a friend request?" prompt (ArenaResultFriendRequestScene),
+then the top again. The Record button sends GetPlayerInfo (`vUQrAV65`, login info only) and
+ArenaArchiveScene draws the statistics from the archive group. With 0 orbs the top offers
+"Insufficient Arena Orbs: use 0 Gem to fully restore" -> ShopUse type 4 (free here).
+
+**Server rules** (`Arena.hpp`, all ours; the original's exact numbers are unknown):
+- Orbs: `UserTeamInfo.fight_point` / `max_fight_point` (3 from the level table), one per battle,
+  one back every DefineMst `recover_time_fight` seconds (3600 in the served defines), the clock
+  in `player_arena.fight_at`; the client shows the countdown next to the orbs. Regenerated at
+  login (UserInfo) and on every arena request. ShopUse type 4 refills (0 gems).
+- Points: a win is +20 plus (enemy points - mine) / 50 clamped to [-10, +20]; a loss or a retreat
+  (ArenaRetire `eyg8sA32`) is -10, never below 0. Karma 300 x the rank id for a win, 100 for a
+  loss. Rank-up rewards from `arena_rank.json` (`reward_type` "1" = gems, "2" = an item
+  "id:count"), paid once per rank in `ArenaBattleEndResp.reward` (`okd0y3Ir`) with
+  `first_rank_up` 1; `max_rank` remembers what was paid.
+- Opponents (`Arena::Pick`): the other players' arena squads (`Db::ListOtherPlayers`, deck type 1
+  number `arena_deck_num`, the active squad when it is empty) and, while there are fewer than
+  three, NPC summoners: five Rare Summon pool units at about the player's level, user unit ids
+  9000000+, points near the player's, a fixed name list (Gladiator Kevin, Knight Lorand, ...),
+  deterministic per day and index. The one just shown is not shown twice in a row. The opponent
+  and the battle id live in `player_arena` (`enemy`, `battle_id`) until End / Retire, so
+  ArenaBattleRestart (`NPyXDgV9`, resuming) can hand the same squads back.
+- Statistics: `UserTeamArenaArchive` (group `PQ56vbkI`, 33 fields, see `user.kdl`) is stored as
+  JSON in `player_arena.archive` and accumulated from the battle log (knock-outs by element and
+  rarity from the unit table, BC / HC, damage, healing, overkills, perfect and time-out wins,
+  points won); the streak and best streak come from `series_win` / `max_series`. Sent in UserInfo
+  and every arena response.
+- ArenaFriendList (`xkd9H50w`) answers an empty list; ArenaInfo (`oim9TU1D`, the arena place
+  select) = ArenaStart.
+
+**Known gaps.** The friend request prompt after a battle appears for NPC opponents too
+(`friend_req_state` 1 does not hide it; the client's check was not found): "Don't Send" returns to
+the top, "Friend Request" would hit the unsupported FriendRequest handler. Defence (being
+attacked), bonus points / random rules, the rankings and the "accept" counts are not simulated.
+`current_position` is always 1.
+
+**Packet notes.** `[X]::size(1)` request groups arrive as one-element arrays (`"fq2C03jh":[{...}]`);
+send them that way with `gme.py`. The arena import in `handlers.kdl` must come after `user.kdl`
+(ArenaStartReq embeds LoginInfoReq). A migration that already ran locally is reset with
+`sqlite3 deploy/gme.sqlite "DROP TABLE player_arena; DELETE FROM migration_status WHERE hash='01112026_PlayerArena'"`
+(the platform-tools folder has sqlite3).
+
 ## MST tables: the .dat format (2026-10-31)
 
 The `/mst/Ver<version>_<file key>[_<part>].dat` files the client downloads are **base64 of
@@ -1187,7 +1256,7 @@ top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later w
 2. ~~Fork decompfrontier/server into bfanew~~ **done 2026-10-30** (`bfanew/server`, subtree with history; first fix: Android `6K7LToCD` key + tolerant JSON reads). ~~Still to do: the `phase` config + `phases/NN/` folders for login-time tables~~ **done 2026-10-31** (see "Phasing design" 1).
 3. MST tooling: ~~decode/encode `.dat`~~ **done 2026-10-31** (`tools/mst.py`); ~~the phase filter driven by `data/*_timeline.json`~~ **done 2026-10-31** (`tools/build_phase.py`, see "MST tables: the .dat format"). ~~Server-side enforcement from `deploy/phase.json`~~ **done 2026-10-31** (MissionStart, UnitEvo, GachaAction). ~~A Vortex schedule for phase 1~~ **done 2026-10-31** (see "Vortex schedule"). ~~Phase folders for the login-time tables~~ **done 2026-10-31** (`deploy/system/phases/01/`). ~~The real summon pools~~ **done 2026-10-31** (see "Summon pools"). ~~A real 2014 Vortex calendar~~ **done 2026-10-31** (see "The 2014 Vortex calendar"); ~~Parade keys~~ **done 2026-10-31** (see "Parade keys"). ~~Real summon odds~~ **done 2026-10-31** (flat per unit, the only documented rule; see "Summon pools"). Still to do: moving the other phase-1 edits of `deploy/system` (banners, campaigns) into the folder as they are made.
 4. Core loop: ~~accounts and persistence → unit box → quests and rewards → summon~~ **done 2026-10-30** (see "Persistence"); ~~the warehouse / items~~ **done 2026-10-30** (see "Items / warehouse"; items used in battle still unverified on the client); ~~the village crash~~ **solved 2026-10-30** (content archive gap, see "Village crash"); ItemSell and ItemMix verified in the village; ~~energy purchase~~ **free economy done 2026-10-30** (see "Free economy"); ~~town facility upgrades~~ **done 2026-10-31** (TownFacilityUpdate); ~~item collection taps~~ **done 2026-10-31** (TownUpdate); ~~the energy-recovery texts~~ **done 2026-10-31** (patched dictionary via overrides); ~~summon odds~~ **done 2026-10-31** (see "Summon rates display"); ~~unit / item first-clear rewards~~ **done 2026-10-31** (see "First-clear rewards"); ~~the Shop tab~~ **done 2026-10-31** (see "Shop tab"; buying gems stays unimplemented on purpose).
-5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); the Arena is still unchecked.
+5. ~~Test feature flags system by system~~ **done 2026-10-31** for the menus reachable today (see "Feature gating"); ~~the Shop tab~~ checked 2026-10-31 (see "Shop tab"); ~~the Arena~~ **built 2026-11-01** (see "Arena"; left: the friend prompt after NPC battles, defence, rankings).
 
 ## Conventions
 

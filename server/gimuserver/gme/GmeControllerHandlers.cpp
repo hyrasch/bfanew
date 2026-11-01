@@ -77,6 +77,15 @@ static GmeHandler getHandler(std::string_view cmd)
 	REGISTER("a5k36D28", BannerClick, "a63Ghbi2");
 	REGISTER("29slks49", UserGemShardInfo, "930sDd3i");
 	REGISTER("aGT5S6qZ", DungeonKeyUse, "3rPx6tTw");
+	REGISTER("zu6ifpy0", ArenaStart, "bGjK4UH1");
+	REGISTER("oim9TU1D", ArenaInfo, "oqQxdFfa");
+	REGISTER("82ztj6Iy", ArenaMatching, "Q53tUIBE");
+	REGISTER("7f1rg92L", ArenaBattleStart, "zaMR9o0d");
+	REGISTER("oQNtKU51", ArenaBattleEnd, "jkgWq1d0");
+	REGISTER("eyg8sA32", ArenaRetire, "93i8EbyM");
+	REGISTER("NPyXDgV9", ArenaBattleRestart, "sWofKGMl");
+	REGISTER("xkd9H50w", ArenaFriendList, "L3TDhrn2");
+	REGISTER("vUQrAV65", GetPlayerInfo, "7pW4xF9H");
 	REGISTER("4P5GELTF", ItemMix, "AFqKIJ8Z4mHPB9xg");
 	REGISTER("xe8tiSf4", ShopUse, "qthMXTQSkz3KfH9R");
 	REGISTER("8v43tz7g", TownFacilityUpdate, "rq7Yd1nG");

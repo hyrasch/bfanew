@@ -114,4 +114,28 @@ namespace Db
 	drogon::Task<void> SaveKey(std::string userId, int32_t keyId, int32_t count, int64_t lastDay);
 	drogon::Task<ParadeMap> LoadParades(std::string userId);
 	drogon::Task<void> SaveParade(std::string userId, int32_t dungeonId, int64_t until, std::string missions);
+
+	/*! bfanew: the Arena record (gme/Arena.hpp): Arena Battle Points, the counts, the best rank
+	 *  reached (its reward paid), the battle in progress (id, opponent as JSON) and the opponent
+	 *  last suggested, and the time the orb regen counts from. */
+	struct ArenaState
+	{
+		int32_t rank_point = 0;
+		int32_t battle_cnt = 0;
+		int32_t win_cnt = 0;
+		int32_t accept_cnt = 0;
+		int32_t accept_win = 0;
+		int32_t max_rank = 1;
+		int32_t series_win = 0;
+		int32_t max_series = 0;
+		std::string battle_id;
+		std::string enemy;
+		std::string suggested;
+		int64_t fight_at = 0;
+		std::string archive; //!< UserTeamArenaArchive as JSON (the Record statistics)
+	};
+	drogon::Task<ArenaState> LoadArena(std::string userId);
+	drogon::Task<void> SaveArena(std::string userId, const ArenaState& st);
+	/*! Up to limit other players (arena opponents), most recently created first. */
+	drogon::Task<std::vector<Player>> ListOtherPlayers(std::string userId, int32_t limit);
 }

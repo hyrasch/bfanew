@@ -477,6 +477,48 @@ namespace Db
 			userId, static_cast<int64_t>(dungeonId), until, missions);
 	}
 
+	Task<ArenaState> LoadArena(std::string userId)
+	{
+		ArenaState st;
+		const auto res = co_await theDb()->execSqlCoro("SELECT rank_point, battle_cnt, win_cnt, accept_cnt, accept_win, max_rank, series_win, max_series, battle_id, enemy, suggested, fight_at, archive FROM player_arena WHERE user_id = $1", userId);
+		if (res.empty()) co_return st;
+		const auto& r = res[0];
+		st.rank_point = static_cast<int32_t>(r["rank_point"].as<int64_t>());
+		st.battle_cnt = static_cast<int32_t>(r["battle_cnt"].as<int64_t>());
+		st.win_cnt = static_cast<int32_t>(r["win_cnt"].as<int64_t>());
+		st.accept_cnt = static_cast<int32_t>(r["accept_cnt"].as<int64_t>());
+		st.accept_win = static_cast<int32_t>(r["accept_win"].as<int64_t>());
+		st.max_rank = static_cast<int32_t>(r["max_rank"].as<int64_t>());
+		st.series_win = static_cast<int32_t>(r["series_win"].as<int64_t>());
+		st.max_series = static_cast<int32_t>(r["max_series"].as<int64_t>());
+		st.battle_id = r["battle_id"].as<std::string>();
+		st.enemy = r["enemy"].as<std::string>();
+		st.suggested = r["suggested"].as<std::string>();
+		st.fight_at = r["fight_at"].as<int64_t>();
+		st.archive = r["archive"].as<std::string>();
+		co_return st;
+	}
+
+	Task<void> SaveArena(std::string userId, const ArenaState& st)
+	{
+		co_await theDb()->execSqlCoro(
+			"INSERT INTO player_arena(user_id, rank_point, battle_cnt, win_cnt, accept_cnt, accept_win, max_rank, series_win, max_series, battle_id, enemy, suggested, fight_at, archive) "
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) ON CONFLICT(user_id) DO UPDATE SET rank_point = $2, battle_cnt = $3, win_cnt = $4, accept_cnt = $5, "
+			"accept_win = $6, max_rank = $7, series_win = $8, max_series = $9, battle_id = $10, enemy = $11, suggested = $12, fight_at = $13, archive = $14",
+			userId, static_cast<int64_t>(st.rank_point), static_cast<int64_t>(st.battle_cnt), static_cast<int64_t>(st.win_cnt), static_cast<int64_t>(st.accept_cnt),
+			static_cast<int64_t>(st.accept_win), static_cast<int64_t>(st.max_rank), static_cast<int64_t>(st.series_win), static_cast<int64_t>(st.max_series),
+			st.battle_id, st.enemy, st.suggested, st.fight_at, st.archive);
+	}
+
+	Task<std::vector<Player>> ListOtherPlayers(std::string userId, int32_t limit)
+	{
+		std::vector<Player> out;
+		const auto res = co_await theDb()->execSqlCoro("SELECT * FROM players WHERE user_id <> $1 ORDER BY created_at DESC LIMIT $2", userId, static_cast<int64_t>(limit));
+		for (const auto& r : res)
+			out.push_back(RowToPlayer(r));
+		co_return out;
+	}
+
 	Task<std::unordered_map<int32_t, TownCollect>> LoadCollect(std::string userId)
 	{
 		std::unordered_map<int32_t, TownCollect> out;

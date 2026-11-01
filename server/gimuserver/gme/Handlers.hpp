@@ -92,6 +92,15 @@ namespace GmeHandlers
 	HANDLE(BannerClick);
 	HANDLE(UserGemShardInfo);
 	HANDLE(DungeonKeyUse);
+	HANDLE(ArenaStart);
+	HANDLE(ArenaInfo);
+	HANDLE(ArenaMatching);
+	HANDLE(ArenaBattleStart);
+	HANDLE(ArenaBattleEnd);
+	HANDLE(ArenaRetire);
+	HANDLE(ArenaBattleRestart);
+	HANDLE(ArenaFriendList);
+	HANDLE(GetPlayerInfo);
 	HANDLE(ItemMix);
 	HANDLE(ShopUse);
 	HANDLE(TownFacilityUpdate);

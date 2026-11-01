@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include "Handlers.hpp"
+#include "Arena.hpp"
 
 /*
 * ShopUse ("xe8tiSf4", encode key qthMXTQSkz3KfH9R, URL /actionSymbol/T10fSAQ6.php): everything the
@@ -9,7 +10,8 @@
 * refill (the home screen "+" / GameScene::confirmAnswerYesEnergy, the stamina shortage prompt),
 * 10 the same from the result screen's repeat prompt, 2 unit box +ext (ShopUnitBoxExtScene),
 * 3 warehouse +ext (ShopItemBoxExtScene), 7 friend slots +5, 5 continue after a defeat, 4 arena
-* points, 6 stamp, 8 colosseum, 9 unit info reset, 11 / 12 summoner shop.
+* orbs refill (the Arena top's "Insufficient Arena Orbs" prompt, FightPointHealCnt gems = 0 here),
+* 6 stamp, 8 colosseum, 9 unit info reset, 11 / 12 summoner shop.
 *
 * bfanew is free: nobody pays gems here. The define table served to the client already prices
 * these at 0 (deploy/system/defines.json: ActionPointHealCnt, UnitBoxExtCnt, ItemBoxExtCnt,
@@ -51,8 +53,18 @@ HANDLEF(ShopUse)
 		case 3:
 			p.team.warehouse_count = std::min(p.team.warehouse_count + std::max(s.ext_cnt, 0), 3200);
 			break;
+		case 4:
+		{
+			// arena orbs: full, and the regen clock restarts (gme/Arena.hpp Regen)
+			auto arena = co_await Db::LoadArena(p.user_id);
+			p.team.fight_point = p.team.max_fight_point;
+			p.team.fight_rest_timer = 0;
+			arena.fight_at = Vortex::Now();
+			co_await Db::SaveArena(p.user_id, arena);
+			break;
+		}
 		default:
-			// friend slots, continue, arena points, stamps...: nothing to charge, nothing stored yet
+			// friend slots, continue, stamps...: nothing to charge, nothing stored yet
 			break;
 		}
 	}

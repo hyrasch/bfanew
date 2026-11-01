@@ -1317,14 +1317,6 @@ json UserItemDictionaryInfo {
 	}
 }
 
-json UserArenaInfo {
-	doc "TODO"
-
-	field mock type="str" {
-		key "INVALID"
-		doc "TODO"
-	}
-}
 
 json UserTeamArchive {
     doc "TODO"
@@ -1336,11 +1328,171 @@ json UserTeamArchive {
 }
 
 json UserTeamArenaArchive {
-    doc "TODO"
+    doc "bfanew: the Arena statistics (group PQ56vbkI; UserTeamArenaArchiveResponse::readParam): the Record screen and the win streak of the Arena top (UserTeamArenaArchive::getAtkSeriesWinCnt). Kept per player in player_arena.archive (gme/Arena.hpp); sum_damage / sum_heal are strings in the client (large numbers). Sent in UserInfo and the Arena responses."
 
-    field mock type="str" {
-		key "INVALID"
-		doc "TODO"
+    field user_id type="str" {
+        key "h7eY3sAK"
+        doc "the player"
+    }
+
+    field arena_defeat_unit_cnt type="i32::str" {
+        key "mFID53JZ"
+        doc "enemy units knocked out, all battles"
+    }
+
+    field atk_series_win_cnt type="i32::str" {
+        key "7sXWfE8j"
+        doc "the current win streak (Arena top: Consecutive Victories)"
+    }
+
+    field max_atk_series_win_cnt type="i32::str" {
+        key "KuZ6k5Vp"
+        doc "the best win streak"
+    }
+
+    field max_def_series_win_cnt type="i32::str" {
+        key "72sMkn1N"
+        doc "the best streak as a defender (0 here: battles are attacks only)"
+    }
+
+    field max_turn_damage type="i32::str" {
+        key "0p8BtREA"
+        doc "most damage in one turn (0: not tracked)"
+    }
+
+    field max_turn_spark type="i32::str" {
+        key "R7eJ1Tfv"
+        doc "most sparks in one turn (0: not tracked)"
+    }
+
+    field sum_bcrystal_cnt type="i32::str" {
+        key "8bAdgn37"
+        doc "BC collected"
+    }
+
+    field sum_hcrystal_cnt type="i32::str" {
+        key "I5Uin24C"
+        doc "HC collected"
+    }
+
+    field sum_defeat_fire_unit_cnt type="i32::str" {
+        key "nRms5i9J"
+        doc "fire units knocked out"
+    }
+
+    field sum_defeat_water_unit_cnt type="i32::str" {
+        key "Cvp53GKJ"
+        doc "water units knocked out"
+    }
+
+    field sum_defeat_tree_unit_cnt type="i32::str" {
+        key "T2qI34Rm"
+        doc "earth units knocked out"
+    }
+
+    field sum_defeat_thunder_unit_cnt type="i32::str" {
+        key "Ff6g3CNv"
+        doc "thunder units knocked out"
+    }
+
+    field sum_defeat_saint_unit_cnt type="i32::str" {
+        key "3EmVG6Ts"
+        doc "light units knocked out"
+    }
+
+    field sum_defeat_dark_unit_cnt type="i32::str" {
+        key "3uUIPEj5"
+        doc "dark units knocked out"
+    }
+
+    field sum_defeat_rare1_unit_cnt type="i32::str" {
+        key "uXrLT17C"
+        doc "rare1 units knocked out"
+    }
+
+    field sum_defeat_rare2_unit_cnt type="i32::str" {
+        key "8dzSxWA2"
+        doc "rare2 units knocked out"
+    }
+
+    field sum_defeat_rare3_unit_cnt type="i32::str" {
+        key "8TL5Zmuw"
+        doc "rare3 units knocked out"
+    }
+
+    field sum_defeat_rare4_unit_cnt type="i32::str" {
+        key "0XocvSM2"
+        doc "rare4 units knocked out"
+    }
+
+    field sum_defeat_rare5_unit_cnt type="i32::str" {
+        key "Ivk81jQh"
+        doc "rare5 units knocked out"
+    }
+
+    field sum_defeat_rare6_unit_cnt type="i32::str" {
+        key "7Su2qZFv"
+        doc "rare6 units knocked out"
+    }
+
+    field sum_defeat_rare7_unit_cnt type="i32::str" {
+        key "mCDR82iQ"
+        doc "rare7 units knocked out"
+    }
+
+    field sum_defeat_rare8_unit_cnt type="i32::str" {
+        key "u9d8ye9H"
+        doc "rare8 units knocked out"
+    }
+
+    field sum_all_knockdown_cnt type="i32::str" {
+        key "Gj4zJIB3"
+        doc "units knocked out"
+    }
+
+    field sum_timeout_win_cnt type="i32::str" {
+        key "Z0X7BVdF"
+        doc "wins on time-out"
+    }
+
+    field sum_perfect_win_cnt type="i32::str" {
+        key "J7u8prxX"
+        doc "perfect wins"
+    }
+
+    field sum_bb_knockdown_cnt type="i32::str" {
+        key "Ut8sN0oM"
+        doc "knock-outs by Brave Burst (0: not tracked)"
+    }
+
+    field sum_arena_point type="i32::str" {
+        key "T57M1AvV"
+        doc "ABP won in all"
+    }
+
+    field sum_damage type="str" {
+        key "hI68VzHu"
+        doc "damage dealt in all"
+    }
+
+    field sum_heal type="str" {
+        key "F32xJzsH"
+        doc "HP healed in all"
+    }
+
+    field sum_overkill_attack_cnt type="i32::str" {
+        key "Wnc6A31E"
+        doc "overkill attacks"
+    }
+
+    field sum_spark type="i32::str" {
+        key "kHbYZ9w1"
+        doc "sparks (0: not tracked)"
+    }
+
+    field sum_skill_cnt type="i32::str" {
+        key "4vx39EIB"
+        doc "skills used (0: not tracked)"
     }
 }
 
