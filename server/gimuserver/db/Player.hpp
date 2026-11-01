@@ -38,6 +38,8 @@ namespace Db
 		int64_t energy_at = 0; //!< unix time the energy value in team was computed at
 		bool tutorial_end = true;
 		int64_t last_login = 0; //!< unix time of the last UserInfo (shown to friends)
+		std::string scenario;         //!< story events watched: the client's UserScenarioInfoList save string (UserInfo N4XVE1uA)
+		std::string special_scenario; //!< special scenarios watched (UserInfo 9yVsu21R)
 	};
 
 	/*! The level table row for a level (nullptr if none). */

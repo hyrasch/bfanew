@@ -236,6 +236,12 @@ static void RegisterMigrations(MigrationMap& map)
 		p->execSqlSync("ALTER TABLE player_runs ADD COLUMN helper TEXT NOT NULL DEFAULT '';");
 	});
 
+	// bfanew: the story events watched (gme/DungeonEventUpdate.cpp): the client's own save strings
+	migrate("01112026_Scenario", {
+		p->execSqlSync("ALTER TABLE players ADD COLUMN scenario TEXT NOT NULL DEFAULT '';");
+		p->execSqlSync("ALTER TABLE players ADD COLUMN special_scenario TEXT NOT NULL DEFAULT '';");
+	});
+
 #if 0
 	migrate("08032025_CreateUserUnitsTable", {
 		p->execSqlSync(

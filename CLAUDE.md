@@ -110,8 +110,7 @@ Handlers that write: GachaAction (units, gems / honor points), MissionStart (ene
 MissionEnd (rewards, level, clears, unlocks, item pickups and items used), DeckEdit (squads,
 helper squads, handle name), UnitMix (fusion), UnitEvo (evolution, unit and item materials),
 UnitSell, ItemEdit (equipped items), ItemSell, ItemMix (synthesis), ShopUse (energy refill, arena
-orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Stubs: DungeonEventUpdate (story events watched,
-not stored), UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"). Not implemented: gifts (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
+orb refill, slot extensions, all free), TownFacilityUpdate (facility / location levels), TownUpdate (village item collection), UpdatePermitPlaceInfo (permit refresh, the Vortex schedule), the Arena (ArenaStart / Matching / BattleStart / BattleEnd / Retire / Restart, GetPlayerInfo; see "Arena"). Also DungeonEventUpdate (story events watched, stored since 2026-11-01). Stubs: UpdateEventInfo (home screen 5-minute poll), friends (FriendGet / Apply / Agree / Refuse / Delete / Search / RandomSearch / Favorite, helpers and friend points; see "Friends"). Not implemented: gifts (the Shop tab shows, buying gems is off). The village (Town tab) works again: its crash was a content-archive gap, not a packet (see
 "Village crash" under "Items / warehouse"). Handler registry:
 `gimuserver/gme/GmeControllerHandlers.cpp` (`REGISTER(id, func, aesKey)`). Login-time tables are
 loaded in `gimuserver/drogon/ServerCache.cpp` from `deploy/system/*.json`. The downloaded-MST
@@ -656,10 +655,16 @@ items included) and the items equipped for quests `player_equip` (slot -> item i
 - UnitEvo item materials (`29MgiJIQ` type 2, `inU8Q4gL` item id) are now checked against the
   warehouse and consumed (`itemId:1` per material).
 - `BjAt1D6b` **DungeonEventUpdate** (key `k5EiNe9x`, URL `/actionSymbol/4iqcLm1s.php`,
-  `gimuserver/gme/DungeonEventUpdate.cpp`): the client reports a story event as watched (area /
-  dungeon / mission event scenes, the town's first visit with Karl); the body is the login info with
-  `9yVsu21R` the scenario id (`randall,`) and `N4XVE1uA` `|0,0`. Stub answering `{}`; the watched
-  events are not stored (UserScenarioInfo is still a mock), so the dialogues replay.
+  `gimuserver/gme/DungeonEventUpdate.cpp`, **stored 2026-11-01**): the client reports a story event
+  as watched (area / dungeon / mission event scenes, the town's first visit with Karl); the body is
+  the login info carrying the client's own state strings: `N4XVE1uA` =
+  `UserScenarioInfoList::getSaveStr` (per land `dungeon id,land flag@event id@event type@area event
+  id&...|land id,flag`, e.g. `80,0@0@1@0&|0,0` after the Tower of Mistral's dungeon event) and
+  `9yVsu21R` = the special scenarios (`randall,`). The server keeps both verbatim
+  (`players.scenario` / `special_scenario`, migration `01112026_Scenario`) and UserInfo echoes them
+  in the login info (the two fields were already there), so `UserScenarioInfoList::parse` restores
+  the state and a dialogue plays once. Verified: the Tower of Mistral scene played on the first
+  visit and not on the next launch.
 - Town: `UserTownLocationDetail` (`s8TCo2MS`: `un80kW9Y` location id, `qA7M9EjP` start date,
   `mDaE3t6A` tap count, `eip3MS5L` drop item info) is now sent for every `town_location.json` row:
   `MyTownTopScene::downloadFiles` dereferences the record of every location whose `need_mission_id`

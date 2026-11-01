@@ -1098,6 +1098,16 @@ json LoginInfoReq {  // # TODO: actually support (GumiLiveInfo), as it's not sup
         doc "User token of the Gumi live API."
     }
 
+    field user_scenario_info type="str" {
+        key "N4XVE1uA"
+        doc "bfanew: the story events watched, UserScenarioInfoList::getSaveStr (per land: dungeon id,finished land flag@finished event id@event type@area event id&...|land id,flag), sent by DungeonEventUpdate inside the login info; stored and echoed by UserInfo"
+    }
+
+    field user_special_scenario_info type="str" {
+        key "9yVsu21R"
+        doc "bfanew: the special scenarios watched (ReplayScenarioInfo id list, e.g. randall,), same handling"
+    }
+
 }
 
 json MstUrlList {

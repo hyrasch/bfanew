@@ -67,6 +67,8 @@ namespace
 		p.energy_at = r["energy_at"].as<int64_t>();
 		p.tutorial_end = r["tutorial_end"].as<int64_t>() != 0;
 		p.last_login = r["last_login"].isNull() ? 0 : r["last_login"].as<int64_t>();
+		p.scenario = r["scenario"].isNull() ? "" : r["scenario"].as<std::string>();
+		p.special_scenario = r["special_scenario"].isNull() ? "" : r["special_scenario"].as<std::string>();
 		return p;
 	}
 }
@@ -176,8 +178,8 @@ namespace Db
 
 	Task<void> SavePlayer(const Player& p)
 	{
-		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4 WHERE user_id = $5",
-			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.user_id);
+		co_await theDb()->execSqlCoro("UPDATE players SET team = $1, energy_at = $2, handle_name = $3, tutorial_end = $4, scenario = $5, special_scenario = $6 WHERE user_id = $7",
+			ToJson(p.team), p.energy_at, p.handle_name, p.tutorial_end ? 1 : 0, p.scenario, p.special_scenario, p.user_id);
 	}
 
 	void RegenEnergy(Player& p)

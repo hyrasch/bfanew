@@ -39,6 +39,8 @@ HANDLEF(UserInfo)
 	resp.login_info.tutorial_end_flag = p.tutorial_end;
 	resp.login_info.tutorial_status = 0;
 	resp.login_info.feature_gate = 0;
+	resp.login_info.user_scenario_info = p.scenario;                 // story events watched (gme/DungeonEventUpdate.cpp)
+	resp.login_info.user_special_scenario_info = p.special_scenario;
 
 	p.team.user_id = p.user_id;
 	{

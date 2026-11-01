@@ -1444,6 +1444,20 @@ json UserInfoResp {
     }
 }
 
+json DungeonEventUpdateReq {
+    doc "DungeonEventUpdate (BjAt1D6b, key k5EiNe9x, URL /actionSymbol/4iqcLm1s.php): a story event watched; the state is in the login info (user_scenario_info, user_special_scenario_info)"
+
+    field signalKey type="[SignalKey]::size(1)" {
+        key "6FrKacq7"
+        doc "TODO"
+    }
+
+    field login_info type="[LoginInfoReq]::size(1)" {
+        key "IKqx1Cn9"
+        doc "TODO"
+    }
+}
+
 json ChallengeArenaResetInfoResp {
     doc "Challenge Arena cooling/reset timer snapshot"
 
