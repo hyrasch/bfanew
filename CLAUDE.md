@@ -1523,6 +1523,18 @@ dungeons, 34 missions, "Weekends" / "This week" period texts, time limit 131874 
 top, as a non-permitted area does. Cosmetic: the 2022 banner art carries later weekday labels
 ("Thursday Dungeon" on The Golden Vault).
 
+## Phase 1 status (2026-11-01)
+
+Everything planned for phase 1 is built and was played through on BlueStacks from a fresh install:
+the tutorial (name, element, Tilith's battles, the summon lesson, the completion gifts), then the
+first Mistral quest with a stranger helper (Adventurer's Prairie, level 2, energy refilled, the
+friend-request prompt). Left open, none of it blocking phase 2: the Login Campaign calendar (zeroed),
+the arena's "Expiring in" cosmetic clock, the town's "triggerable" tutorials (chapters 50-54), the
+Vortex wiki pages not yet saved by hand (`data/wiki/`), defence battles and rankings in the Arena,
+and the tutorial script's own "5 Gems" wording outside fresh installs. **Phase 2 (the content Global
+added after Oct 2014) starts from here**: raise the cutoff in `data/overrides.json`, rebuild the
+overrides, add the phase folder, and gate the features that came with it.
+
 ## Next steps (in order)
 
 1. Android patch: **done** (script, APK; home, Summon with a working Honor/Rare summon, Unit and Town browse without requests). Quests play end to end with the 2014 battle data (see "Quests play end to end"); next on the client side: the write operations (DeckEdit, fusion, sell) and item pickups once persistence exists, enemy skills in `build_battles.py`.
